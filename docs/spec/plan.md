@@ -6,7 +6,7 @@ Hour budget: about 76 team-hours, roughly 5 per day. Each phase budget includes 
 
 | Phase | Target dates | Budget | Hat | Depends on | Done |
 |---|---|---|---|---|---|
-| 0 Spike | 28–29 Oct | 6h | PayPal + UI | — | [ ] |
+| 0 Spike | 28–29 Oct | 6h | PayPal + UI | — | [x] |
 | 1 Database design | 29–30 Oct | 5h | Data | 0 | [ ] |
 | 2 UI design | 30 Oct – 1 Nov | 4h | Product + UI | 0 (runs beside 1 and 3) | [ ] |
 | 3 Backend foundation + first deploy | 31 Oct – 2 Nov | 10h | Backend + Ops | 1 | [ ] |

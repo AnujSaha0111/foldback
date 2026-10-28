@@ -20,7 +20,7 @@ Foldback is a Next.js frontend and an Express API, deployed as two containers be
 | AI | Plain `fetch` to free OpenAI-compatible APIs: Gemini Flash models first, then Groq `gpt-oss-120b` and `gpt-oss-20b`, then OpenRouter free. No LLM SDK. See `ai.md` |
 | PayPal | REST with `fetch` to `https://api-m.sandbox.paypal.com`. No SDK. See `paypal.md` |
 | Dates | luxon (backend). `Intl` on the frontend |
-| Frontend | Next.js 16 App Router, React 19.2, MUI 7 + Emotion (`@mui/material-nextjs` for App Router SSR), design tokens in `src/theme` |
+| Frontend | Next.js 16 App Router, React 19.2, MUI 7 + Emotion (`@mui/material-nextjs` for App Router SSR), design tokens in `src/theme`. **Dev and build use webpack:** the scripts are `next dev --webpack` and `next build --webpack`, because Turbopack's dev server dies while compiling the Bryntum package (found in phase 0, on a laptop and in Codespaces) |
 | Frontend state | Redux Toolkit 2 + react-redux 9, RTK Query API layer in `src/api` |
 | Schedule | Bryntum Scheduler trial + React wrapper, rendered client-only. See `scheduler.md` |
 | Tests | Jest 30 + ts-jest + supertest. Integration tests use a real Postgres test database. See `test.md` |
@@ -62,7 +62,7 @@ backend/
     app.ts                         express app factory (tests mount it without listening)
     config/env.ts                  zod-validated env, fail fast
     observability/                 logger.ts, requestContext.ts, metrics.ts, otel.ts
-    db/                            pool.ts, tx.ts (withTransaction, withContractLock)
+    db/                            pool.ts, tx.ts (withTransaction, withContractLock), migrator.ts (used by scripts/migrate.ts and /health/ready)
     http/                          errors.ts (AppError), middleware/ (requestId, auth, originCheck, rateLimit, validate, errorHandler)
     routes/                        health, auth, contracts, shares, agent, demo (*.routes.ts: paths + middleware only)
     controllers/                   parse validated input, call one service, shape the response

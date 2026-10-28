@@ -268,6 +268,14 @@ Triggers (PL/pgSQL, in `0001_init.sql`):
 
 Each trigger raises with SQLSTATE `23514` (check violation) and a clear message. The repository maps that to `500 internal` and logs it at error level, because it means a bug got past the services.
 
+## Implementation notes (migration 0001)
+
+- The migration is `backend/migrations/0001_init.sql`. Every constraint and trigger has a name (for example `contracts_money_math`, `contracts_transition`, `ops_one_inflight_per_share`) so tests and logs can say exactly which rule fired.
+- Guard triggers raise SQLSTATE `23514` with `CONSTRAINT = <name>`. Unique indexes raise `23505`. The composite foreign key raises `23503`.
+- Fields frozen once `confirmed_at` is set: `confirmed_at`, `title`, `rule_text`, `reference_at`, `currency`, `total_cents`, `share_cents`, `headcount`, `deadline_at`, `timezone`, `grace_person_name`, `grace_until`. `owner_id`, `money_source`, and `seed_key` never change at any time. `demo_now`, `status`, `direction` (once), `resolution_reason`, and `resolved_at` stay writable.
+- Additional checks beyond the table notes: `direction` may be set only on `capturing`, `kept`, `releasing`, `released`, or `blocked`; `resolved_at` is set exactly when the status is `kept` or `released`; `shares.checkout_attempt` only increases; the share `position` is immutable.
+- Tests run against a real Postgres. Local dev may use any Postgres 16 or newer. CI and production use 16.
+
 ## Read-model queries (derived aggregates)
 
 ```sql

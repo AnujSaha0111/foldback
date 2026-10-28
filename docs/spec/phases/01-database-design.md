@@ -39,7 +39,9 @@ The schema is designed, reviewed with you, and real: `0001_init.sql` applies cle
 ```text
 backend/package.json  backend/yarn.lock  backend/tsconfig.json  backend/jest.config.ts  backend/eslint.config.mjs
 backend/migrations/0001_init.sql
-backend/scripts/migrate.ts
+backend/scripts/migrate.ts             thin CLI over src/db/migrator.ts
+backend/src/db/migrator.ts             applyMigrations, migrationStatus, migrationsCurrent, resetSchema
+backend/.env.example
 backend/docs/principles.md
 backend/test/integration/schema.test.ts
 backend/test/helpers/db.ts             create the test schema, truncate between tests
@@ -55,7 +57,7 @@ deploy/compose.dev.yml
 ## Exit check
 
 - [ ] `yarn migrate` then `yarn migrate status` show `0001` applied. A second `migrate` is a no-op.
-- [ ] Phase 1 cases in `test.md` pass against real Postgres.
+- [ ] Phase 1 cases 1–17 in `test.md` pass against real Postgres.
 - [ ] `yarn typecheck` and `yarn lint` are clean.
 - [ ] `learn/03-database.md` is written.
 

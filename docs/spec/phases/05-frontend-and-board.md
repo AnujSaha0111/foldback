@@ -19,6 +19,7 @@ The real frontend, built to the approved design. A visitor lands, tries it as a 
 ```text
 frontend/  (create-next-app, App Router, TypeScript, Yarn, ESLint 9)
   next.config.ts                      output "standalone"; dev rewrites /api and /socket.io → :8787
+  package.json scripts                "dev": "next dev --webpack", "build": "next build --webpack" (Turbopack crashes on Bryntum, see scheduler.md)
   src/theme/                          tokens + MUI theme from phase 2; AppRouterCacheProvider
   src/store/  src/api/                RTK Query baseApi (credentials: include), tags: Me, ContractList, Contract, Scheduler, PublicShare
   src/sockets/                        singleton client; joins rooms; invalidates tags on events

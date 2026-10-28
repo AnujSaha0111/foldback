@@ -53,8 +53,8 @@ Start at [phases/00-spike.md](phases/00-spike.md).
 
 | Phase | File | Status |
 |---|---|---|
-| 0 Spike | `phases/00-spike.md` | not started |
-| 1 Database design | `phases/01-database-design.md` | blocked on 0 |
+| 0 Spike | `phases/00-spike.md` | done |
+| 1 Database design | `phases/01-database-design.md` | next |
 | 2 UI design | `phases/02-ui-design.md` | blocked on 0 (runs beside 1 and 3) |
 | 3 Backend foundation | `phases/03-backend-foundation.md` | blocked on 1 |
 | 4 Rule reader | `phases/04-rule-reader.md` | blocked on 3 |

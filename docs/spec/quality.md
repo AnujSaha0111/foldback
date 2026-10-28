@@ -82,9 +82,11 @@ The number at the bottom of DevTools → Network is what we budget: **transferre
 | `/pay/[shareId]` (phones!) | ≤ 140 KB | ≤ 320 KB | ≥ 90 | ≤ 2.5 s |
 | `/login`, `/signup` | ≤ 140 KB | ≤ 300 KB | ≥ 90 | ≤ 2.5 s |
 | `/plans` | ≤ 200 KB | ≤ 400 KB | ≥ 80 | ≤ 3.0 s |
-| `/plans/[id]` board | ≤ 200 KB before Bryntum, plus a Bryntum chunk ≤ the size measured in phase 0 + 10% | ≤ the phase 0 measurement + 300 KB | ≥ 70 (desktop ≥ 85) | ≤ 3.5 s |
+| `/plans/[id]` board | ≤ 200 KB app JS, **plus the Bryntum chunk, measured at 1,390 KB gzip (3.47 MB raw) in phase 0, so ≤ 1,530 KB** | ≤ 2.0 MB total (JS, CSS, fonts) | desktop ≥ 80, mobile ≥ 50 | ≤ 4.5 s |
 
 All routes: CLS ≤ 0.1, INP ≤ 200 ms, Lighthouse accessibility ≥ 95, best practices ≥ 95.
+
+The board is the one heavy route: Bryntum's single library file is 3.47 MB raw. It is an operator screen, so the budget is deliberately wider, but it is loaded **only** on `/plans/[id]` through `next/dynamic` with `ssr: false`, shows a skeleton while loading, and never appears in the landing, auth, plans, or pay bundles. Its CSS (57 KB gzip) is imported only inside that component.
 
 How we stay inside the budgets:
 

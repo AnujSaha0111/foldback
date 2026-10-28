@@ -89,11 +89,11 @@ Also on day one: create the Oracle Cloud account and try to create the Ampere VM
 
 ## Exit check
 
-- [ ] `yarn dev` in `spike/bryntum-next` shows the Held row at `/spike` with no hydration errors.
-- [ ] `yarn build` output records the Bryntum chunk's compressed size, and DevTools Network shows the transferred and resources numbers for `/spike`. These set the board budget in `quality.md` §4.
-- [ ] PayPal: authorization id, capture `COMPLETED`, second authorization id, void 204, GET `VOIDED`.
-- [ ] LLM: Groq strict-schema reply, tool-call round trip, the Groq and OpenRouter free-model lists, and the rate-limit headers recorded.
-- [ ] License email or Discord post sent.
+- [x] `yarn dev` in `spike/bryntum-next` shows the Held row at `/spike` with no hydration errors.
+- [x] `yarn build` output records the Bryntum chunk's compressed size, and DevTools Network shows the transferred and resources numbers for `/spike`. These set the board budget in `quality.md` §4.
+- [x] PayPal: authorization id, capture `COMPLETED`, second authorization id, void 204, GET `VOIDED`.
+- [x] LLM: Groq strict-schema reply, tool-call round trip, the Groq and OpenRouter free-model lists, and the rate-limit headers recorded.
+- [x] Optional: Bryntum license question posted in the PayPal Discord (not blocking).
 - [ ] Oracle account created (VM created or capacity pending).
 
 ## Exit note
@@ -106,8 +106,8 @@ Authorization (release path), void status: `884176326X892633S`. Void returned HT
 
 LLM (28 Oct 2026): Gemini `gemini-3.6-flash`, `gemini-3.5-flash-lite`, and `gemini-3.1-flash-lite` passed ping, strict schema, and a tool round trip (1.5 to 3.8 s). `gemini-3.8-flash` and `gemini-3.7-flash` returned HTTP 503 "high demand" (the earlier 45 s timeout was this overload, not our request shape). `gemini-3.5-flash` hit the 5 requests/min quota mid-test. Groq `openai/gpt-oss-120b` passed (1.3 to 2.3 s, title "Cabin weekend"). Limits: Gemini Flash 5/min, Flash-Lite 15/min, 250K tokens/min (daily limit not seen), Groq 30/min, 1,000/day, 8,000 tokens/min. Gemini Pro models have 0 free quota, `gemini-2.5-flash` returns 404 for new users, and Gemini sends no rate-limit headers.
 
-Bryntum install command, React 19 support, compressed chunk size:
+Bryntum (28 Oct 2026): install command `yarn add "@bryntum/scheduler@npm:@bryntum/scheduler-trial@^7.3.7" @bryntum/scheduler-react@^7.3.7` (Yarn needs the explicit range). Next 16.4.3 with React 19.3 and Turbopack: the dev server dies while compiling `/spike`, on the laptop (froze it) and in Codespaces. `next dev --webpack` works and the page opens. The trial's install script stays disabled and nothing breaks. `next build --webpack` passes. Largest chunk: 1,390,124 bytes gzip (3,465,527 raw) is Bryntum, plus 57,189 bytes gzip of CSS. The next largest JS chunks are 68 KB (React framework) and 67 KB. The `/spike` page rendered the orange Held bar for Alex Chen.
 
-License email:
+License email: optional insurance only. Every team uses the same trial link and the same 45-day clock, so we continue without waiting for a reply.
 
-Oracle VM status:
+Oracle VM status: account being created on 28 Oct evening (needs a card for verification). Stay on Always Free resources only. Fallback: Azure VM.

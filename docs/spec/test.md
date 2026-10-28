@@ -42,7 +42,10 @@ Fixtures: `backend/src/shared/rules.ts` (demo strings) and `backend/test/fixture
 11. `one grace subject per contract`: a second grace subject raises.
 12. `events are append-only`: an UPDATE on events raises.
 13. `guest delete cascades`: deleting a guest user removes their contracts, shares, operations, and events, and keeps `ai_usage` with a null `user_id`.
-14. `ai_usage refuses paid OpenRouter models`: inserting `provider = 'openrouter'` with `model = 'anthropic/claude-3.5-sonnet'` raises.
+14. `ai_usage refuses paid OpenRouter models`: inserting `provider = 'openrouter'` with `model = 'anthropic/claude-3.5-sonnet'` raises. Free models (`openrouter/free`, `...:free`) and Gemini or Groq models insert fine.
+15. `a share amount must equal the contract share`: inserting a share with `amount_cents = 100` on an 8000 contract raises `shares_amount_matches_contract`.
+16. `authorization and capture ids are write-once`: changing `authorization_id` or `capture_id` after it is set raises.
+17. `an illegal share transition is rejected`: `waiting → kept` raises `shares_transition`.
 
 ## Phase 3: `test/integration/{auth,health,contracts-read}.test.ts`
 
