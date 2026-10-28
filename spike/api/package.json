@@ -1,0 +1,20 @@
+{
+  "name": "foldback-spike-api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "packageManager": "yarn@4.9.2",
+  "scripts": {
+    "spike:paypal": "tsx paypal-spike.ts",
+    "spike:llm": "tsx llm-spike.ts"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.9",
+    "zod": "^4"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "tsx": "^4.23.15",
+    "typescript": "^6"
+  }
+}
