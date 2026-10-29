@@ -43,6 +43,11 @@ describe("env fails fast (test 15)", () => {
     expect(err.variables).toEqual(expect.arrayContaining(["JWT_SECRET", "APP_BASE_URL"]));
   });
 
+  it("accepts a cookie domain and refuses a malformed one", () => {
+    expect(testEnv({ COOKIE_DOMAIN: ".example.com" }).COOKIE_DOMAIN).toBe(".example.com");
+    expect(failure({ COOKIE_DOMAIN: "https://example.com" }).variables).toContain("COOKIE_DOMAIN");
+  });
+
   it("refuses a paid model in the LLM chain (L1)", () => {
     expect(failure({ LLM_CHAIN: "openrouter:anthropic/claude-3.5-sonnet" }).variables).toContain("LLM_CHAIN");
   });

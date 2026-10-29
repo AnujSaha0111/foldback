@@ -1,7 +1,8 @@
-import { randomBytes } from "node:crypto";
 import { Pool } from "pg";
-import type { PoolClient, QueryResult, QueryResultRow } from "pg";
+import type { QueryResult, QueryResultRow } from "pg";
+import { newId } from "../../src/db/ids";
 import { applyMigrations, resetSchema } from "../../src/db/migrator";
+import { withTransaction } from "../../src/db/tx";
 
 export const TEST_DATABASE_URL =
   process.env["TEST_DATABASE_URL"] ?? "postgres://foldback:foldback@localhost:5433/foldback_test";
@@ -51,26 +52,8 @@ export async function truncateAll(owner: Pool): Promise<void> {
   );
 }
 
-/** 128 random bits as 22 base64url characters, the id format the schema requires. */
-export function newId(prefix: "usr" | "con" | "shr" | "op"): string {
-  return `${prefix}_${randomBytes(16).toString("base64url")}`;
-}
-
-/** Runs `fn` in one transaction. A failure at COMMIT (deferred constraints) rejects like any other error. */
-export async function withTransaction<T>(pool: Pool, fn: (client: PoolClient) => Promise<T>): Promise<T> {
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    const result = await fn(client);
-    await client.query("COMMIT");
-    return result;
-  } catch (error) {
-    await client.query("ROLLBACK").catch(() => undefined);
-    throw error;
-  } finally {
-    client.release();
-  }
-}
+// The same id format and transaction wrapper the application uses, so the tests cannot drift from it.
+export { newId, withTransaction };
 
 /** Asserts a Postgres error with the given SQLSTATE and (optionally) constraint name. */
 export async function expectDbError(

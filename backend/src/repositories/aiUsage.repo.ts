@@ -9,3 +9,11 @@ export async function countCallsToday(db: Db): Promise<number> {
   );
   return Number(result.rows[0]?.count ?? 0);
 }
+
+/** Housekeeping, run as the table owner (the app role has no DELETE on this table). Returns the rows removed. */
+export async function deleteOlderThanDays(db: Db, days: number): Promise<number> {
+  const result = await db.query("DELETE FROM ai_usage WHERE created_at < now() - make_interval(days => $1)", [
+    days,
+  ]);
+  return result.rowCount ?? 0;
+}

@@ -4,8 +4,10 @@ import { loadEnv } from "./config/env";
 import { createPool } from "./db/pool";
 import { migrationsCurrent } from "./db/migrator";
 import { createLogger } from "./observability/logger";
+import { sweepExpiredGuests } from "./services/housekeeping.service";
 
 const SHUTDOWN_GRACE_MS = 10_000;
+const GUEST_SWEEP_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 async function main(): Promise<void> {
   const env = loadEnv();
@@ -21,6 +23,13 @@ async function main(): Promise<void> {
 
   const server = createServer(createApp({ env, pool, logger }));
   server.listen(env.PORT, () => log.info("listening", { port: env.PORT, version: env.GIT_SHA }));
+
+  // Remove expired guests (who hold no live money) on boot and every 6 hours.
+  const sweep = (): void => {
+    sweepExpiredGuests(pool, logger).catch((err: unknown) => log.error("guest sweep failed", { err }));
+  };
+  sweep();
+  setInterval(sweep, GUEST_SWEEP_INTERVAL_MS).unref();
 
   let closing = false;
   const shutdown = (signal: string): void => {
