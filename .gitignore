@@ -1,0 +1,16 @@
+learn/
+node_modules/
+.env
+.env.*
+!.env.example
+!env.*.example
+dist/
+.next/
+coverage/
+*.log
+.claude/
+docs/google-gemini/
+docs/vendor/
+*.zip
+.yarn/
+*.tsbuildinfo
