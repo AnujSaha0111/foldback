@@ -8,7 +8,7 @@ interface BodyParserError extends Error {
 }
 
 /** Turns anything thrown into the API's error JSON. Only AppError messages reach the client. */
-export function toAppError(err: unknown): AppError {
+function toAppError(err: unknown): AppError {
   if (err instanceof AppError) return err;
   if (err instanceof ZodError) {
     return new AppError(

@@ -8,7 +8,7 @@ import { listForContract } from "../repositories/shares.repo";
 import type { ShareRow } from "../repositories/shares.repo";
 import type { ApiContract, ApiShare, ContractRead, ContractSummary } from "../shared/api-types";
 
-export const EVENTS_IN_READ_MODEL = 30;
+const EVENTS_IN_READ_MODEL = 30;
 
 const iso = (d: Date | null): string | null => (d ? d.toISOString() : null);
 

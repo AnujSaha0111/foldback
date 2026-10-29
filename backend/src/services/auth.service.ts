@@ -15,7 +15,7 @@ import { hashPassword, verifyPassword } from "./password";
 import { seedUser } from "./seed.service";
 import { signSession } from "./token";
 
-export const GUEST_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const GUEST_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export interface AuthResult {
   user: User;

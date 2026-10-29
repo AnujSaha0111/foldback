@@ -1,5 +1,5 @@
 /** Every error code the API can return, with its HTTP status. Mirrors the table in docs/spec/api.md. */
-export const ERROR_STATUS = {
+const ERROR_STATUS = {
   bad_request: 400,
   unauthenticated: 401,
   invalid_credentials: 401,

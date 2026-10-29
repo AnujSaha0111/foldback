@@ -86,7 +86,7 @@ If Bryntum's registry needs a token, it is a build secret (`RUN --mount=type=sec
 
 ```text
 caddy     caddy:2.11      ports 80, 443 → reverse proxy; volumes caddy_data, caddy_config
-migrate   backend image   command: node dist/scripts/migrate.js migrate (uses MIGRATE_DATABASE_URL); restart: "no"
+migrate   backend image   command: node dist/cli/migrate.js migrate (uses MIGRATE_DATABASE_URL); restart: "no"
 backend   backend image   depends_on migrate completed_successfully; healthcheck /health/ready; restart unless-stopped
 frontend  frontend image  depends_on backend healthy; restart unless-stopped
 postgres  postgres:16     optional fallback only (compose profile `local-db`): no public port, volume pgdata.

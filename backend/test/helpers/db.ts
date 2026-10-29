@@ -4,12 +4,12 @@ import { newId } from "../../src/db/ids";
 import { applyMigrations, resetSchema } from "../../src/db/migrator";
 import { withTransaction } from "../../src/db/tx";
 
-export const TEST_DATABASE_URL =
+const TEST_DATABASE_URL =
   process.env["TEST_DATABASE_URL"] ?? "postgres://foldback:foldback@localhost:5433/foldback_test";
-export const APP_ROLE = "foldback_app";
+const APP_ROLE = "foldback_app";
 const APP_ROLE_PASSWORD = "foldback_app";
 
-export type Row = Record<string, unknown>;
+type Row = Record<string, unknown>;
 
 /** Anything that can run a query: a Pool or a checked-out client. */
 export interface Queryable {

@@ -3,19 +3,19 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Pool, PoolClient } from "pg";
 
-export const MIGRATIONS_DIR = path.resolve(__dirname, "../../migrations");
+const MIGRATIONS_DIR = path.resolve(__dirname, "../../migrations");
 
 // Any constant works. It makes two processes that migrate at the same time take turns.
 const MIGRATION_LOCK_KEY = 727_274;
 
-export interface MigrationFile {
+interface MigrationFile {
   version: string;
   name: string;
   sql: string;
   checksum: string;
 }
 
-export interface AppliedMigration {
+interface AppliedMigration {
   version: string;
   name: string;
   checksum: string;
@@ -37,7 +37,7 @@ interface AppliedRow {
 
 const FILE_PATTERN = /^(\d{4})_([a-z0-9_]+)\.sql$/;
 
-export async function loadMigrations(dir: string = MIGRATIONS_DIR): Promise<MigrationFile[]> {
+async function loadMigrations(dir: string = MIGRATIONS_DIR): Promise<MigrationFile[]> {
   const names = (await readdir(dir)).filter((n) => FILE_PATTERN.test(n)).sort();
   const files: MigrationFile[] = [];
   for (const fileName of names) {

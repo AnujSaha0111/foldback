@@ -18,7 +18,7 @@ export interface AuthController {
 }
 
 /** The only shape of a user the API returns. It never contains a hash. */
-export function toApiUser(user: User): ApiUser {
+function toApiUser(user: User): ApiUser {
   return {
     id: user.id,
     kind: user.kind,

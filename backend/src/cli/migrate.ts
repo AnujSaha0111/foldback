@@ -1,6 +1,6 @@
 // Usage: yarn migrate | yarn migrate:status | yarn migrate:reset
 import { Pool } from "pg";
-import { applyMigrations, migrationStatus, resetSchema } from "../src/db/migrator";
+import { applyMigrations, migrationStatus, resetSchema } from "../db/migrator";
 
 async function main(): Promise<void> {
   const command = process.argv[2];

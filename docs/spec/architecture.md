@@ -11,7 +11,7 @@ Foldback is a Next.js frontend and an Express API, deployed as two containers be
 | Package manager | Yarn 4 (Berry, via Corepack, `nodeLinker: node-modules`, `enableScripts: false` with a per-package allow-list), two separate packages (`backend/`, `frontend/`), each with its own `yarn.lock`. Not a monorepo |
 | API | Express 5 (^5.2), compiled by `tsc` to `dist/` and run with plain `node` in production. `tsx` watch in dev |
 | Realtime | Socket.IO 4 (^4.8). Used only to tell clients "this contract changed" |
-| Database | PostgreSQL 16 **hosted separately from the app** (Azure Database for PostgreSQL Flexible Server, see `deploy.md`), with the plain `pg` driver. Two roles: an owner for migrations and a DML-only `foldback_app` for the running app. No ORM. Hand-written SQL. Numbered `.sql` migrations run by `scripts/migrate.ts` (`migrate`, `status`, `reset`) |
+| Database | PostgreSQL 16 **hosted separately from the app** (Azure Database for PostgreSQL Flexible Server, see `deploy.md`), with the plain `pg` driver. Two roles: an owner for migrations and a DML-only `foldback_app` for the running app. No ORM. Hand-written SQL. Numbered `.sql` migrations run by `src/cli/migrate.ts` (`migrate`, `status`, `reset`) |
 | Validation | zod ^4 strict objects on every body, params, and query, and on env |
 | Auth | JWT (`jsonwebtoken`) in an httpOnly cookie, bcrypt password hashing, email login, guest demo accounts |
 | Security | helmet, cors allow-list (`CORS_ORIGINS`), express-rate-limit per IP and per user, `TRUST_PROXY`, Origin check on mutations |
@@ -56,14 +56,14 @@ backend/
   package.json  yarn.lock  tsconfig.json  tsconfig.build.json  jest.config.ts  eslint.config.mjs  Dockerfile  .env.example
   docs/principles.md               engineering principles (phase 1)
   migrations/0001_init.sql …       numbered, forward-only
-  scripts/migrate.ts               migrate | status | reset (reset refuses when NODE_ENV=production)
+  src/cli/migrate.ts, housekeeping.ts   compiled into the image (node dist/cli/migrate.js migrate); migrate | status | reset (reset refuses when NODE_ENV=production)
   scripts/sync-types.ts            copies src/shared/* into frontend/src/types/generated/
   src/
     server.ts                      boot: env → otel → pool → migrations check → http + io → graceful shutdown
     app.ts                         express app factory (tests mount it without listening)
     config/env.ts                  zod-validated env, fail fast
     observability/                 logger.ts, requestContext.ts, metrics.ts, otel.ts
-    db/                            pool.ts, tx.ts (withTransaction, withContractLock), migrator.ts (used by scripts/migrate.ts and /health/ready)
+    db/                            pool.ts, tx.ts (withTransaction, withContractLock), migrator.ts (used by cli/migrate.ts and /health/ready)
     http/                          errors.ts (AppError), middleware/ (requestId, auth, originCheck, rateLimit, validate, errorHandler)
     routes/                        health, auth, contracts, shares, agent, demo (*.routes.ts: paths + middleware only)
     controllers/                   parse validated input, call one service, shape the response

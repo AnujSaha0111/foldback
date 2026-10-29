@@ -3,7 +3,7 @@ import { ipKeyGenerator, rateLimit } from "express-rate-limit";
 import { AppError } from "../errors";
 import { currentUser } from "./auth";
 
-export interface LimitRule {
+interface LimitRule {
   limit: number;
   windowMs: number;
 }

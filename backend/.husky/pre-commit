@@ -1,0 +1,10 @@
+# Runs from the repository root. Staged backend files: Prettier, then ESLint. Then the whole project must typecheck.
+cd backend || exit 1
+corepack yarn lint-staged || exit 1
+corepack yarn typecheck || exit 1
+# gitleaks is optional locally (CI always runs it).
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks git --pre-commit --staged --redact --no-banner || exit 1
+else
+  echo "gitleaks is not installed, skipping the local secret scan (CI runs it)."
+fi
