@@ -34,9 +34,9 @@ An approved visual design for every screen before any frontend code is written.
 
 ## Exit check
 
-- [ ] Tokens and all screen mockups approved by you.
-- [ ] `ui.md` → Visual design is filled in, including the template name and license.
-- [ ] `learn/04-ui-design.md` is written.
+- [x] Tokens and all screen mockups approved by you.
+- [x] `ui.md` → Visual design is filled in, including the template name and license.
+- [x] `learn/04-ui-design.md` is written.
 
 ## Exit note
 

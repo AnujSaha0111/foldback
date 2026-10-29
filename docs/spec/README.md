@@ -55,10 +55,10 @@ Start at [phases/00-spike.md](phases/00-spike.md).
 |---|---|---|
 | 0 Spike | `phases/00-spike.md` | done |
 | 1 Database design | `phases/01-database-design.md` | done |
-| 2 UI design | `phases/02-ui-design.md` | next (needs your reference screenshots) |
+| 2 UI design | `phases/02-ui-design.md` | done |
 | 3 Backend foundation | `phases/03-backend-foundation.md` | next |
 | 4 Rule reader | `phases/04-rule-reader.md` | blocked on 3 |
-| 5 Frontend and board | `phases/05-frontend-and-board.md` | blocked on 2 and 3 |
+| 5 Frontend and board | `phases/05-frontend-and-board.md` | blocked on 3 |
 | 6 Pay link and hold | `phases/06-pay-and-hold.md` | blocked on 4 and 5 |
 | 7 Resolve: keep or release | `phases/07-resolve.md` | blocked on 6 |
 | 8 Organizer agent | `phases/08-agent.md` | blocked on 7 |
