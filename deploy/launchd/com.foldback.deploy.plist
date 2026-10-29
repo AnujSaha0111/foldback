@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Checks for a new backend image every five minutes and deploys it. Install: see deploy.md, launchd jobs. Runs as the foldback user. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.foldback.deploy</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/foldback/foldback/scripts/deploy.sh</string>
+  </array>
+  <key>StartInterval</key><integer>300</integer>
+  <key>StandardOutPath</key><string>/Users/foldback/Library/Logs/foldback-deploy.log</string>
+  <key>StandardErrorPath</key><string>/Users/foldback/Library/Logs/foldback-deploy.log</string>
+</dict>
+</plist>

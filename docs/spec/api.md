@@ -14,7 +14,7 @@ Every money mutation re-reads the share and contract inside a Postgres transacti
 | `/api/contracts/*`, `/api/demo/reset` | signed-in organizer (member or guest), **own contracts only**. Another user's contract returns `404 not_found`, never 403, so ids cannot be probed |
 | `/api/shares/:shareId` (GET), `/checkout`, `/authorize`, `/sync` | anyone holding the pay link (the share id is the capability) |
 | `/api/health` | anyone |
-| `/health/live`, `/health/ready` | Compose and Caddy (not under `/api`) |
+| `/health/live`, `/health/ready` | Compose health checks and `smoke.sh` (not under `/api`) |
 | `/metrics` | internal network, or `Authorization: Bearer {METRICS_TOKEN}` |
 
 Every non-GET request must carry an `Origin` (or `Referer`) header in `CORS_ORIGINS`. Otherwise it returns `403 bad_origin`.

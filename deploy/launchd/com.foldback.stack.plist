@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Brings the stack up at login. Install: see deploy.md, launchd jobs. Runs as the foldback user. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.foldback.stack</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/foldback/foldback/scripts/stack-up.sh</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>StandardOutPath</key><string>/Users/foldback/Library/Logs/foldback-stack.log</string>
+  <key>StandardErrorPath</key><string>/Users/foldback/Library/Logs/foldback-stack.log</string>
+</dict>
+</plist>

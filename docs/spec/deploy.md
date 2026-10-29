@@ -1,172 +1,216 @@
 # Deploy and infrastructure
 
-The application runs on **one Azure VM** (Docker Compose: Caddy, a one-shot migrate job, the backend, and the frontend). **The database is not on the VM.** It is **Azure Database for PostgreSQL – Flexible Server**, a separate managed service in a different Azure account. One domain, HTTPS, paid from the team's student credits, and it stays up through judging (1 to 15 December 2026, so about seven weeks from now).
+The backend and its Postgres database run on **one Mac mini** (Apple M4) owned by a team member, under Docker Compose. The frontend runs on **Vercel**. Public traffic reaches the Mac through a **Cloudflare Tunnel**, so the home router opens no ports. Admin access is SSH over **Tailscale**. Everything is on free tiers and stays up through judging (1 to 15 December 2026).
 
-The work is split across three student Azure accounts so no single credit has to cover everything. Credits do not pool: each account's credit pays only for resources created inside that account.
+The plan changed on 29 October 2026: the earlier Azure plan (VM, managed Postgres, Caddy, three student accounts) was dropped because the free cloud options did not work out.
+
+```text
+ Browser
+   | https://app.<domain>                    https://api.<domain> (and Socket.IO)
+   v                                          v
+ Vercel (Next.js frontend)              Cloudflare (DNS + Tunnel, free)
+                                              |  outbound-only tunnel
+                                              v
+                              +----------- Mac mini ------------+
+                              |  cloudflared -> 127.0.0.1:8787  |
+                              |  backend container (Node 24)    |
+                              |  postgres:16 container, volume  |
+                              |  daily backups (internal disk)   |
+                              +---------------------------------+
+   Team access to the Mac (admin only, never public): Tailscale + SSH keys
+```
 
 ## Environments
 
 | Env | Where | Database | Notes |
 |---|---|---|---|
-| dev | your machine | `deploy/compose.dev.yml` → `postgres:16` on 5432 | `yarn dev` in `backend/` and `frontend/`. Next.js rewrites `/api` and `/socket.io` to `localhost:8787`, so dev is same-origin like prod |
+| dev | your machine | `deploy/compose.dev.yml` → `postgres:16` on 5432 | `yarn dev` in `backend/` and `frontend/`. Next.js rewrites `/api` and `/socket.io` to `localhost:8787` |
 | test | your machine and CI | `postgres:16` on 5433 (tmpfs) | Integration tests migrate a fresh schema per run |
-| production | Azure VM (app, account B) + Azure Postgres Flexible Server (data, account A) | reached by `DATABASE_URL` over TLS | `deploy/compose.yml` |
+| production | Mac mini (backend + database), Vercel (frontend) | `postgres:16` container on the Mac, on the Compose network only | `deploy/compose.yml`, run from `~foldback/foldback` |
 
-## Accounts and ownership
+## Who owns what
 
-| Account | Credit | Holds | Why |
-|---|---|---|---|
-| **A** (project lead, about ₹8,000) | student credit | Azure Database for PostgreSQL Flexible Server, plus a budget alert | The database is the cheapest part (roughly ₹3,000 to 3,500 for 10 weeks) |
-| **B** (teammate, about ₹10,000) | student credit | The production VM, its disk, the static public IP, and the DNS name | The VM is the biggest cost (roughly ₹8,000 to 9,500 for 10 weeks) |
-| **C** (teammate, about ₹10,000) | student credit | **Scale-out spare**: a second identical VM, only if measurements show one VM is not enough | Keeps the main deployment simple and the spare ready |
+| Piece | Owner | Notes |
+|---|---|---|
+| Mac mini, its macOS admin account, the Tailscale network it is on, server operations | Manveer | The Mac also holds the owner's personal data, so the owner is the only operator (see Remote access) |
+| The domain, the Cloudflare account, the tunnel | Manveer | Creates the tunnel himself, so its token never leaves the Mac owner. Adds the DNS record Vercel asks for |
+| Vercel project | Nishit | Built from GitHub (`frontend/`) |
+| GitHub repository and the ghcr.io package | Anuj | The package stays private until submission (see Docker image) |
 
-Before building, each owner checks, in the portal under Cost Management, **when the credit expires** (a 30-day free-trial credit would not last until 15 December; a student credit lasts 12 months) and sets a **budget alert** at about 70% of the credit.
+## The Mac mini host
 
-The database lives outside the application deployment on purpose. The backend reads one connection string, so replacing or duplicating the VM never touches the data.
+What is set up, and why. All of it was done over SSH, from a Windows laptop.
 
-**Oracle's free databases were ruled out.** Always Free gives two *Oracle* Autonomous Databases and one MySQL system. Foldback's guarantees are written in PostgreSQL (PL/pgSQL triggers, partial unique indexes, `citext`, jsonb, advisory locks), so those databases cannot host the schema. Oracle's VM capacity was also unavailable. A free Neon database remains the no-card fallback if an Azure student policy blocks Flexible Server.
+| Item | Setting | Why |
+|---|---|---|
+| Accounts | Owner's admin account, plus a **standard (non-admin) `foldback` account** that runs the stack | The stack never runs with admin rights. `foldback` cannot `sudo` and cannot read the owner's home folder (mode 700) |
+| Auto-login | `foldback` | The stack and Docker start after a reboot or power cut with nobody at the keyboard |
+| FileVault | Off | With FileVault on, every reboot waits for a password typed at the Mac, which takes the site down. The data is PayPal sandbox data and the Mac is in a private home |
+| Sleep | `pmset`: `sleep 0`, `autorestart 1`, `womp 1` | Never sleeps, and starts again after a power failure |
+| Firewall | macOS application firewall on | Nothing needs to come in: the tunnel and Tailscale are outbound-only |
+| Tailscale | The **Homebrew `tailscaled` system daemon** (`/Library/LaunchDaemons/com.tailscale.tailscaled.plist`), not the menu-bar app | The app's tunnel drops whenever the app is not running in a logged-in session. The daemon connects at boot, before any login. Key expiry is disabled for the Mac in the Tailscale admin console |
+| Docker | **Colima** (Homebrew `colima`, `docker`, `docker-compose`), 4 CPUs, 6 GB, 60 GB disk, under `foldback` | Installs and runs entirely from the command line, so no GUI step is needed on a machine far away. Started at login by `deploy/launchd/com.foldback.colima.plist` |
+| Tunnel client | Homebrew `cloudflared`, a locally managed tunnel run by a launch daemon at boot (see Cloudflare Tunnel) | Runs on the host, not as a container: only images from `ghcr.io/anujsaha0111` and the official `postgres:16` run on the Mac |
+| Code | No git clone with credentials on the Mac | The repository is private, so files reach the Mac by `git archive | ssh`. Production needs only the `deploy/` folder, copied to `~foldback/foldback` |
 
-## Database setup (account A)
+Gotcha: saving **System Settings → General → Sharing → Remote Login** rewrites the SSH allow-list from what that window shows, which drops `foldback`. Add Foldback there with **+**, or run `sudo dseditgroup -o edit -a foldback -t user com.apple.access_ssh`.
 
-1. Portal, Azure Database for PostgreSQL Flexible Server, Create. Version **16**, workload **Development**, compute **Burstable B1ms**, storage **32 GiB**, backup retention 7 days (the default), same **region** as the VM. Choose a region your student subscription allows (try the VM region list first).
-2. Authentication: PostgreSQL authentication. The admin login you create becomes the **owner role** (`MIGRATE_DATABASE_URL`).
-3. Networking: **public access** with firewall rules. Allow only the VM's static public IP (add your own IP temporarily while you create the roles, then remove it). TLS is required by default. Use port **5432** (the direct connection). Do **not** use the built-in PgBouncer on 6432, because session-level advisory locks break under transaction pooling.
-4. Server parameters: set `azure.extensions` to include `CITEXT` (the migration runs `CREATE EXTENSION IF NOT EXISTS citext`).
-5. Create the database `foldback`, then as the admin: `CREATE ROLE foldback_app LOGIN PASSWORD '<random>';`.
-6. Put the owner URL in `MIGRATE_DATABASE_URL` and the app URL in `DATABASE_URL` on the VM (`/opt/foldback/.env`, mode 600), both with `sslmode=require`.
-7. Run `migrate` (the `migrate` container does this on every deploy). It creates every object and grants DML to `foldback_app`.
-8. Backups: Flexible Server keeps 7 days of automatic backups. Also run `backup.sh` (`pg_dump`) daily from the VM to `/opt/foldback/backups`, using `postgresql-client-16`.
-9. Application pool size 10 or less, statement timeout 5 s, and connection retry on a transient failure.
+## Remote access
+
+- **Owner only.** The Mac is reachable for administration only from the owner's own devices on the owner's Tailscale network, with SSH keys. Nobody else has an account, a key, or a Tailscale share. The team does not need one: merging to `main` deploys by itself (CI/CD below), and server problems go to the owner.
+- **Public traffic never uses Tailscale.** Users, PayPal returns, and judges reach only `api.<domain>`, through the Cloudflare Tunnel, which forwards to the backend on `127.0.0.1:8787` and nothing else. Postgres, SSH, and the rest of the Mac are not reachable through it.
+- **No inbound ports.** Port 22 and the app are never forwarded on the home router.
+- **If another operator is ever needed:** share only the Mac in the Tailscale admin console (Machines → the Mac → Share; node sharing exposes that one machine), and append their SSH **public** key to `~foldback/.ssh/authorized_keys`. They get `foldback`, never admin.
+- The owner keeps a private operations runbook with hostnames and commands. It is never committed, because the repository is public at submission and the runbook names hosts and accounts.
 
 ## Environment variables (backend)
 
-Every variable is parsed by `config/env.ts` (zod). Boot fails on a missing or invalid value, and the error names the variable. The PayPal and AI variables are listed in `paypal.md`.
+Every variable is parsed by `config/env.ts` (zod). Boot fails on a missing or invalid value, and the error names the variable. The PayPal and AI variables are listed in `paypal.md` and `ai.md`.
 
 | Variable | Example / default | Notes |
 |---|---|---|
-| `NODE_ENV` | `production` | `development`, `test`, or `production` |
-| `PORT` | `8787` | |
-| `DATABASE_URL` | `postgres://foldback_app:…@<host>/foldback?sslmode=require` | The application role (DML only). Use the provider's **direct** endpoint, not a pooled one (session advisory locks) |
-| `MIGRATE_DATABASE_URL` | `postgres://<owner>:…@<host>/foldback?sslmode=require` | The owner role. Used only by `migrate`, tests, and housekeeping jobs. Never given to the backend container |
-| `JWT_SECRET` | 64 random bytes, base64 | At least 32 bytes, otherwise boot fails |
-| `CORS_ORIGINS` | `https://foldback.<region>.cloudapp.azure.com` | Comma list. Also used by the Origin check |
-| `APP_BASE_URL` | `https://foldback.<region>.cloudapp.azure.com` | PayPal return URLs |
-| `TRUST_PROXY` | `1` | One proxy hop (Caddy) |
+| `NODE_ENV` | `production` | Set by Compose |
+| `PORT` | `8787` | Set by Compose |
+| `DATABASE_URL` | `postgres://foldback_app@postgres:5432/foldback` | Set by Compose, with the password in `PGPASSWORD` (from `APP_DB_PASSWORD`), which the `pg` driver reads; no URL in the repository carries a password. The application role (DML only). A direct connection: session advisory locks do not survive a transaction pooler |
+| `MIGRATE_DATABASE_URL` | `postgres://foldback@postgres:5432/foldback` | Set by Compose, with `PGPASSWORD` from `POSTGRES_PASSWORD`. The owner role. Given only to the `migrate` service (which housekeeping reuses), never to the backend |
+| `JWT_SECRET` | 48 random bytes, base64 | At least 32 characters, otherwise boot fails |
+| `CORS_ORIGINS` | `https://app.<domain>` | Comma list. Also the Origin check's allow-list |
+| `APP_BASE_URL` | `https://app.<domain>` | PayPal return URLs |
+| `COOKIE_DOMAIN` | `.<domain>` | The session cookie's domain, so `app.` and `api.` share it (same site) |
+| `TRUST_PROXY` | `1` | Set by Compose: one hop, the tunnel client |
 | `LOG_LEVEL` | `info` | |
-| `METRICS_TOKEN` | random | Bearer token for `/metrics` from outside the Compose network |
+| `METRICS_TOKEN` | random | Bearer token for `/metrics` |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | unset | Set it to turn on tracing |
-| `SIGNUPS_ENABLED` | `true` | Kill switch |
-| `GIT_SHA` | set by CI | Shown in `/api/health` |
+| `SIGNUPS_ENABLED`, `AI_ENABLED`, `AI_DAILY_CALLS` | `true`, `true`, `600` | Kill switches and caps |
+| `GIT_SHA` | baked into the image by CI | Shown in `/api/health`. Compose does not override it |
 
-Frontend: `API_INTERNAL_URL=http://backend:8787`, used only for server-side fetches inside Compose. Browser code uses relative `/api`.
+Templates: `backend/.env.example` (dev) and `deploy/env.production.example` (prod), with every name and no values. The real production file is `~foldback/foldback/.env`, mode 600, on the Mac only. Database passwords are hex (`openssl rand -hex 24`) so they are safe inside URLs.
 
-Templates: `backend/.env.example` (dev) and `deploy/env.production.example` (prod), with every key and empty secrets. Real `.env` files are never committed.
+## Docker image
 
-## Docker images
+`backend/Dockerfile` is multi-stage (`build`, `prod-deps`, `runtime`). The runtime stage uses `node:24-bookworm-slim`, runs as the non-root `node` user under `tini`, has production dependencies only, and has a `HEALTHCHECK` on `/health/live`. The server runs `node dist/server.js`; the same image runs `node dist/cli/migrate.js migrate` and `node dist/cli/housekeeping.js`.
 
-Both Dockerfiles are multi-stage, with targets `deps → build → runtime` plus a `dev` target. The runtime stage:
+CI builds it for `linux/arm64` (the Mac mini) and `linux/amd64`, and pushes `ghcr.io/anujsaha0111/paypal-hackathon/backend` with two tags: `:latest` (newest `main`) and `:sha-<full commit>` (for pinning and rollback).
 
-- uses `node:24-bookworm-slim`
-- runs as the non-root `node` user
-- has production dependencies only
-- sets `NODE_ENV=production`
-- has a `HEALTHCHECK` (`/health/live` for the backend, `/` for the frontend)
-- uses `tini` (or `--init`) for signal handling
+**The image stays private until submission.** It holds the compiled backend code (readable, with comments) and the schema, but no secrets: every secret enters at runtime through the env file. Never build a secret, key, or real URL into the image. The Mac pulls it with a **classic GitHub token from the Mac owner's account that has only the `read:packages` scope** (fine-grained tokens cannot read packages), set to expire after judging. It was entered once with `docker login ghcr.io` as `foldback`, and lives only in `~foldback/.docker/config.json` (mode 600). If it leaks, delete it on GitHub (Settings → Developer settings → Tokens (classic)) and log in again with a new one. At submission the repository becomes public, as the rules require; the package can be made public then (GitHub profile → Packages → `paypal-hackathon/backend` → Package settings → Change visibility).
 
-The backend runs `node dist/server.js`. The frontend uses Next.js `output: "standalone"` and runs `node server.js`.
-
-Images are built for `linux/amd64` (the Azure VM and every developer machine) with Buildx, then pushed to GitHub Container Registry:
-
-- `ghcr.io/{owner}/foldback-backend:{sha}` and `:main`
-- `ghcr.io/{owner}/foldback-frontend:{sha}` and `:main`
-
-If Bryntum's registry needs a token, it is a build secret (`RUN --mount=type=secret,id=npmrc`), never an `ARG` or a layer.
+Only CI-built images reach production. Never `docker build` on the Mac for production.
 
 ## Production Compose (`deploy/compose.yml`)
 
 ```text
-caddy     caddy:2.11      ports 80, 443 → reverse proxy; volumes caddy_data, caddy_config
-migrate   backend image   command: node dist/cli/migrate.js migrate (uses MIGRATE_DATABASE_URL); restart: "no"
-backend   backend image   depends_on migrate completed_successfully; healthcheck /health/ready; restart unless-stopped
-frontend  frontend image  depends_on backend healthy; restart unless-stopped
-postgres  postgres:16     optional fallback only (compose profile `local-db`): no public port, volume pgdata.
-                          Not started in production while a managed database is in use
+postgres  postgres:16     no published port (Compose network only); volume pgdata; postgres-init.sh creates foldback_app
+migrate   backend image   node dist/cli/migrate.js migrate, owner role; restart "no"; waits for postgres healthy
+backend   backend image   waits for migrate to complete; healthcheck /health/ready; 127.0.0.1:8787; restart unless-stopped
 ```
 
-Every service has a memory limit and json-file log rotation (`max-size: 10m`, `max-file: 3`).
+Each service gets only its own variables (explicit `environment:`), every service has a memory limit, and logs rotate (`json-file`, `max-size: 10m`, `max-file: 3`).
 
-`deploy/Caddyfile`:
+**Ordering:** `0001_init.sql` grants table rights to `foldback_app` only if the role already exists. `deploy/postgres-init.sh` creates it when the volume is first created, before `migrate` runs. If the grants ever go wrong, ask the project lead before touching them by hand.
 
-```text
-{$DOMAIN} {
-  encode zstd gzip
-  header Strict-Transport-Security "max-age=31536000; includeSubDomains"
-  @api path /api/* /socket.io/* /health/*
-  reverse_proxy @api backend:8787
-  reverse_proxy frontend:3000
-}
-```
+## Cloudflare Tunnel
 
-Caddy gets and renews the Let's Encrypt certificate, redirects HTTP to HTTPS, proxies WebSockets, and forwards `X-Request-Id`. `/metrics` is not routed publicly.
+The domain is on Cloudflare's Free plan. The tunnel is **locally managed** (created with `cloudflared` on the Mac), because the Zero Trust dashboard asks for payment details during onboarding even on its free plan. Tunnels themselves are free.
 
-## Azure VM setup (account B, Phase 3, so deploys start early)
+1. On the Mac, as the admin account: `cloudflared tunnel login` prints a link; the owner opens it in a browser, picks the domain, and authorizes. This writes a login certificate (`~/.cloudflared/cert.pem`).
+2. `cloudflared tunnel create foldback-api`, then `cloudflared tunnel route dns foldback-api api.<domain>` (adds the CNAME in Cloudflare).
+3. `/etc/cloudflared/config.yml` (root only, with the tunnel's credentials file beside it) routes exactly one hostname, and returns 404 for everything else:
 
-1. Create a resource group `foldback-app` in the chosen region.
-2. Create the VM: image **Ubuntu Server 24.04 LTS (x64)**, size **Standard B2s** (2 vCPU, 4 GB) or a similar B-series, **Standard SSD 64 GB**, authentication **SSH public key**, admin user `azureuser`. Turn **auto-shutdown off**.
-3. Public IP: **Standard SKU, static**, with a **DNS name label**, for example `foldback`. That gives a free domain, `foldback.<region>.cloudapp.azure.com`, and no DuckDNS is needed. Set `DOMAIN` to that name.
-4. Network security group, inbound rules: **22** (SSH) from your team's addresses only, **80** and **443** from anywhere. Nothing else.
-5. SSH in, then install Docker Engine and the Compose plugin (Docker's official apt repository), and add the user to the `docker` group. Turn off password SSH. Ubuntu on Azure has no extra host firewall to open.
-6. Add each teammate's SSH **public** key to `~/.ssh/authorized_keys`. Never share the private key.
-7. `docker login ghcr.io` with a read-only token, copy `deploy/` to `/opt/foldback`, fill in `/opt/foldback/.env` from `env.production.example`, then `docker compose up -d`.
-8. Give account A's database the VM's static IP in its firewall (see Database setup).
-9. Run `deploy/scripts/smoke.sh https://<domain>`.
+   ```yaml
+   tunnel: <tunnel id>
+   credentials-file: /etc/cloudflared/<tunnel id>.json
+   ingress:
+     - hostname: api.<domain>
+       service: http://localhost:8787
+     - service: http_status:404
+   ```
 
-## Scale-out playbook (account C, only if measurements require it)
+4. `sudo cloudflared service install` creates the launch daemon `/Library/LaunchDaemons/com.cloudflare.cloudflared.plist`, which starts at boot. **Gotcha:** on macOS the generated plist runs `cloudflared` with no arguments, so it never connects ("use cloudflared tunnel run"). Its `ProgramArguments` must be `cloudflared --no-autoupdate --config /etc/cloudflared/config.yml tunnel run`; reload it with `launchctl bootout system <plist>` and `launchctl bootstrap system <plist>`.
+5. Delete the login certificate afterwards. The running tunnel needs only its credentials file, and the certificate can change DNS for the whole domain. To change the tunnel later, log in again, make the change, delete it again.
+6. In the Cloudflare dashboard: SSL/TLS → Edge Certificates → **Always Use HTTPS** on, **Minimum TLS 1.2**. Plain HTTP then redirects (the session cookie is `Secure`), and TLS 1.0 and 1.1 are refused.
 
-One VM is the plan for judging. Scaling out is documented, not built. The backend is already stateless and the database is external, so a second instance is mostly infrastructure. Do it only if a load test shows CPU above about 70% or p95 latency above the target in `quality.md`.
+Check: `cloudflared tunnel info foldback-api` lists the connections, and `https://api.<domain>/health/live` returns 200. Socket.IO works through the tunnel.
 
-Code changes needed first (small, each behind an existing interface):
+## Frontend on Vercel
 
-- A **Redis adapter for Socket.IO**, so board updates reach clients connected to either instance (a free hosted Redis such as Upstash works).
-- A **shared store for rate-limit counters** (the same Redis).
-- **Sticky sessions** for Socket.IO, or WebSocket-only transport.
-- A **singleton guard** for housekeeping jobs, using `pg_try_advisory_lock`, so only one instance runs them (they are idempotent, so this is an optimization).
+Vercel builds `frontend/` from GitHub and serves it at `app.<domain>`. There is no frontend Dockerfile. The browser calls the API at `https://api.<domain>` with credentials; the session cookie is set for `COOKIE_DOMAIN`, so both subdomains are the same site and `SameSite=Lax` holds. CORS allows only `CORS_ORIGINS`.
 
-Already safe across instances because they live in Postgres: the contract advisory lock, the unique indexes, the guard triggers, the AI call cap, and the extraction cache.
+## First deploy (in order)
 
-Infrastructure:
-
-1. In account C create an identical VM (same image, size, `.env`). Add its static IP to the database firewall in account A.
-2. Azure's load balancers cannot span subscriptions, so front both VMs with **Caddy on VM B**: `reverse_proxy` to the local backend and to VM C's backend, with an IP-hash or cookie policy for stickiness.
-3. Connect B and C privately with **VNet peering across subscriptions** (both owners approve it), so backend traffic does not cross the public internet. Without peering, restrict VM C's backend port to VM B's IP in its network security group and add a shared-secret header.
-4. Deploys run `deploy.sh` on both hosts (CI loops over `DEPLOY_HOSTS`).
+| Step | What you do | Result |
+|---|---|---|
+| B0 | As `foldback`, `docker login ghcr.io` with the read-only token, then `docker pull` of `:latest` | Image pulls on the Mac |
+| B1 | As `foldback`, copy `deploy/` to `~/foldback` (a working folder, not a git clone) | Working folder |
+| B2 | `umask 077`, create `~/foldback/.env` from `env.production.example`, generate the secrets on the Mac. Type shared values in with an editor, never into chat | Private env file |
+| B3 | `cd ~/foldback && docker compose up -d` (postgres, then the role, then migrate, then the backend) | Containers healthy, migrations applied |
+| B4 | Install the tunnel service (above) | Tunnel Healthy |
+| B5 | `scripts/smoke.sh https://api.<domain> https://app.<domain>` | Health and guest sign-in pass from outside |
+| B6 | Install the launchd jobs (below) | A new image on `main` reaches the Mac by itself |
+| B7 | Run `scripts/backup.sh`, then `scripts/restore.sh check <dump>` | A backup exists and a restore has been tried |
+| B8 | Set `BACKEND_TAG=sha-<previous commit>`, run `scripts/deploy.sh --force`, then set it back to `latest` and deploy again | The rollback path works |
+| B9 | Reboot (with someone at home reachable) and confirm everything returns by itself | Auto-login, Docker, containers, Tailscale, tunnel all back |
 
 ## Scripts (`deploy/scripts/`)
 
+All run as `foldback` from `~/foldback/scripts`, with macOS's bash 3.2. `lib.sh` holds the shared setup (PATH for launchd, reading `.env` without printing it, waiting for Docker, one run at a time).
+
 | Script | Does |
 |---|---|
-| `deploy.sh` | `docker compose pull && docker compose up -d --remove-orphans`, then `smoke.sh`. Exits non-zero on failure |
-| `smoke.sh {url}` | checks `/health/live`, `/health/ready`, `/api/health`, guest sign-in, and listing plans returns 2 sample plans |
-| `backup.sh` | `pg_dump -Fc` to `/opt/foldback/backups/foldback-{date}.dump`, keeps 7 days |
-| `restore.sh {file}` | restores into a stopped backend, with a confirm prompt |
-| `systemd/foldback-backup.{service,timer}` | runs `backup.sh` daily at 03:00 UTC |
+| `deploy.sh [--force]` | Pulls the image named by `BACKEND_TAG`. If it differs from the running one: tags the running image `foldback-backend:previous`, runs `docker compose up -d` (migrate first), waits for the backend's health check, then runs `smoke.sh` with the image's commit. On failure it puts the previous image back and records the bad image in `.bad-image`, so the five-minute check does not retry it. Migrations are forward-only: a rollback restores the old backend, not the old schema |
+| `smoke.sh <url> <origin> [sha]` | `/health/live` and `/health/ready` are 200, `/api/health` shows `paypal_env: sandbox` and the expected commit, and a guest sign-in (with an allowed `Origin`) gets two sample plans |
+| `backup.sh` | `pg_dump -Fc` through `docker compose exec` into `BACKUP_DIR` (`~/foldback/backups` on the Mac's internal disk; there is no external disk, so these protect against bad data and bad deploys, not against losing the Mac), checked with `pg_restore --list`, older than `BACKUP_KEEP_DAYS` (14) removed. With `OFFSITE_DIR` set, an AES-256 encrypted copy goes there (a cloud-drive folder); it refuses to copy off the Mac unencrypted |
+| `restore.sh check <dump>` | Restores into a scratch database, prints row counts, drops it. Safe at any time |
+| `restore.sh production <dump>` | Asks you to type `restore foldback`, takes a safety backup, stops the backend, replaces the database, starts the stack |
+| `housekeeping.sh` | `node dist/cli/housekeeping.js` in a throwaway `migrate` container (owner role) |
+| `stack-up.sh` | Waits for Docker and runs `docker compose up -d`. A safety net: the containers also restart by themselves |
+
+## launchd jobs (`deploy/launchd/`)
+
+Per-user jobs for `foldback`, logging to `~foldback/Library/Logs/`.
+
+| Label | When | Runs |
+|---|---|---|
+| `com.foldback.colima` | at login, kept alive | `colima start --foreground` |
+| `com.foldback.stack` | at login | `stack-up.sh` |
+| `com.foldback.deploy` | every 5 minutes | `deploy.sh` |
+| `com.foldback.backup` | daily 03:30 (Mac time) | `backup.sh` |
+| `com.foldback.housekeeping` | daily 04:15 (Mac time) | `housekeeping.sh` |
+
+Install or update, as `foldback`:
+
+```bash
+cp ~/foldback/launchd/com.foldback.*.plist ~/Library/LaunchAgents/
+for p in ~/Library/LaunchAgents/com.foldback.*.plist; do launchctl bootout gui/$(id -u) "$p" 2>/dev/null; launchctl bootstrap gui/$(id -u) "$p"; done
+```
+
+Homebrew's own `brew services` plists do not work for `foldback`: they log into Homebrew's folder, which belongs to the admin account, and launchd refuses to start them (exit 78).
 
 ## CI/CD (`.github/workflows/ci.yml`)
 
-Runs on every push and pull request:
+Runs on every pull request and on pushes to `main`:
 
-1. **backend** job: Node 24, `yarn install --immutable`, `yarn format:check`, `yarn typecheck`, `yarn lint`, `yarn knip`, `yarn dup` (jscpd), `yarn npm audit --severity high`, and `yarn test --coverage` with a `postgres:16` service container. Uploads coverage.
-2. **frontend** job: Node 24, `yarn install --immutable`, `yarn sync-types --check`, `yarn format:check`, `yarn typecheck`, `yarn lint`, `yarn knip`, `yarn dup`, `yarn npm audit --severity high`, `yarn test`, `yarn build`, then **Lighthouse CI** (`lhci autorun` against `next start` with the stub API) using the budgets in `quality.md`.
-3. **security** job: gitleaks over the full history. CodeQL runs through GitHub's default setup (enable it in repo Settings → Code security).
-4. **images** job (only on `main`, after 1 and 2): Buildx build (`linux/amd64`) and push to ghcr.io, tagged with the commit sha and `main`.
-5. **deploy** job (only on `main`, after 4, environment `production` with required reviewers optional): SSH to the Azure VM (`DEPLOY_HOST` and `DEPLOY_SSH_KEY` secrets) and run `deploy.sh`. The job fails if the smoke test fails.
+1. **backend:** Node 24, `yarn install --immutable`, `format:check`, `typecheck`, `lint`, `knip`, `dup`, `sync-types --check`, `build`, `test --coverage` against a `postgres:16` service.
+2. **security:** gitleaks over the whole history (checksum-verified binary), and `yarn npm audit --severity high`. CodeQL runs through GitHub's default setup.
+3. **image** (after 1 and 2): builds the backend image and checks that its modules load. On pushes to `main` it publishes `linux/amd64` and `linux/arm64` to ghcr.io.
+4. **frontend** (phase 5): every `quality.md` §7 gate plus Lighthouse CI. Vercel builds and deploys the frontend itself.
 
-Branch protection on `main` requires jobs 1–3. `.github/dependabot.yml` opens weekly grouped updates for `backend/`, `frontend/`, and GitHub Actions. The CI badge goes in the README.
+**Deploys are pull-based.** There is no deploy job and no self-hosted runner: the repository is public at submission, and a self-hosted runner on a public repository can run a stranger's pull request on the Mac. The Mac's `com.foldback.deploy` job pulls each new `:latest` within five minutes.
+
+`.github/dependabot.yml` opens weekly updates for `backend/` (npm and its Docker base image) and GitHub Actions.
 
 ## Operations
 
-- **Logs:** `docker compose logs -f backend`, as JSON lines that include `requestId`.
-- **Metrics:** `curl -H "Authorization: Bearer $METRICS_TOKEN" http://localhost:8787/metrics` on the VM.
-- **Rollback:** set `BACKEND_TAG` and `FRONTEND_TAG` in `.env` to a previous sha, then run `deploy.sh`.
-- **Kill switches:** set `AI_ENABLED=false`, `PAYPAL_WRITES_ENABLED=false`, or `SIGNUPS_ENABLED=false` in `.env`, then `docker compose up -d backend`.
-- **Backups:** verify one restore into a scratch database before submission (phase 9).
+- **Status:** `cd ~/foldback && docker compose ps`
+- **Logs:** `docker compose logs -f --tail 100 backend` (JSON lines with `requestId`); job logs in `~/Library/Logs/foldback-*.log`
+- **Health:** `curl -s http://127.0.0.1:8787/health/ready`
+- **Metrics:** `curl -H "Authorization: Bearer $METRICS_TOKEN" http://127.0.0.1:8787/metrics` on the Mac
+- **Deploy now:** `scripts/deploy.sh --force`
+- **Rollback:** set `BACKEND_TAG=sha-<commit>` in `.env`, run `scripts/deploy.sh --force`. Set it back to `latest` to follow `main` again
+- **Kill switches:** set `AI_ENABLED=false` or `SIGNUPS_ENABLED=false` in `.env`, then `docker compose up -d backend`
+- **After a power cut:** the Mac restarts, auto-logs in as `foldback`, Colima and the stack start, Tailscale and the tunnel reconnect. Check with `docker compose ps` and the smoke test
+- **macOS updates:** never remotely. Do them with someone at home on the line, at a quiet time, and tell the team. Turn off automatic installation of macOS updates (System Settings → General → Software Update → Automatic Updates) so a surprise restart cannot take the demo down
+- **Backups:** verify one restore into a scratch database before submission (phase 9)
+
+## Limits and fallback
+
+A home machine is less reliable than a cloud server: power, home internet, and reboots. The demo video is recorded before the deadline, because the video is the judging artifact if the Mac is offline during judging. If the Mac fails for good, the latest dump restores into any Postgres 16 (for example a free Neon database) and the same image runs on any Docker host; only `.env` and the tunnel's target change.
