@@ -99,7 +99,7 @@ How we stay inside the budgets:
 - **Fonts:** `next/font` (self-hosted, subset `latin`, `display: swap`), at most 2 families and 4 weights total.
 - **Images:** `next/image` with explicit sizes. SVG icons inline. No image over 100 KB.
 - **No client-side libraries for things the platform does:** `Intl` for dates and money, `fetch` for HTTP.
-- **Caching and compression:** Caddy `encode zstd gzip`. Next.js serves `/_next/static/*` immutable. API responses are small and paginated (the read model caps events at 30).
+- **Caching and compression:** Vercel and the Cloudflare edge compress responses. Next.js serves `/_next/static/*` immutable. API responses are small and paginated (the read model caps events at 30).
 - **Check on every frontend change:** `next build` route-size output, plus `next experimental-analyze` (or `next analyze` in 16.1+) whenever a budget is close. Every regression is explained in the commit message.
 
 ## 5. Backend performance and reliability
@@ -141,10 +141,10 @@ Locally: **husky + lint-staged** runs Prettier, ESLint, and typecheck on staged 
 
 ## 8. Deploy rules
 
-- Only CI-built images reach production. Never `docker build` on the VM.
+- Only CI-built images reach production. Never `docker build` on the production host.
 - Each deploy runs `smoke.sh`, and a failure means rollback (`deploy.md` → Operations).
 - Migrations are forward-only and run by the one-shot `migrate` service before the backend starts.
-- Production `.env` lives only on the VM (mode 600) and in your password manager.
+- Production `.env` lives only on the production host (mode 600) and in your password manager.
 
 ## Quality gate
 

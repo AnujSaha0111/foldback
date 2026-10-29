@@ -18,7 +18,7 @@ The real frontend, built to the approved design. A visitor lands, tries it as a 
 
 ```text
 frontend/  (create-next-app, App Router, TypeScript, Yarn, ESLint 9)
-  next.config.ts                      output "standalone"; dev rewrites /api and /socket.io → :8787
+  next.config.ts                      dev rewrites /api and /socket.io → :8787; in production the API is https://api.<domain> (deploy.md)
   package.json scripts                "dev": "next dev --webpack", "build": "next build --webpack" (Turbopack crashes on Bryntum, see scheduler.md)
   src/theme/                          tokens + MUI theme from phase 2; AppRouterCacheProvider
   src/store/  src/api/                RTK Query baseApi (credentials: include), tags: Me, ContractList, Contract, Scheduler, PublicShare
@@ -31,13 +31,12 @@ frontend/  (create-next-app, App Router, TypeScript, Yarn, ESLint 9)
   src/features/<feature>/components/<ComponentName>/   same shape for feature-owned components
   src/lib/format.ts  src/lib/status.ts
   src/middleware.ts                   redirect to /login when no fb_session cookie on /plans*
-  Dockerfile
 backend/src/services/projection.service.ts  + GET /api/contracts/:id/scheduler
 backend/test/integration/scheduler.test.ts
 frontend/src/**/*.test.ts(x)
 ```
 
-CI gets the frontend job with every `quality.md` §7 gate, including Lighthouse CI and `budgets.json`. The frontend image is added to Compose.
+CI gets the frontend job with every `quality.md` §7 gate, including Lighthouse CI and `budgets.json`. Vercel builds `frontend/` from GitHub and serves it at `app.<domain>`; there is no frontend Dockerfile or Compose service (`deploy.md` → Frontend on Vercel).
 
 ## Frontend engineering standard
 
@@ -60,7 +59,7 @@ Written like a production codebase, modular and without repetition.
 
 ## Exit check
 
-- [ ] Phase 5 cases pass. Both packages typecheck, lint, and test clean. CI is green and deployed.
+- [ ] Phase 5 cases pass. Both packages typecheck, lint, and test clean. CI is green and Vercel has deployed `main`.
 - [ ] On production at 1280 px, the sample cabin board shows three Held and Maya Waiting with all markers, with no horizontal scroll and readable labels.
 - [ ] Two browser tabs on the same board: an action in one updates the other within a second.
 - [ ] Lighthouse CI budgets (`quality.md` §4) pass for `/`, `/login`, `/plans`, and `/plans/[id]`. Record the transferred sizes in the exit note.

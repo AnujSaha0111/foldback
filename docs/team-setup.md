@@ -10,7 +10,7 @@ Welcome. This page gets you from zero to a working local copy of Foldback. Read 
 
 1. Ask Nishit to add you as a collaborator on the GitHub repository (Write access).
 2. Work on a branch, never directly on `main`. Name branches `phaseN-topic`, for example `phase3-auth`. Open a pull request into `main`. One concern per pull request.
-3. Send Nishit your SSH **public** key (never the private one) if you need access to the Azure VM.
+3. Production runs on Manveer's Mac mini. If you need operations access, send Manveer your SSH **public** key (never the private one) and your Tailscale account email. You get the restricted `foldback` account on that one machine, not admin. See [deploy.md](spec/deploy.md) → Remote access.
 
 ## 2. Install
 
@@ -83,8 +83,9 @@ CI runs the same gates plus the build, the shared-types check, a secret scan, an
 
 | Secret | Location |
 |---|---|
-| Production `.env` | only on the Azure VM (`/opt/foldback/.env`, file mode 600), held by the person who owns the VM's Azure account and Nishit |
-| CI and deploy keys | GitHub repository secrets, set by Nishit |
+| Production `.env` | only on the Mac mini (`~foldback/foldback/.env`, file mode 600), plus the team password manager. Never in chat |
+| Cloudflare tunnel token | the Cloudflare dashboard (Nishit), sent once through a password manager to install the tunnel on the Mac |
+| CI | none beyond GitHub's built-in token, which publishes the image. Deploys are pulled by the Mac, so there is no deploy key |
 | Your own dev keys | your own `backend/.env` |
 
 ## 7. If a secret leaks
@@ -100,5 +101,5 @@ CI runs the same gates plus the build, the shared-types check, a secret scan, an
 | `docs/spec/` | the full build specification, one contract per file |
 | `backend/` | Express API, Postgres migrations, tests (own `package.json` and `yarn.lock`) |
 | `frontend/` | Next.js app (arrives in Phase 5) |
-| `deploy/` | Docker Compose files, Caddy config, deploy scripts |
+| `deploy/` | Docker Compose files (dev and production), the production env template, deploy, backup and smoke scripts, launchd jobs for the Mac mini |
 | `spike/` | throwaway Phase 0 experiments (PayPal, AI models, Bryntum). Safe to ignore |

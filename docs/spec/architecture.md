@@ -1,6 +1,6 @@
 # Architecture
 
-Foldback is a Next.js frontend and an Express API, deployed as two containers behind Caddy on one VM, with Postgres alongside. The API is the only component that talks to PayPal, the LLM providers, or the database. The browser renders server state and sends intents.
+Foldback is a Next.js frontend on Vercel and an Express API in a container on a Mac mini, with Postgres alongside it on the same machine. A Cloudflare Tunnel carries public traffic to the API. The API is the only component that talks to PayPal, the LLM providers, or the database. The browser renders server state and sends intents.
 
 ## Stack
 
@@ -11,7 +11,7 @@ Foldback is a Next.js frontend and an Express API, deployed as two containers be
 | Package manager | Yarn 4 (Berry, via Corepack, `nodeLinker: node-modules`, `enableScripts: false` with a per-package allow-list), two separate packages (`backend/`, `frontend/`), each with its own `yarn.lock`. Not a monorepo |
 | API | Express 5 (^5.2), compiled by `tsc` to `dist/` and run with plain `node` in production. `tsx` watch in dev |
 | Realtime | Socket.IO 4 (^4.8). Used only to tell clients "this contract changed" |
-| Database | PostgreSQL 16 **hosted separately from the app** (Azure Database for PostgreSQL Flexible Server, see `deploy.md`), with the plain `pg` driver. Two roles: an owner for migrations and a DML-only `foldback_app` for the running app. No ORM. Hand-written SQL. Numbered `.sql` migrations run by `src/cli/migrate.ts` (`migrate`, `status`, `reset`) |
+| Database | PostgreSQL 16 in its own container (`postgres:16`, a named volume, no published port, see `deploy.md`), reached only through `DATABASE_URL`, with the plain `pg` driver. Two roles: an owner for migrations and a DML-only `foldback_app` for the running app. No ORM. Hand-written SQL. Numbered `.sql` migrations run by `src/cli/migrate.ts` (`migrate`, `status`, `reset`) |
 | Validation | zod ^4 strict objects on every body, params, and query, and on env |
 | Auth | JWT (`jsonwebtoken`) in an httpOnly cookie, bcrypt password hashing, email login, guest demo accounts |
 | Security | helmet, cors allow-list (`CORS_ORIGINS`), express-rate-limit per IP and per user, `TRUST_PROXY`, Origin check on mutations |
@@ -25,29 +25,30 @@ Foldback is a Next.js frontend and an Express API, deployed as two containers be
 | Schedule | Bryntum Scheduler trial + React wrapper, rendered client-only. See `scheduler.md` |
 | Tests | Jest 30 + ts-jest + supertest. Integration tests use a real Postgres test database. See `test.md` |
 | Lint | ESLint 9 flat config (`eslint-config-next` on the frontend, `typescript-eslint` on the backend) |
-| CI | GitHub Actions: typecheck, lint, and test for both packages, then build and push images to ghcr.io on `main` |
-| Deploy | Multi-stage Dockerfiles, Docker Compose on one Azure VM (x64), Azure Database for PostgreSQL Flexible Server for data, Caddy 2 for TLS. See `deploy.md` |
+| CI | GitHub Actions: typecheck, lint, and test, then build the backend image and push it (amd64 and arm64) to ghcr.io on `main` |
+| Deploy | Backend: multi-stage Dockerfile, Docker Compose (Colima) on one Mac mini (arm64) with a Postgres container, Cloudflare Tunnel for HTTPS, pull-based deploys by launchd. Frontend: Vercel. See `deploy.md` |
 
 Not used, even though our previous project had them: worker_threads, Groq, market-data libraries, charting packages, Google sign-in, username login, autoscaling scripts. Nothing here needs them.
 
 ## Processes
 
 ```text
-                Internet (HTTPS 443)
-                        |
-                     Caddy 2  ── automatic TLS, HTTP→HTTPS, WebSocket proxy
-              /api/*, /socket.io/*, /health/*      everything else
-                 |                                     |
-          backend :8787 (Express 5 + Socket.IO)   frontend :3000 (Next.js standalone)
-           |        |          |
-     Postgres 16  PayPal     Gemini, Groq
-     (managed,    sandbox    LLM APIs
-      separate)
+   https://app.<domain>                          https://api.<domain>
+          |                                              |
+   Vercel (Next.js frontend)              Cloudflare edge: TLS, WebSocket proxy
+                                                         |  outbound-only tunnel
+                                          Mac mini: cloudflared → 127.0.0.1:8787
+                                                         |
+                                     backend :8787 (Express 5 + Socket.IO)
+                                       |            |            |
+                                 Postgres 16     PayPal      Gemini, Groq
+                                 (container,     sandbox     LLM APIs
+                                  same host)
 ```
 
-One domain serves both, so the auth cookie is first-party, there are no cross-origin requests in production, and PayPal return URLs are simple. `/metrics` is not exposed publicly by Caddy. It is reachable only inside the Compose network, or with `METRICS_TOKEN`.
+The frontend and the API are two subdomains of one registered domain, so they are the **same site**. The session cookie is set for the parent domain (`COOKIE_DOMAIN`), `SameSite=Lax` still applies, and the browser sends it to `api.` on credentialed requests. Those requests are cross-origin, so CORS allows exactly `CORS_ORIGINS` with credentials, and the Origin check guards every mutation. The tunnel forwards every path on `api.<domain>` to the backend, with no proxy in between to hide a route, so `/metrics` must answer only with `METRICS_TOKEN` (it is not built yet).
 
-The database is a separate service, reached only through `DATABASE_URL`, so the backend container is stateless and can be replaced or duplicated. We still run **one** backend instance for now. Running more needs two small changes, both behind existing interfaces: a shared store for rate-limit counters, and a Redis adapter for Socket.IO rooms. Everything that must be correct across instances is already in Postgres (advisory locks, unique indexes, the guard triggers). Housekeeping jobs (guest cleanup) are safe on every instance because they are idempotent.
+The database is a separate container, reached only through `DATABASE_URL`, so the backend container is stateless and can be replaced or duplicated. We still run **one** backend instance for now. Running more needs two small changes, both behind existing interfaces: a shared store for rate-limit counters, and a Redis adapter for Socket.IO rooms. Everything that must be correct across instances is already in Postgres (advisory locks, unique indexes, the guard triggers). Housekeeping jobs (guest cleanup) are safe on every instance because they are idempotent.
 
 ## Backend layout and layering
 
@@ -259,7 +260,7 @@ Otherwise the route returns `409 share_not_payable` (or the more specific `contr
 
 ## Abuse and cost limits
 
-Mounted in `http/middleware/rateLimit.ts`. In-memory stores behind an interface. Keys are the user id when signed in and `req.ip` otherwise (`TRUST_PROXY=1` behind Caddy).
+Mounted in `http/middleware/rateLimit.ts`. In-memory stores behind an interface. Keys are the user id when signed in and `req.ip` otherwise (`TRUST_PROXY=1` behind the tunnel client).
 
 | Routes | Limit |
 |---|---|
@@ -278,9 +279,9 @@ Also: `express.json({ limit: "32kb" })`, the global daily AI call cap stored in 
 
 ## Observability
 
-- **Logs.** winston JSON in production and pretty output in dev. Every line carries `requestId`, `userId` (when known), and `module`. `X-Request-Id` is accepted from Caddy or generated, and echoed in the response. PayPal and LLM calls log kind, duration, outcome, and `paypal-debug-id`, never bodies with secrets.
+- **Logs.** winston JSON in production and pretty output in dev. Every line carries `requestId`, `userId` (when known), and `module`. `X-Request-Id` is accepted from the proxy or generated, and echoed in the response. PayPal and LLM calls log kind, duration, outcome, and `paypal-debug-id`, never bodies with secrets.
 - **Metrics** (`/metrics`, prom-client): `http_request_duration_seconds{route,method,status}`, `paypal_calls_total{kind,outcome}`, `paypal_call_duration_seconds{kind}`, `ai_calls_total{route,provider,model,result}`, `ai_fallbacks_total{from,to}`, `resolve_outcomes_total{outcome}`, `socket_connections`, plus Node defaults (event-loop lag, heap).
-- **Health.** `/health/live` returns 200 if the process is up. `/health/ready` returns 200 only when Postgres answers `SELECT 1` and the migrations are current. Compose and Caddy use them.
+- **Health.** `/health/live` returns 200 if the process is up. `/health/ready` returns 200 only when Postgres answers `SELECT 1` and the migrations are current. Compose health checks and `smoke.sh` use them.
 - **Tracing.** OpenTelemetry auto-instrumentation for http, express, and pg, enabled only when `OTEL_EXPORTER_OTLP_ENDPOINT` is set (for example, a free Grafana Cloud stack). No code path depends on it.
 - **Graceful shutdown.** On SIGTERM: stop accepting connections, close Socket.IO, wait up to 10 seconds for in-flight requests, then `pool.end()`.
 

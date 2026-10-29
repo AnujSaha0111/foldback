@@ -15,14 +15,14 @@ Hackathon: [Build What's Next with PayPal and AI](https://paypalaihackathon.devp
 - structured logs, health checks, and metrics
 - CI on every push
 - Docker images
-- HTTPS on a real VM
+- HTTPS on a real, always-on server
 
 Most hackathon entries skip these, and judges notice.
 
 - **PayPal:** sandbox Orders v2 with `intent: AUTHORIZE`, then Payments v2 authorizations (capture, void, get).
 - **AI:** free hosted models, Gemini first with Groq (`gpt-oss-120b`) as fallback, read a pasted group chat into a fixed schema. An organizer agent answers questions, simulates outcomes, drafts reminders, and proposes clock moves. The model never sets amounts and never calls PayPal.
 - **Sponsor tool:** Bryntum Scheduler (we compete for Best Use of Bryntum).
-- **Hosting:** Azure. One VM runs Docker Compose + Caddy (account B). The database is Azure Database for PostgreSQL Flexible Server (account A). A third account (C) is the scale-out spare. See `deploy.md`.
+- **Hosting:** a team member's Mac mini runs the backend and Postgres under Docker Compose, reached through a Cloudflare Tunnel at `api.<domain>`. The frontend is on Vercel at `app.<domain>`. See `deploy.md`.
 
 ## Read order
 
@@ -43,7 +43,7 @@ Most hackathon entries skip these, and judges notice.
 | `scheduler.md` | Bryntum board, projection, license gate |
 | `ui.md` | Screens, flows, copy (visual design is settled in phase 2) |
 | `test.md` | Jest suites and manual negatives |
-| `deploy.md` | Docker, Compose, Caddy, Azure VM and database, accounts, scale-out playbook, CI/CD |
+| `deploy.md` | Mac mini host, Docker image, Compose, Cloudflare Tunnel, Vercel, scripts, launchd jobs, CI/CD, operations |
 | `demo.md` | Chat fixtures, sandbox prep, video, judge path, Devpost text |
 | `quality.md` | **Permanent** rules for AI-assisted building: workflow, code rules, approved dependencies, performance budgets, security checklist, CI gates |
 
@@ -90,7 +90,7 @@ PayPal-Hackathon/
   docs/spec/                 this spec
   backend/                   Express 5 API + Socket.IO + Postgres (own package.json and yarn.lock)
   frontend/                  Next.js 16 app (own package.json and yarn.lock)
-  deploy/                    compose files, Caddyfile, env templates, scripts
+  deploy/                    compose files, env template, scripts, launchd jobs
   learn/                     numbered study notes, gitignored, never pushed
 ```
 

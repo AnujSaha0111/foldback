@@ -12,7 +12,7 @@ Budget: 10 hours. Hats: Backend and Ops. Depends on phase 1. Dates: 31 October �
 
 ## Goal
 
-A production-shaped backend with auth and seeds, running behind HTTPS on the Azure VM with the Azure Postgres database, deployed by CI. It has no business features yet.
+A production-shaped backend with auth and seeds, running on the Mac mini with its Postgres container, served over HTTPS at `api.<domain>` through a Cloudflare Tunnel, and deployed by pulling CI images. It has no business features yet.
 
 ## Create
 
@@ -32,8 +32,9 @@ backend/src/realtime/{io,notify}.ts
 backend/src/shared/{api-types,statuses,rules}.ts
 backend/scripts/sync-types.ts  backend/src/cli/{migrate,housekeeping}.ts
 backend/Dockerfile  backend/.env.example
-deploy/compose.yml  deploy/Caddyfile  deploy/env.production.example
-deploy/scripts/{deploy,smoke,backup,restore}.sh
+deploy/compose.yml  deploy/env.production.example  deploy/postgres-init.sh
+deploy/scripts/{lib,deploy,smoke,backup,restore,housekeeping,stack-up}.sh
+deploy/launchd/com.foldback.{colima,stack,deploy,backup,housekeeping}.plist
 .github/workflows/ci.yml
 backend/test/integration/{auth,contracts-read,limits-basic,health}.test.ts
 ```
@@ -48,11 +49,11 @@ Dependencies: `express@^5`, `socket.io@^4`, `pg`, `zod@^4`, `jsonwebtoken`, `bcr
 4. Contracts list and read, ownership-scoped.
 5. Socket.IO: handshake, `contract:join` ownership check, `notify` after commit.
 6. Quality tooling from `quality.md` §7: Prettier, the ESLint rule set, knip, jscpd, husky + lint-staged (including the commit-msg check), gitleaks, Dependabot, and the `enableScripts: false` Yarn config. Then the Dockerfile, CI (all backend gates plus the security job), and multi-arch images to ghcr.io.
-7. Azure: the database in account A, then the VM in account B (`deploy.md`), Caddy, and the `cloudapp.azure.com` domain. CI deploys to the VM, and `smoke.sh` passes.
+7. Mac mini (sub-phase 3f, `deploy.md`): remote access over Tailscale, the `foldback` account, Colima, then the Compose stack, the Cloudflare Tunnel for `api.<domain>`, the launchd jobs (pull-based deploys, backups, housekeeping), a restore check, a rollback, and a reboot test. `smoke.sh` passes from outside.
 
 ## Database and review obligations
 
-Provision the Azure Postgres server first (`deploy.md` → Database setup). Then, in code:
+In production the database is the `postgres` service in `deploy/compose.yml`, and `deploy/postgres-init.sh` creates `foldback_app` before the first migration. In code:
 
 - Two connection strings: `DATABASE_URL` (role `foldback_app`) for the app, `MIGRATE_DATABASE_URL` (owner) for `migrate` and housekeeping jobs.
 - `withContractLock` releases with `pg_advisory_unlock` on the same client in `finally`. The authorize route takes the lock too. Each money transaction begins with `SELECT 1 FROM contracts WHERE id = $1 FOR UPDATE`.
@@ -71,7 +72,7 @@ Provision the Azure Postgres server first (`deploy.md` → Database setup). Then
 ## Exit check
 
 - [ ] Phase 3 cases pass. `yarn typecheck` and `yarn lint` are clean. CI is green.
-- [ ] `https://{domain}/api/health` shows the commit sha, from a CI deploy.
+- [ ] `https://api.{domain}/api/health` shows the commit sha of the image the Mac pulled from CI.
 - [ ] Guest sign-in on production returns two sample plans.
 - [ ] `learn/05-backend-foundation.md` is written.
 
