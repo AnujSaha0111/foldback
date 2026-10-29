@@ -10,7 +10,7 @@ Welcome. This page gets you from zero to a working local copy of Foldback. Read 
 
 1. Ask Nishit to add you as a collaborator on the GitHub repository (Write access).
 2. Work on a branch, never directly on `main`. Name branches `phaseN-topic`, for example `phase3-auth`. Open a pull request into `main`. One concern per pull request.
-3. Production runs on Manveer's Mac mini. If you need operations access, send Manveer your SSH **public** key (never the private one) and your Tailscale account email. You get the restricted `foldback` account on that one machine, not admin. See [deploy.md](spec/deploy.md) → Remote access.
+3. Production runs on Manveer's Mac mini, and Manveer is its only operator. You never need access to it: merging to `main` deploys automatically within five minutes. For anything on the server (logs, a restart, a stuck deploy), ask Manveer. See [deploy.md](spec/deploy.md) → Remote access.
 
 ## 2. Install
 
@@ -83,8 +83,8 @@ CI runs the same gates plus the build, the shared-types check, a secret scan, an
 
 | Secret | Location |
 |---|---|
-| Production `.env` | only on the Mac mini (`~foldback/foldback/.env`, file mode 600), plus the team password manager. Never in chat |
-| Cloudflare tunnel token | the Cloudflare dashboard (Nishit), sent once through a password manager to install the tunnel on the Mac |
+| Production `.env` | only on the Mac mini (`~foldback/foldback/.env`, file mode 600), plus Manveer's password manager. Never in chat |
+| Cloudflare tunnel token | Manveer's Cloudflare dashboard. Used once on the Mac to install the tunnel, never shared |
 | CI | none beyond GitHub's built-in token, which publishes the image. Deploys are pulled by the Mac, so there is no deploy key |
 | Your own dev keys | your own `backend/.env` |
 

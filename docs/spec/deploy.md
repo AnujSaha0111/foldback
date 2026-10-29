@@ -32,10 +32,10 @@ The plan changed on 29 October 2026: the earlier Azure plan (VM, managed Postgre
 
 | Piece | Owner | Notes |
 |---|---|---|
-| Mac mini, its macOS admin account, the Tailscale network it is on | Manveer | The Mac also holds the owner's personal data. Teammates get only the `foldback` account (below) |
-| Cloudflare account, the domain, the tunnel | Nishit | Creates the tunnel and sends its install command through a password manager |
+| Mac mini, its macOS admin account, the Tailscale network it is on, server operations | Manveer | The Mac also holds the owner's personal data, so the owner is the only operator (see Remote access) |
+| The domain, the Cloudflare account, the tunnel | Manveer | Creates the tunnel himself, so its token never leaves the Mac owner. Adds the DNS record Vercel asks for |
 | Vercel project | Nishit | Built from GitHub (`frontend/`) |
-| GitHub repository and the ghcr.io package | Anuj | Makes the backend package public once (see Docker image) |
+| GitHub repository and the ghcr.io package | Anuj | The package stays private until submission (see Docker image) |
 
 ## The Mac mini host
 
@@ -43,7 +43,7 @@ What is set up, and why. All of it was done over SSH, from a Windows laptop.
 
 | Item | Setting | Why |
 |---|---|---|
-| Accounts | Owner's admin account, plus a **standard (non-admin) `foldback` account** that runs the stack | Teammates log in as `foldback`. It cannot `sudo` and cannot read the owner's home folder (mode 700) |
+| Accounts | Owner's admin account, plus a **standard (non-admin) `foldback` account** that runs the stack | The stack never runs with admin rights. `foldback` cannot `sudo` and cannot read the owner's home folder (mode 700) |
 | Auto-login | `foldback` | The stack and Docker start after a reboot or power cut with nobody at the keyboard |
 | FileVault | Off | With FileVault on, every reboot waits for a password typed at the Mac, which takes the site down. The data is PayPal sandbox data and the Mac is in a private home |
 | Sleep | `pmset`: `sleep 0`, `autorestart 1`, `womp 1` | Never sleeps, and starts again after a power failure |
@@ -57,10 +57,11 @@ Gotcha: saving **System Settings → General → Sharing → Remote Login** rewr
 
 ## Remote access
 
-- **Tailscale.** The owner shares only the Mac mini with a teammate (admin console → Machines → the Mac → Share). Node sharing exposes that one machine, not the rest of the owner's network.
-- **SSH keys only, as `foldback`.** A teammate creates a key (`ssh-keygen -t ed25519`, PowerShell works on Windows) and sends the **public** key to the owner, who appends it to `~foldback/.ssh/authorized_keys`. Private keys never leave the machine that made them. Administrator tasks stay with the owner.
+- **Owner only.** The Mac is reachable for administration only from the owner's own devices on the owner's Tailscale network, with SSH keys. Nobody else has an account, a key, or a Tailscale share. The team does not need one: merging to `main` deploys by itself (CI/CD below), and server problems go to the owner.
+- **Public traffic never uses Tailscale.** Users, PayPal returns, and judges reach only `api.<domain>`, through the Cloudflare Tunnel, which forwards to the backend on `127.0.0.1:8787` and nothing else. Postgres, SSH, and the rest of the Mac are not reachable through it.
 - **No inbound ports.** Port 22 and the app are never forwarded on the home router.
-- The full access and operations guide, with hostnames and the runbook, is a dated PDF sent privately. It is never committed, because the repository is public at submission and the document names hosts and accounts.
+- **If another operator is ever needed:** share only the Mac in the Tailscale admin console (Machines → the Mac → Share; node sharing exposes that one machine), and append their SSH **public** key to `~foldback/.ssh/authorized_keys`. They get `foldback`, never admin.
+- The owner keeps a private operations runbook with hostnames and commands. It is never committed, because the repository is public at submission and the runbook names hosts and accounts.
 
 ## Environment variables (backend)
 
@@ -91,7 +92,7 @@ Templates: `backend/.env.example` (dev) and `deploy/env.production.example` (pro
 
 CI builds it for `linux/arm64` (the Mac mini) and `linux/amd64`, and pushes `ghcr.io/anujsaha0111/paypal-hackathon/backend` with two tags: `:latest` (newest `main`) and `:sha-<full commit>` (for pinning and rollback).
 
-**The image is public, by decision.** The Mac pulls it with no login and no token, and every secret enters at runtime through the env file. Never build a secret, key, or real URL into the image. GitHub creates a new package as private, so the repository owner switches it once: GitHub profile → Packages → `paypal-hackathon/backend` → Package settings → Change visibility → Public. Check from the Mac with no login: `docker pull ghcr.io/anujsaha0111/paypal-hackathon/backend:latest`.
+**The image stays private until submission.** It holds the compiled backend code (readable, with comments) and the schema, but no secrets: every secret enters at runtime through the env file. Never build a secret, key, or real URL into the image. The Mac pulls it with a **classic GitHub token from the Mac owner's account that has only the `read:packages` scope** (fine-grained tokens cannot read packages), set to expire after judging. It was entered once with `docker login ghcr.io` as `foldback`, and lives only in `~foldback/.docker/config.json` (mode 600). If it leaks, delete it on GitHub (Settings → Developer settings → Tokens (classic)) and log in again with a new one. At submission the repository becomes public, as the rules require; the package can be made public then (GitHub profile → Packages → `paypal-hackathon/backend` → Package settings → Change visibility).
 
 Only CI-built images reach production. Never `docker build` on the Mac for production.
 
@@ -109,8 +110,8 @@ Each service gets only its own variables (explicit `environment:`), every servic
 
 ## Cloudflare Tunnel
 
-1. Nishit creates the tunnel in the Cloudflare dashboard (Zero Trust → Networks → Tunnels) and adds the public hostname `api.<domain>` → `http://localhost:8787`.
-2. He sends the install command (it contains the tunnel token) through a password manager or a one-time link. The Mac owner runs it once with `sudo`; it installs `cloudflared` as a system service that starts at boot.
+1. The Mac owner creates the tunnel in the Cloudflare dashboard (Zero Trust → Networks → Tunnels) and adds the public hostname `api.<domain>` → `http://localhost:8787`.
+2. The dashboard shows an install command that contains the tunnel token. The owner runs it once on the Mac with `sudo`; it installs `cloudflared` as a system service that starts at boot. The token never leaves the owner's hands.
 3. The dashboard shows the tunnel as Healthy. Socket.IO works through it.
 
 ## Frontend on Vercel
@@ -121,7 +122,7 @@ Vercel builds `frontend/` from GitHub and serves it at `app.<domain>`. There is 
 
 | Step | What you do | Result |
 |---|---|---|
-| B0 | Confirm the package is public: `docker pull` of `:latest` on the Mac with no login | Image pulls without credentials |
+| B0 | As `foldback`, `docker login ghcr.io` with the read-only token, then `docker pull` of `:latest` | Image pulls on the Mac |
 | B1 | As `foldback`, copy `deploy/` to `~/foldback` (a working folder, not a git clone) | Working folder |
 | B2 | `umask 077`, create `~/foldback/.env` from `env.production.example`, generate the secrets on the Mac. Type shared values in with an editor, never into chat | Private env file |
 | B3 | `cd ~/foldback && docker compose up -d` (postgres, then the role, then migrate, then the backend) | Containers healthy, migrations applied |
