@@ -20,6 +20,21 @@ function baseOptions(env: Env): {
   };
 }
 
+/** One cookie's value from a raw `Cookie` header (the socket handshake has no cookie-parser). Null when absent. */
+export function readCookie(header: string | undefined, name: string): string | null {
+  if (!header) return null;
+  for (const part of header.split(";")) {
+    const eq = part.indexOf("=");
+    if (eq === -1 || part.slice(0, eq).trim() !== name) continue;
+    try {
+      return decodeURIComponent(part.slice(eq + 1).trim());
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
 /** The session is an httpOnly, Secure, SameSite=Lax cookie. The token is never in the response body. */
 export function setSessionCookie(res: Response, token: string, env: Env): void {
   res.cookie(SESSION_COOKIE, token, { ...baseOptions(env), maxAge: SESSION_TTL_SECONDS * 1000 });

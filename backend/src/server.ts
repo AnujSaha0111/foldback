@@ -4,6 +4,7 @@ import { loadEnv } from "./config/env";
 import { createPool } from "./db/pool";
 import { migrationsCurrent } from "./db/migrator";
 import { createLogger } from "./observability/logger";
+import { attachRealtime } from "./realtime/io";
 import { sweepExpiredGuests } from "./services/housekeeping.service";
 
 const SHUTDOWN_GRACE_MS = 10_000;
@@ -22,6 +23,8 @@ async function main(): Promise<void> {
   }
 
   const server = createServer(createApp({ env, pool, logger }));
+  // The notifier is handed to the money services in later phases, to call after a transaction commits.
+  const { io } = attachRealtime(server, { env, pool, logger });
   server.listen(env.PORT, () => log.info("listening", { port: env.PORT, version: env.GIT_SHA }));
 
   // Remove expired guests (who hold no live money) on boot and every 6 hours.
@@ -41,7 +44,8 @@ async function main(): Promise<void> {
       process.exit(1);
     }, SHUTDOWN_GRACE_MS);
     timer.unref();
-    server.close(() => {
+    // io.close() disconnects every socket and closes the HTTP server, then we close the database pool.
+    void io.close(() => {
       void pool.end().then(() => process.exit(0));
     });
   };

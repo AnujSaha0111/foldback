@@ -1,7 +1,66 @@
 import type { Pool, PoolClient } from "pg";
 import { newId } from "../db/ids";
+import type { MoneySource, ShareStatus } from "../shared/statuses";
 
 type Db = Pick<Pool | PoolClient, "query">;
+
+/** A share as the read model shows it. It never includes the approval link or idempotency keys. */
+export interface ShareRow {
+  id: string;
+  displayName: string;
+  isGraceSubject: boolean;
+  status: ShareStatus;
+  amountCents: number;
+  moneySource: MoneySource;
+  sampleLabel: string | null;
+  orderId: string | null;
+  authorizationId: string | null;
+  authorizationExpiresAt: Date | null;
+  captureId: string | null;
+}
+
+interface RawShareRow {
+  id: string;
+  display_name: string;
+  is_grace_subject: boolean;
+  status: ShareStatus;
+  amount_cents: number;
+  money_source: MoneySource;
+  sample_label: string | null;
+  order_id: string | null;
+  authorization_id: string | null;
+  authorization_expires_at: Date | null;
+  capture_id: string | null;
+}
+
+/** The shares of one contract in seat order. The caller has already checked the contract is theirs. */
+export async function listForContract(db: Db, contractId: string): Promise<ShareRow[]> {
+  const result = await db.query<RawShareRow>(
+    `SELECT id, display_name, is_grace_subject, status, amount_cents, money_source, sample_label, order_id,
+            authorization_id, authorization_expires_at, capture_id
+       FROM shares WHERE contract_id = $1 ORDER BY position`,
+    [contractId],
+  );
+  return result.rows.map((r) => ({
+    id: r.id,
+    displayName: r.display_name,
+    isGraceSubject: r.is_grace_subject,
+    status: r.status,
+    amountCents: r.amount_cents,
+    moneySource: r.money_source,
+    sampleLabel: r.sample_label,
+    orderId: r.order_id,
+    authorizationId: r.authorization_id,
+    authorizationExpiresAt: r.authorization_expires_at,
+    captureId: r.capture_id,
+  }));
+}
+
+/** True when a share with this id exists. Used by the pay-link socket room, which any holder of the link may join. */
+export async function shareExists(db: Db, shareId: string): Promise<boolean> {
+  const result = await db.query("SELECT 1 FROM shares WHERE id = $1", [shareId]);
+  return result.rowCount === 1;
+}
 
 export interface SeedShareInput {
   name: string;
