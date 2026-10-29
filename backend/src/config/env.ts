@@ -1,0 +1,92 @@
+import { z } from "zod";
+
+export const DEFAULT_LLM_CHAIN =
+  "gemini:gemini-3.8-flash,gemini:gemini-3.6-flash,gemini:gemini-3.5-flash-lite,groq:openai/gpt-oss-120b,groq:openai/gpt-oss-20b,openrouter:openrouter/free";
+
+const PROVIDERS = new Set(["gemini", "groq", "openrouter"]);
+
+/** The rule that keeps the project free: an OpenRouter entry must be a free model. */
+function chainProblem(chain: string): string | null {
+  for (const entry of chain.split(",").map((e) => e.trim())) {
+    const at = entry.indexOf(":");
+    const provider = at === -1 ? "" : entry.slice(0, at);
+    const model = at === -1 ? "" : entry.slice(at + 1);
+    if (!PROVIDERS.has(provider) || model === "")
+      return `"${entry}" is not provider:model with a known provider`;
+    if (provider === "openrouter" && model !== "openrouter/free" && !model.endsWith(":free")) {
+      return `"${entry}" is not a free OpenRouter model`;
+    }
+  }
+  return null;
+}
+
+const flag = z
+  .enum(["true", "false"])
+  .transform((v) => v === "true")
+  .default(true);
+
+const schema = z.object({
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  PORT: z.coerce.number().int().min(1).max(65535).default(8787),
+  DATABASE_URL: z.string().min(1),
+  MIGRATE_DATABASE_URL: z.string().min(1).optional(),
+  JWT_SECRET: z.string().min(32, "must be at least 32 characters"),
+  CORS_ORIGINS: z
+    .string()
+    .min(1)
+    .transform((v) => v.split(",").map((o) => o.trim()))
+    .pipe(z.array(z.url()).min(1)),
+  APP_BASE_URL: z.url(),
+  TRUST_PROXY: z.coerce.number().int().min(0).default(0),
+  LOG_LEVEL: z.enum(["error", "warn", "info", "debug"]).default("info"),
+  METRICS_TOKEN: z.string().min(16).optional(),
+  OTEL_EXPORTER_OTLP_ENDPOINT: z.url().optional(),
+  SIGNUPS_ENABLED: flag,
+  GIT_SHA: z.string().min(1).default("dev"),
+  PAYPAL_ENV: z.literal("sandbox", "must be exactly sandbox. Foldback never runs against live PayPal"),
+  AI_ENABLED: flag,
+  AI_DAILY_CALLS: z.coerce.number().int().positive().default(600),
+  GEMINI_API_KEY: z.string().min(1).optional(),
+  GROQ_API_KEY: z.string().min(1).optional(),
+  OPENROUTER_API_KEY: z.string().min(1).optional(),
+  LLM_CHAIN: z
+    .string()
+    .default(DEFAULT_LLM_CHAIN)
+    .superRefine((chain, ctx) => {
+      const problem = chainProblem(chain);
+      if (problem) ctx.addIssue({ code: "custom", message: problem });
+    }),
+});
+
+export type Env = z.infer<typeof schema>;
+
+export class EnvError extends Error {
+  constructor(
+    readonly variables: string[],
+    message: string,
+  ) {
+    super(message);
+    this.name = "EnvError";
+  }
+}
+
+/** Parses an environment, treating empty strings as unset. Throws an EnvError that names every bad variable. */
+export function parseEnv(source: Record<string, string | undefined> = process.env): Env {
+  const cleaned: Record<string, string> = {};
+  for (const [key, value] of Object.entries(source)) {
+    if (value !== undefined && value !== "") cleaned[key] = value;
+  }
+  const result = schema.safeParse(cleaned);
+  if (result.success) return result.data;
+  const names = [...new Set(result.error.issues.map((i) => String(i.path[0] ?? "env")))];
+  const lines = result.error.issues.map((i) => `${String(i.path[0] ?? "env")}: ${i.message}`);
+  throw new EnvError(names, `Invalid environment. ${lines.join("; ")}`);
+}
+
+let cached: Env | undefined;
+
+/** The process environment, parsed once. Boot calls this first so a bad value stops the server early. */
+export function loadEnv(): Env {
+  cached ??= parseEnv();
+  return cached;
+}

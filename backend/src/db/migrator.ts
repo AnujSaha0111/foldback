@@ -62,6 +62,13 @@ async function ensureLedger(client: PoolClient): Promise<void> {
       checksum   text NOT NULL,
       applied_at timestamptz NOT NULL DEFAULT now()
     )`);
+  // /health/ready runs as the app role and only needs to read which versions are applied.
+  await client.query(`
+    DO $$ BEGIN
+      IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'foldback_app') THEN
+        GRANT SELECT ON schema_migrations TO foldback_app;
+      END IF;
+    END $$`);
 }
 
 async function readLedger(client: PoolClient): Promise<AppliedRow[]> {
@@ -124,12 +131,30 @@ export async function applyMigrations(
   return { applied };
 }
 
-export async function migrationStatus(pool: Pool, dir: string = MIGRATIONS_DIR): Promise<MigrationStatus> {
+/** A missing ledger table means nothing has been applied yet. */
+async function readLedgerIfPresent(client: PoolClient): Promise<AppliedRow[]> {
+  try {
+    return await readLedger(client);
+  } catch (err) {
+    if ((err as { code?: string }).code === "42P01") return [];
+    throw err;
+  }
+}
+
+/**
+ * Which migrations are applied and which are pending. The owner's CLI creates the ledger on first use;
+ * the app role (used by /health/ready) cannot run DDL, so it passes `createLedger: false` and only reads.
+ */
+export async function migrationStatus(
+  pool: Pool,
+  dir: string = MIGRATIONS_DIR,
+  { createLedger = true }: { createLedger?: boolean } = {},
+): Promise<MigrationStatus> {
   const files = await loadMigrations(dir);
   const client = await pool.connect();
   try {
-    await ensureLedger(client);
-    const done = await readLedger(client);
+    if (createLedger) await ensureLedger(client);
+    const done = await readLedgerIfPresent(client);
     const doneVersions = new Set(done.map((r) => r.version));
     return {
       applied: done.map((r) => ({
@@ -148,7 +173,7 @@ export async function migrationStatus(pool: Pool, dir: string = MIGRATIONS_DIR):
 
 /** True when every migration file has been applied and none was edited. Used by /health/ready. */
 export async function migrationsCurrent(pool: Pool, dir: string = MIGRATIONS_DIR): Promise<boolean> {
-  const status = await migrationStatus(pool, dir);
+  const status = await migrationStatus(pool, dir, { createLedger: false });
   return status.pending.length === 0 && status.applied.every((m) => m.checksumOk);
 }
 
