@@ -12,7 +12,7 @@ Budget: 10 hours. Hats: Backend and Ops. Depends on phase 1. Dates: 31 October �
 
 ## Goal
 
-A production-shaped backend with auth and seeds, running behind HTTPS on the Oracle VM, deployed by CI. It has no business features yet.
+A production-shaped backend with auth and seeds, running behind HTTPS on the Azure VM with the Azure Postgres database, deployed by CI. It has no business features yet.
 
 ## Create
 
@@ -48,7 +48,19 @@ Dependencies: `express@^5`, `socket.io@^4`, `pg`, `zod@^4`, `jsonwebtoken`, `bcr
 4. Contracts list and read, ownership-scoped.
 5. Socket.IO: handshake, `contract:join` ownership check, `notify` after commit.
 6. Quality tooling from `quality.md` §7: Prettier, the ESLint rule set, knip, jscpd, husky + lint-staged (including the commit-msg check), gitleaks, Dependabot, and the `enableScripts: false` Yarn config. Then the Dockerfile, CI (all backend gates plus the security job), and multi-arch images to ghcr.io.
-7. Oracle VM (`deploy.md`, steps 1–7), Caddy, DuckDNS. CI deploys to the VM, and `smoke.sh` passes.
+7. Azure: the database in account A, then the VM in account B (`deploy.md`), Caddy, and the `cloudapp.azure.com` domain. CI deploys to the VM, and `smoke.sh` passes.
+
+## Database and review obligations
+
+Provision the Azure Postgres server first (`deploy.md` → Database setup). Then, in code:
+
+- Two connection strings: `DATABASE_URL` (role `foldback_app`) for the app, `MIGRATE_DATABASE_URL` (owner) for `migrate` and housekeeping jobs.
+- `withContractLock` releases with `pg_advisory_unlock` on the same client in `finally`. The authorize route takes the lock too. Each money transaction begins with `SELECT 1 FROM contracts WHERE id = $1 FOR UPDATE`.
+- Store only a redacted PayPal response (drop `payer` and `purchase_units[].shipping`). `ai_usage.ip_hash` is an HMAC keyed with `IP_HASH_SALT`. Omit `ai_usage.day` (the database sets it).
+- Guest cleanup uses the "skip guests with live money" query in `data-model.md`. Reset returns `409 live_money` when the schema refuses it.
+- A daily job (owner role) deletes `ai_usage` rows older than 90 days.
+- Treat bigint ids (`events.id`, `ai_usage.id`) as strings.
+- Add a test that keeps the status lists in the CHECK constraints and the transition tables in sync.
 
 ## Do not
 

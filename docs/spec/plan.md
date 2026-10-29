@@ -7,7 +7,7 @@ Hour budget: about 76 team-hours, roughly 5 per day. Each phase budget includes 
 | Phase | Target dates | Budget | Hat | Depends on | Done |
 |---|---|---|---|---|---|
 | 0 Spike | 28–29 Oct | 6h | PayPal + UI | — | [x] |
-| 1 Database design | 29–30 Oct | 5h | Data | 0 | [ ] |
+| 1 Database design | 29–30 Oct | 5h | Data | 0 | [x] |
 | 2 UI design | 30 Oct – 1 Nov | 4h | Product + UI | 0 (runs beside 1 and 3) | [ ] |
 | 3 Backend foundation + first deploy | 31 Oct – 2 Nov | 10h | Backend + Ops | 1 | [ ] |
 | 4 Rule reader | 2–3 Nov | 6h | Rules | 3 | [ ] |
@@ -22,7 +22,7 @@ Why this order:
 - The **spike** proves the three risky integrations before any design time is spent on them.
 - **Database design** comes before code, because every service is built on the schema and its constraints.
 - **UI design** runs in parallel with backend work, so neither waits on the other.
-- **First deploy in phase 3:** the Oracle VM, Caddy, and CI/CD are set up while the app is only `/health`. Every later phase then ships to production, and the final days are not spent on infrastructure surprises.
+- **First deploy in phase 3:** the Azure VM, the managed database, Caddy, and CI/CD are set up while the app is only `/health`. Every later phase then ships to production, and the final days are not spent on infrastructure surprises.
 
 Hats (switch in this order even if one person does everything):
 
@@ -39,7 +39,7 @@ Hats (switch in this order even if one person does everything):
 - **0 Spike.** Bryntum renders in Next.js 16 / React 19.2. Sandbox authorize → capture and authorize → void return real ids. Gemini Flash-Lite and Groq `gpt-oss-120b` structured output and tool use work. Send the Bryntum license email.
 - **1 Database design.** Finalize `data-model.md` with a review checklist. Write `0001_init.sql` (tables, constraints, transition tables, triggers), `migrate.ts`, and `principles.md`. Constraint tests run against real Postgres.
 - **2 UI design.** You share screenshots you like. I suggest template sources, you pick one and list modifications, and we produce tokens and per-screen mockups for approval. Nothing is coded until you approve.
-- **3 Backend foundation.** Express 5 app with layering, env, logging, metrics, health, errors, rate limits, auth (signup, login, guest, logout, me), seeds, and reset. Socket.IO skeleton. Dockerfiles, CI, Oracle VM, Caddy. `/api/health` is live on HTTPS.
+- **3 Backend foundation.** Express 5 app with layering, env, logging, metrics, health, errors, rate limits, auth (signup, login, guest, logout, me), seeds, and reset. Socket.IO skeleton. Dockerfiles, CI, Azure VM and database, Caddy. `/api/health` is live on HTTPS.
 - **4 Rule reader.** Create, clarify, and confirm, with the validator, AI guard, and extraction cache.
 - **5 Frontend and board.** Next.js app shell, theme from phase 2, auth pages, plans page, Bryntum board, Person card, sockets.
 - **6 Pay link and hold.** Pay page, checkout, authorize, sync, and live updates to the board.
@@ -65,7 +65,7 @@ Reply: (fill in: pending, yes through 15 December 2026, or no)
 
 - Phase 0 cannot authorize, capture, or void in sandbox: stop. Report PayPal's `name`, `issue`, and `debug_id`. Never fake ids.
 - The Bryntum trial won't install, or won't run on React 19.2 / Next.js 16: stop and ask on the PayPal Discord. Never draw a substitute calendar.
-- No Oracle Ampere capacity by 2 November: deploy the same Compose stack to an Azure B2s VM (the cost is noted in the README) and continue.
+- Azure refuses the VM or the database in every region the student policy allows, by 2 November: switch the database to Neon (free, no card) and the VM to another account, and continue. Do not wait.
 - A phase needs a schema change: write a new numbered migration and update `data-model.md` in the same change. Never edit an applied migration.
 - The model returns amounts the validator didn't check: stop and fix the validator.
 - It's 8 November and phase 7 isn't done: apply the cut list from item 3 down, and protect phase 9's full budget.
@@ -73,7 +73,7 @@ Reply: (fill in: pending, yes through 15 December 2026, or no)
 
 ## Definition of finished
 
-1. `https://{domain}` serves the app over HTTPS from the Oracle VM. "Try it as a guest" works from a fresh browser.
+1. `https://{domain}` serves the app over HTTPS from the Azure VM. "Try it as a guest" works from a fresh browser.
 2. A new machine with Node 24, Yarn, Docker, PayPal sandbox credentials, free Gemini and Groq keys, and the Bryntum trial can follow the README to run it locally.
 3. CI is green on `main`: typecheck, lint, and tests for both packages, plus images pushed to ghcr.io.
 4. Every case in `test.md` passes.

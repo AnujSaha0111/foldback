@@ -37,6 +37,8 @@ erDiagram
 
 ## Tables
 
+> **The authoritative SQL is `backend/migrations/0001_init.sql`.** The blocks below are the original design. An independent review (28 Oct 2026) amended it; see "Independent review" below for exactly what changed. Where they differ, the migration file wins.
+
 ### users
 
 ```sql
@@ -254,7 +256,7 @@ CREATE TABLE share_transitions    (from_status text, to_status text, PRIMARY KEY
 
 Contract rows: `extracting→needs_clarification`, `extracting→awaiting_confirmation`, `needs_clarification→extracting`, `awaiting_confirmation→active`, `active→grace|capturing|releasing|blocked`, `grace→capturing|releasing|blocked`, `capturing→kept|blocked`, `releasing→released|blocked`, `blocked→active|grace|capturing|releasing`.
 
-Share rows: `waiting→checkout_open|expired`, `checkout_open→waiting|authorize_unknown|held|declined|expired`, `authorize_unknown→held|checkout_open|declined`, `declined→checkout_open|expired`, `held→capture_unknown|kept|capture_failed|void_unknown|released`, `capture_unknown→kept|held`, `void_unknown→released|held`.
+Share rows: `waiting→checkout_open|expired`, `checkout_open→waiting|authorize_unknown|held|declined|expired`, `authorize_unknown→held|checkout_open|declined`, `declined→checkout_open|expired`, `held→capture_unknown|kept|capture_failed|void_unknown|released`, `capture_unknown→kept|held`, `void_unknown→released|held`, `capture_failed→void_unknown|released` (a failed capture can leave a live authorization that must be voided).
 
 Triggers (PL/pgSQL, in `0001_init.sql`):
 
@@ -272,9 +274,61 @@ Each trigger raises with SQLSTATE `23514` (check violation) and a clear message.
 
 - The migration is `backend/migrations/0001_init.sql`. Every constraint and trigger has a name (for example `contracts_money_math`, `contracts_transition`, `ops_one_inflight_per_share`) so tests and logs can say exactly which rule fired.
 - Guard triggers raise SQLSTATE `23514` with `CONSTRAINT = <name>`. Unique indexes raise `23505`. The composite foreign key raises `23503`.
-- Fields frozen once `confirmed_at` is set: `confirmed_at`, `title`, `rule_text`, `reference_at`, `currency`, `total_cents`, `share_cents`, `headcount`, `deadline_at`, `timezone`, `grace_person_name`, `grace_until`. `owner_id`, `money_source`, and `seed_key` never change at any time. `demo_now`, `status`, `direction` (once), `resolution_reason`, and `resolved_at` stay writable.
+- Fields frozen once `confirmed_at` is set: `confirmed_at`, `title`, `rule_text`, `rule_hash`, `reference_at`, `currency`, `total_cents`, `share_cents`, `headcount`, `deadline_at`, `timezone`, `grace_person_name`, `grace_until`, `extraction`. `owner_id`, `money_source`, and `seed_key` never change at any time. `demo_now`, `status`, `direction` (once), `resolution_reason`, and `resolved_at` stay writable.
 - Additional checks beyond the table notes: `direction` may be set only on `capturing`, `kept`, `releasing`, `released`, or `blocked`; `resolved_at` is set exactly when the status is `kept` or `released`; `shares.checkout_attempt` only increases; the share `position` is immutable.
 - Tests run against a real Postgres. Local dev may use any Postgres 16 or newer. CI and production use 16.
+
+## Independent review (28 Oct 2026)
+
+A senior-database-engineer review of the first draft found 7 problems that were reproduced against Postgres 16 and fixed in place in `0001_init.sql` (nothing was deployed). Each change is tagged `[R-Fn]` in the SQL.
+
+| Finding | What changed |
+|---|---|
+| F1 | Insert guards: a **sandbox** contract must be born unconfirmed and undecided; a sandbox share must be born `waiting` with no PayPal ids. Sample seeds are exempt. The state machine can no longer be skipped by an INSERT |
+| F2 | Money moves only on "keep": `held → capture_unknown/kept` needs the contract's `direction = 'keep'`, and a `capture` operation row needs it too |
+| F3 | A share cannot become `expired` while a PayPal mutation for it is `pending` or `unknown` (the authorization might exist) |
+| F4 | A share whose money may be live (held, any unknown status, `capture_failed`, or a call in flight) cannot be deleted, directly or by cascade. Guest cleanup and reset must skip such rows |
+| F5 | The operation log is an audit record: identity and request never change, outcome moves only `pending → completed/failed/unknown` and `unknown → completed/failed`, settled rows are frozen, mutating operations are born `pending`, and sample shares cannot have operations |
+| F6 | `ops_one_completion_per_key` became `ops_one_live_per_key` (any non-`failed` row), so a replay insert gets `23505` and the caller reads the existing row |
+| F7 | A deferred constraint trigger checks at commit that share count, amounts, and the grace subject match the confirmed terms. The share set is frozen once confirmed |
+| F8 | `events.share_id` and `contract_id` use a composite foreign key (an event's share belongs to the event's contract), plus an index so share deletion does not scan `events` |
+| F9 | Least privilege: the migrator owns everything; the app role `foldback_app` gets DML only (no DELETE on events, operations, or ai_usage; read-only on the transition tables). It cannot disable triggers |
+| F10 | `rule_hash` and `extraction` are frozen after confirm |
+| F11 | The share insert guard locks the contract row (`FOR NO KEY UPDATE`), so a concurrent confirm waits |
+| F12 | A `capture_id` is allowed only on `capture_unknown`, `kept`, or `capture_failed` |
+| F13 | `ai_usage.day` defaults to the UTC date of the database clock. Callers omit it |
+| F14 | Every id column uses `COLLATE "C"` (faster, and immune to collation-change index corruption) |
+| F15 | `contracts_money_math` uses bigint arithmetic, and `share_cents` is capped at 1,000,000 ($10,000), so overflow is a `23514` refusal |
+| F16 | The bare `UTC` timezone is accepted |
+| F17 | `contracts_owner` is `(owner_id, created_at DESC, id DESC)`. Queries use `ORDER BY created_at DESC, id DESC` |
+| F23 | `capture_failed → void_unknown / released` is allowed |
+| F24 | `confirmed_at` cannot be set before the confirm step |
+
+**Deliberately not changed:** no row-level security (one app role and an anonymous pay path make it pure overhead; ownership is enforced in repositories and tested), no enums, no status lookup table (add a test that keeps the CHECK lists and the transition tables in sync), no people table, no uuid switch, `citext` stays, unpinned `search_path` (no SECURITY DEFINER function exists), case-sensitive share names.
+
+**Obligations on application code** (carried into the phase files):
+
+- **F18** Store a redacted PayPal response: drop `payer` and `purchase_units[].shipping` before writing, because settled operation rows are frozen. `ai_usage.ip_hash` is an HMAC with `IP_HASH_SALT` as the key (not a plain hash). A retention job deletes `ai_usage` older than 90 days (run by the owner role).
+- **F19** The contract advisory lock is session-level. Always release it with `pg_advisory_unlock` on the **same** client in `finally`, then release the client. The authorize path takes the lock too. Inside each of transaction 1 and transaction 2, start with `SELECT 1 FROM contracts WHERE id = $1 FOR UPDATE`.
+- **F20** The daily AI cap is count-then-insert and may overshoot by up to the pool size. Accepted.
+- **F26** `events.id` and `ai_usage.id` are bigint; node-pg returns them as strings. Treat them as strings.
+- **Guest cleanup** must skip guests with live money: `DELETE FROM users u WHERE u.kind = 'guest' AND u.expires_at < now() AND NOT EXISTS (SELECT 1 FROM contracts c JOIN shares s ON s.contract_id = c.id WHERE c.owner_id = u.id AND s.money_source = 'sandbox' AND s.status IN ('held', 'authorize_unknown', 'capture_unknown', 'void_unknown', 'capture_failed'))`.
+- **Confirm** inserts the shares first and then updates the contract to `active` with `confirmed_at`, all in one transaction.
+
+**Answers to the reviewer's open questions**
+
+1. Shares are inserted in the confirm transaction, before `confirmed_at` is set. They are not edited later.
+2. In the keep direction, if one capture ends `capture_failed`, the contract stays `blocked` with a reason (it does not become `kept`). The organizer can void that authorization (F23 allows it) and the plan is then handled manually.
+3. `rule_hash = sha256(rule_text || reference_at)`. The timezone is fixed (`America/Los_Angeles`).
+4. `demo_now` may move backward only while no share has ever been held. The route enforces it; the database does not.
+5. `version` orders socket invalidations. It is not used for optimistic concurrency.
+6. Idempotency keys are derived per PayPal object (`paypal.md`).
+7. No flow records a mutating operation without calling PayPal. A definite 4xx is inserted `pending`, then updated to `failed`.
+8. There is no per-IP AI cap in the database. Per-IP limits live in memory. `ip_hash` is for audit only.
+9. Nothing looks a share up by an older order id. The return URL token must equal the stored `order_id`.
+10. `contracts_sample_is_seed` stays one-directional.
+11. Nothing changes on a `kept` or `released` contract. Routes return `409 contract_closed`.
+12. The application always sets `authorization_expires_at` on a hold. No CHECK.
 
 ## Read-model queries (derived aggregates)
 
@@ -304,15 +358,15 @@ FROM shares WHERE contract_id = ANY($1) GROUP BY contract_id;
 
 **`print-full`.** Title `Print run`. Status `active`. USD, 20000 / 5000 / 4. Deadline `2026-11-06T18:00:00-08:00`, no grace. `demo_now` `2026-11-06T16:00:00-08:00`. Shares, all `held`: Priya Nair, Noah Brooks, Elena Vaz, Chris Dalton.
 
-Seed rows are inserted directly in their starting statuses. The transition triggers check updates only.
+Seed rows are inserted directly in their starting statuses. The insert guards apply only to `sandbox` rows, so `sample` seeds are exempt. Sample shares never get PayPal operations (`ops_sandbox_only`).
 
 ## Reset
 
-`POST /api/demo/reset` (authenticated) deletes the caller's contracts (shares, operations, and events cascade), then re-inserts that caller's two seeds, in one transaction. It never touches other users' data, never touches `ai_usage`, and never calls PayPal.
+`POST /api/demo/reset` (authenticated) deletes the caller's contracts (shares, operations, and events cascade), then re-inserts that caller's two seeds, in one transaction. It never touches other users' data, never touches `ai_usage`, and never calls PayPal. **If any of the caller's sandbox shares holds live money** (held, an unknown status, `capture_failed`, or a call in flight) the delete is refused by `shares_live_money_undeletable` and the route returns `409 live_money` with "Release or void your live holds first." Contracts without live money are fine to reset.
 
 ## Guest cleanup
 
-On boot and every 6 hours: `DELETE FROM users WHERE kind = 'guest' AND expires_at < now()`. Cascades remove their data. Their `ai_usage` rows remain with a null `user_id`.
+On boot and every 6 hours, delete expired guests **who have no live money** (query under "Independent review"). A guest with a live hold is skipped and retried next time, so a hold is never orphaned. Cascades remove the rest of their data. Their `ai_usage` rows remain with a null `user_id`.
 
 ## Migrations
 

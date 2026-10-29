@@ -22,7 +22,7 @@ Most hackathon entries skip these, and judges notice.
 - **PayPal:** sandbox Orders v2 with `intent: AUTHORIZE`, then Payments v2 authorizations (capture, void, get).
 - **AI:** free hosted models, Gemini first with Groq (`gpt-oss-120b`) as fallback, read a pasted group chat into a fixed schema. An organizer agent answers questions, simulates outcomes, drafts reminders, and proposes clock moves. The model never sets amounts and never calls PayPal.
 - **Sponsor tool:** Bryntum Scheduler (we compete for Best Use of Bryntum).
-- **Hosting:** one Oracle Cloud Always Free VM (Docker Compose + Caddy + Postgres).
+- **Hosting:** Azure. One VM runs Docker Compose + Caddy (account B). The database is Azure Database for PostgreSQL Flexible Server (account A). A third account (C) is the scale-out spare. See `deploy.md`.
 
 ## Read order
 
@@ -43,7 +43,7 @@ Most hackathon entries skip these, and judges notice.
 | `scheduler.md` | Bryntum board, projection, license gate |
 | `ui.md` | Screens, flows, copy (visual design is settled in phase 2) |
 | `test.md` | Jest suites and manual negatives |
-| `deploy.md` | Docker, Compose, Caddy, Oracle VM, CI/CD |
+| `deploy.md` | Docker, Compose, Caddy, Azure VM and database, accounts, scale-out playbook, CI/CD |
 | `demo.md` | Chat fixtures, sandbox prep, video, judge path, Devpost text |
 | `quality.md` | **Permanent** rules for AI-assisted building: workflow, code rules, approved dependencies, performance budgets, security checklist, CI gates |
 
@@ -54,9 +54,9 @@ Start at [phases/00-spike.md](phases/00-spike.md).
 | Phase | File | Status |
 |---|---|---|
 | 0 Spike | `phases/00-spike.md` | done |
-| 1 Database design | `phases/01-database-design.md` | next |
-| 2 UI design | `phases/02-ui-design.md` | blocked on 0 (runs beside 1 and 3) |
-| 3 Backend foundation | `phases/03-backend-foundation.md` | blocked on 1 |
+| 1 Database design | `phases/01-database-design.md` | done |
+| 2 UI design | `phases/02-ui-design.md` | next (needs your reference screenshots) |
+| 3 Backend foundation | `phases/03-backend-foundation.md` | next |
 | 4 Rule reader | `phases/04-rule-reader.md` | blocked on 3 |
 | 5 Frontend and board | `phases/05-frontend-and-board.md` | blocked on 2 and 3 |
 | 6 Pay link and hold | `phases/06-pay-and-hold.md` | blocked on 4 and 5 |

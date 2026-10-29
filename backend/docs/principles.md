@@ -21,3 +21,12 @@ Read this before changing the schema or any code that touches money. The full da
 | `23503`  | foreign key violation | for example `shares_contract_fk` (a sandbox share on a sample contract)                                             |
 
 A service that sees one of these in production has a bug the schema caught. Log it at error level and return `500 internal`. Never loosen the constraint to make the error go away.
+
+## Added by the independent review
+
+10. **Guard the birth as well as the life.** Update triggers alone are not enough. A row is also checked when it is inserted, so an INSERT cannot skip the state machine. Sample seeds are the one exempt path.
+11. **Least privilege.** The migrator owns the schema. The running app uses `foldback_app`, which has DML grants only: it cannot disable triggers, edit the transition tables, or delete events, operations, or `ai_usage`. Tests run as `foldback_app` so they prove what the app can and cannot do.
+12. **Money moves only on "keep".** A capture (the operation row and the share status) requires the contract's decision to be `keep`. Void paths never require it.
+13. **Never destroy live money.** A share that holds money (or may, after an unknown outcome) cannot be deleted, directly or by cascade. Cleanup jobs skip those rows. Settle or void first.
+14. **The operation log is evidence.** Identity and request never change, outcomes move one way, and settled rows are frozen.
+15. **Session-level locks need discipline.** Release the advisory lock on the same client in `finally`, and use a direct database connection (no transaction-mode pooler).

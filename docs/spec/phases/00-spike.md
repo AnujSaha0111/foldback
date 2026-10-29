@@ -85,7 +85,7 @@ We will not commit Bryntum source or license keys. Our own code is MIT licensed.
 Thank you!
 ```
 
-Also on day one: create the Oracle Cloud account and try to create the Ampere VM (`deploy.md`, step 1), because free capacity can take days to become available.
+Also on day one: line up the cloud accounts (see `deploy.md` → Accounts and ownership).
 
 ## Exit check
 
@@ -94,7 +94,7 @@ Also on day one: create the Oracle Cloud account and try to create the Ampere VM
 - [x] PayPal: authorization id, capture `COMPLETED`, second authorization id, void 204, GET `VOIDED`.
 - [x] LLM: Groq strict-schema reply, tool-call round trip, the Groq and OpenRouter free-model lists, and the rate-limit headers recorded.
 - [x] Optional: Bryntum license question posted in the PayPal Discord (not blocking).
-- [ ] Oracle account created (VM created or capacity pending).
+- [x] Hosting decided: Oracle had no capacity, so production moved to Azure (see `deploy.md`).
 
 ## Exit note
 
@@ -110,4 +110,4 @@ Bryntum (28 Oct 2026): install command `yarn add "@bryntum/scheduler@npm:@bryntu
 
 License email: optional insurance only. Every team uses the same trial link and the same 45-day clock, so we continue without waiting for a reply.
 
-Oracle VM status: account being created on 28 Oct evening (needs a card for verification). Stay on Always Free resources only. Fallback: Azure VM.
+Hosting status (29 Oct 2026): Oracle Always Free had no capacity. Production runs on Azure: the database in the project lead's student account, the VM in a teammate's account, and a third account kept as the scale-out spare.

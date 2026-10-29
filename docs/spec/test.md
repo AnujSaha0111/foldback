@@ -29,23 +29,42 @@ Fixtures: `backend/src/shared/rules.ts` (demo strings) and `backend/test/fixture
 
 ## Phase 1: `test/integration/schema.test.ts`
 
-1. `migrations apply and are idempotent`: migrate twice; `status` shows 0001 applied once.
-2. `money math is enforced`: a contract with total 32000, share 5000, and headcount 4 is rejected.
-3. `illegal contract transition is rejected`: updating `active → kept` directly raises.
-4. `direction is write-once`: setting `keep` and then `release` raises.
-5. `confirmed money is immutable`: updating `share_cents` after `confirmed_at` raises.
-6. `sample rows cannot hold PayPal ids`: a sample share with an `authorization_id` is rejected.
-7. `mixed money sources are impossible`: a sandbox share on a sample contract fails the composite FK.
-8. `kept sandbox share needs a capture id`: rejected without one.
-9. `one in-flight call per share`: a second `pending` mutating operation for the same share raises `23505`.
-10. `one completion per idempotency key`: a second `completed` row with the same key raises `23505`.
-11. `one grace subject per contract`: a second grace subject raises.
-12. `events are append-only`: an UPDATE on events raises.
-13. `guest delete cascades`: deleting a guest user removes their contracts, shares, operations, and events, and keeps `ai_usage` with a null `user_id`.
-14. `ai_usage refuses paid OpenRouter models`: inserting `provider = 'openrouter'` with `model = 'anthropic/claude-3.5-sonnet'` raises. Free models (`openrouter/free`, `...:free`) and Gemini or Groq models insert fine.
-15. `a share amount must equal the contract share`: inserting a share with `amount_cents = 100` on an 8000 contract raises `shares_amount_matches_contract`.
-16. `authorization and capture ids are write-once`: changing `authorization_id` or `capture_id` after it is set raises.
-17. `an illegal share transition is rejected`: `waiting → kept` raises `shares_transition`.
+All 31 cases run as the **non-owner application role** `foldback_app` (DML grants only). The owner connection is used only to rebuild the schema, truncate between tests, and to prove that the owner is also stopped by triggers. Fixtures walk the real lifecycle (draft, shares and confirm in one transaction, create order, authorize, capture or void), because the schema refuses rows that skip it.
+
+1. `migrations apply and are idempotent`: a second run applies nothing, `status` shows `0001`, the checksum matches.
+2. `money math is enforced`: total 100, share 30, headcount 3 raises `contracts_money_math`. A huge share is a `23514` refusal, never a `22003` overflow.
+3. `an illegal transition is rejected, a legal update bumps the version`.
+4. `direction is write-once`.
+5. `confirmed terms are frozen`, including `rule_hash`.
+6. `sample rows hold no PayPal ids`, seeds insert directly in their final status, and an operation on a sample share raises `ops_sandbox_only`.
+7. `a contract cannot mix sample and sandbox shares` (`shares_contract_fk`, `23503`).
+8. `a held sandbox share needs its authorization id`.
+9. `only one mutating PayPal call can be in flight per share` (`ops_one_inflight_per_share`).
+10. `a key has one live row`: replay raises `ops_one_live_per_key`, and a retry after `failed` is allowed.
+11. `a contract has at most one grace subject`.
+12. `events are append-only`: the trigger stops the owner, the missing grants stop the app (`42501` on UPDATE and DELETE).
+13. `deleting a guest as the app role cascades everything and keeps ai_usage` (user set to null).
+14. `ai_usage refuses paid OpenRouter models` and defaults `day` to the UTC date.
+15. `a share amount must equal the contract share`.
+16. `the authorization id is write-once`.
+17. `an illegal share transition is rejected`.
+
+Cases added by the independent review (prefix `N`):
+
+- N1. `a sandbox contract cannot be born kept` (`contracts_insert_state`).
+- N2. `a sandbox share is born waiting, inside the headcount, and never after confirm`.
+- N3. `confirm commits only if shares match headcount, amount, and grace subject` (`contracts_shares_match_terms`, raised at COMMIT).
+- N4. `nothing is captured unless the decision is keep` (`ops_capture_requires_keep`, `shares_capture_requires_keep`).
+- N5. `a share with an authorize in flight cannot be expired`.
+- N6. `a guest with a live hold cannot be deleted, and can after the hold is released` (`shares_live_money_undeletable`).
+- N7. `the operation log is born pending, moves legally, and settled rows are frozen`.
+- N8. `an event's share must belong to the event's contract`.
+- N9. `a capture id never sits on a released share`.
+- N10. `the UTC timezone is accepted, and confirmed_at only exists after confirm`.
+- N11. `the app role cannot disable triggers, edit transitions, or delete the operation log`.
+- N12. `happy path`: hold all, keep, capture through an unknown plus sync, kept.
+- N13. `a failed capture's authorization can still be voided`.
+- N14. `a share insert locks its contract, so a concurrent confirm waits` (`55P03` under a short `lock_timeout`).
 
 ## Phase 3: `test/integration/{auth,health,contracts-read}.test.ts`
 

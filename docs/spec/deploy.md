@@ -1,6 +1,8 @@
 # Deploy and infrastructure
 
-One Oracle Cloud **Always Free** Ampere VM (ARM64) runs everything with Docker Compose: Caddy, Postgres, a one-shot migrate job, the backend, and the frontend. One domain, HTTPS, $0 per month, and it stays up through judging (15 December 2026).
+The application runs on **one Azure VM** (Docker Compose: Caddy, a one-shot migrate job, the backend, and the frontend). **The database is not on the VM.** It is **Azure Database for PostgreSQL – Flexible Server**, a separate managed service in a different Azure account. One domain, HTTPS, paid from the team's student credits, and it stays up through judging (1 to 15 December 2026, so about seven weeks from now).
+
+The work is split across three student Azure accounts so no single credit has to cover everything. Credits do not pool: each account's credit pays only for resources created inside that account.
 
 ## Environments
 
@@ -8,7 +10,33 @@ One Oracle Cloud **Always Free** Ampere VM (ARM64) runs everything with Docker C
 |---|---|---|---|
 | dev | your machine | `deploy/compose.dev.yml` → `postgres:16` on 5432 | `yarn dev` in `backend/` and `frontend/`. Next.js rewrites `/api` and `/socket.io` to `localhost:8787`, so dev is same-origin like prod |
 | test | your machine and CI | `postgres:16` on 5433 (tmpfs) | Integration tests migrate a fresh schema per run |
-| production | Oracle VM | `postgres:16` container with a named volume | `deploy/compose.yml` |
+| production | Azure VM (app, account B) + Azure Postgres Flexible Server (data, account A) | reached by `DATABASE_URL` over TLS | `deploy/compose.yml` |
+
+## Accounts and ownership
+
+| Account | Credit | Holds | Why |
+|---|---|---|---|
+| **A** (project lead, about ₹8,000) | student credit | Azure Database for PostgreSQL Flexible Server, plus a budget alert | The database is the cheapest part (roughly ₹3,000 to 3,500 for 10 weeks) |
+| **B** (teammate, about ₹10,000) | student credit | The production VM, its disk, the static public IP, and the DNS name | The VM is the biggest cost (roughly ₹8,000 to 9,500 for 10 weeks) |
+| **C** (teammate, about ₹10,000) | student credit | **Scale-out spare**: a second identical VM, only if measurements show one VM is not enough | Keeps the main deployment simple and the spare ready |
+
+Before building, each owner checks, in the portal under Cost Management, **when the credit expires** (a 30-day free-trial credit would not last until 15 December; a student credit lasts 12 months) and sets a **budget alert** at about 70% of the credit.
+
+The database lives outside the application deployment on purpose. The backend reads one connection string, so replacing or duplicating the VM never touches the data.
+
+**Oracle's free databases were ruled out.** Always Free gives two *Oracle* Autonomous Databases and one MySQL system. Foldback's guarantees are written in PostgreSQL (PL/pgSQL triggers, partial unique indexes, `citext`, jsonb, advisory locks), so those databases cannot host the schema. Oracle's VM capacity was also unavailable. A free Neon database remains the no-card fallback if an Azure student policy blocks Flexible Server.
+
+## Database setup (account A)
+
+1. Portal, Azure Database for PostgreSQL Flexible Server, Create. Version **16**, workload **Development**, compute **Burstable B1ms**, storage **32 GiB**, backup retention 7 days (the default), same **region** as the VM. Choose a region your student subscription allows (try the VM region list first).
+2. Authentication: PostgreSQL authentication. The admin login you create becomes the **owner role** (`MIGRATE_DATABASE_URL`).
+3. Networking: **public access** with firewall rules. Allow only the VM's static public IP (add your own IP temporarily while you create the roles, then remove it). TLS is required by default. Use port **5432** (the direct connection). Do **not** use the built-in PgBouncer on 6432, because session-level advisory locks break under transaction pooling.
+4. Server parameters: set `azure.extensions` to include `CITEXT` (the migration runs `CREATE EXTENSION IF NOT EXISTS citext`).
+5. Create the database `foldback`, then as the admin: `CREATE ROLE foldback_app LOGIN PASSWORD '<random>';`.
+6. Put the owner URL in `MIGRATE_DATABASE_URL` and the app URL in `DATABASE_URL` on the VM (`/opt/foldback/.env`, mode 600), both with `sslmode=require`.
+7. Run `migrate` (the `migrate` container does this on every deploy). It creates every object and grants DML to `foldback_app`.
+8. Backups: Flexible Server keeps 7 days of automatic backups. Also run `backup.sh` (`pg_dump`) daily from the VM to `/opt/foldback/backups`, using `postgresql-client-16`.
+9. Application pool size 10 or less, statement timeout 5 s, and connection retry on a transient failure.
 
 ## Environment variables (backend)
 
@@ -18,10 +46,11 @@ Every variable is parsed by `config/env.ts` (zod). Boot fails on a missing or in
 |---|---|---|
 | `NODE_ENV` | `production` | `development`, `test`, or `production` |
 | `PORT` | `8787` | |
-| `DATABASE_URL` | `postgres://foldback:…@postgres:5432/foldback` | |
+| `DATABASE_URL` | `postgres://foldback_app:…@<host>/foldback?sslmode=require` | The application role (DML only). Use the provider's **direct** endpoint, not a pooled one (session advisory locks) |
+| `MIGRATE_DATABASE_URL` | `postgres://<owner>:…@<host>/foldback?sslmode=require` | The owner role. Used only by `migrate`, tests, and housekeeping jobs. Never given to the backend container |
 | `JWT_SECRET` | 64 random bytes, base64 | At least 32 bytes, otherwise boot fails |
-| `CORS_ORIGINS` | `https://foldback.duckdns.org` | Comma list. Also used by the Origin check |
-| `APP_BASE_URL` | `https://foldback.duckdns.org` | PayPal return URLs |
+| `CORS_ORIGINS` | `https://foldback.<region>.cloudapp.azure.com` | Comma list. Also used by the Origin check |
+| `APP_BASE_URL` | `https://foldback.<region>.cloudapp.azure.com` | PayPal return URLs |
 | `TRUST_PROXY` | `1` | One proxy hop (Caddy) |
 | `LOG_LEVEL` | `info` | |
 | `METRICS_TOKEN` | random | Bearer token for `/metrics` from outside the Compose network |
@@ -46,7 +75,7 @@ Both Dockerfiles are multi-stage, with targets `deps → build → runtime` plus
 
 The backend runs `node dist/server.js`. The frontend uses Next.js `output: "standalone"` and runs `node server.js`.
 
-Images are built for `linux/arm64` (the Oracle VM) and `linux/amd64` (local) with Buildx, then pushed to GitHub Container Registry:
+Images are built for `linux/amd64` (the Azure VM and every developer machine) with Buildx, then pushed to GitHub Container Registry:
 
 - `ghcr.io/{owner}/foldback-backend:{sha}` and `:main`
 - `ghcr.io/{owner}/foldback-frontend:{sha}` and `:main`
@@ -57,11 +86,11 @@ If Bryntum's registry needs a token, it is a build secret (`RUN --mount=type=sec
 
 ```text
 caddy     caddy:2.11      ports 80, 443 → reverse proxy; volumes caddy_data, caddy_config
-postgres  postgres:16     no public port; volume pgdata; healthcheck pg_isready;
-                          command tuned: shared_buffers=512MB, effective_cache_size=2GB, max_connections=50
-migrate   backend image   command: node dist/scripts/migrate.js migrate; depends_on postgres healthy; restart: "no"
+migrate   backend image   command: node dist/scripts/migrate.js migrate (uses MIGRATE_DATABASE_URL); restart: "no"
 backend   backend image   depends_on migrate completed_successfully; healthcheck /health/ready; restart unless-stopped
 frontend  frontend image  depends_on backend healthy; restart unless-stopped
+postgres  postgres:16     optional fallback only (compose profile `local-db`): no public port, volume pgdata.
+                          Not started in production while a managed database is in use
 ```
 
 Every service has a memory limit and json-file log rotation (`max-size: 10m`, `max-file: 3`).
@@ -80,15 +109,37 @@ Every service has a memory limit and json-file log rotation (`max-size: 10m`, `m
 
 Caddy gets and renews the Let's Encrypt certificate, redirects HTTP to HTTPS, proxies WebSockets, and forwards `X-Request-Id`. `/metrics` is not routed publicly.
 
-## Oracle Cloud VM setup (phase 3, so deploys start early)
+## Azure VM setup (account B, Phase 3, so deploys start early)
 
-1. Create an Oracle Cloud account. Pick a home region with Ampere capacity; if "out of capacity" appears, try another availability domain or try again later. Do this on day one.
-2. Create the instance: shape `VM.Standard.A1.Flex` with 2 OCPU and 12 GB (inside the free 4 OCPU / 24 GB), image Ubuntu 24.04 (aarch64), boot volume 50 GB, your SSH public key.
-3. Networking: in the VCN security list, allow ingress TCP 80 and 443 from `0.0.0.0/0`, and 22 from your IP only. Oracle's Ubuntu images also ship host firewall rules, so open 80 and 443 there too (`iptables` + `netfilter-persistent save`).
-4. Domain: a free DuckDNS subdomain (for example `foldback.duckdns.org`) pointing at the VM's public IP, or your own domain. Set `DOMAIN` in the env file.
-5. Install Docker Engine and the Compose plugin. Create a `deploy` user in the `docker` group, and turn off password SSH.
-6. `docker login ghcr.io` with a read-only token, copy `deploy/` to `/opt/foldback`, fill in `/opt/foldback/.env` from `env.production.example`, then `docker compose up -d`.
-7. Run `deploy/scripts/smoke.sh https://{domain}`.
+1. Create a resource group `foldback-app` in the chosen region.
+2. Create the VM: image **Ubuntu Server 24.04 LTS (x64)**, size **Standard B2s** (2 vCPU, 4 GB) or a similar B-series, **Standard SSD 64 GB**, authentication **SSH public key**, admin user `azureuser`. Turn **auto-shutdown off**.
+3. Public IP: **Standard SKU, static**, with a **DNS name label**, for example `foldback`. That gives a free domain, `foldback.<region>.cloudapp.azure.com`, and no DuckDNS is needed. Set `DOMAIN` to that name.
+4. Network security group, inbound rules: **22** (SSH) from your team's addresses only, **80** and **443** from anywhere. Nothing else.
+5. SSH in, then install Docker Engine and the Compose plugin (Docker's official apt repository), and add the user to the `docker` group. Turn off password SSH. Ubuntu on Azure has no extra host firewall to open.
+6. Add each teammate's SSH **public** key to `~/.ssh/authorized_keys`. Never share the private key.
+7. `docker login ghcr.io` with a read-only token, copy `deploy/` to `/opt/foldback`, fill in `/opt/foldback/.env` from `env.production.example`, then `docker compose up -d`.
+8. Give account A's database the VM's static IP in its firewall (see Database setup).
+9. Run `deploy/scripts/smoke.sh https://<domain>`.
+
+## Scale-out playbook (account C, only if measurements require it)
+
+One VM is the plan for judging. Scaling out is documented, not built. The backend is already stateless and the database is external, so a second instance is mostly infrastructure. Do it only if a load test shows CPU above about 70% or p95 latency above the target in `quality.md`.
+
+Code changes needed first (small, each behind an existing interface):
+
+- A **Redis adapter for Socket.IO**, so board updates reach clients connected to either instance (a free hosted Redis such as Upstash works).
+- A **shared store for rate-limit counters** (the same Redis).
+- **Sticky sessions** for Socket.IO, or WebSocket-only transport.
+- A **singleton guard** for housekeeping jobs, using `pg_try_advisory_lock`, so only one instance runs them (they are idempotent, so this is an optimization).
+
+Already safe across instances because they live in Postgres: the contract advisory lock, the unique indexes, the guard triggers, the AI call cap, and the extraction cache.
+
+Infrastructure:
+
+1. In account C create an identical VM (same image, size, `.env`). Add its static IP to the database firewall in account A.
+2. Azure's load balancers cannot span subscriptions, so front both VMs with **Caddy on VM B**: `reverse_proxy` to the local backend and to VM C's backend, with an IP-hash or cookie policy for stickiness.
+3. Connect B and C privately with **VNet peering across subscriptions** (both owners approve it), so backend traffic does not cross the public internet. Without peering, restrict VM C's backend port to VM B's IP in its network security group and add a shared-secret header.
+4. Deploys run `deploy.sh` on both hosts (CI loops over `DEPLOY_HOSTS`).
 
 ## Scripts (`deploy/scripts/`)
 
@@ -107,8 +158,8 @@ Runs on every push and pull request:
 1. **backend** job: Node 24, `yarn install --immutable`, `yarn format:check`, `yarn typecheck`, `yarn lint`, `yarn knip`, `yarn dup` (jscpd), `yarn npm audit --severity high`, and `yarn test --coverage` with a `postgres:16` service container. Uploads coverage.
 2. **frontend** job: Node 24, `yarn install --immutable`, `yarn sync-types --check`, `yarn format:check`, `yarn typecheck`, `yarn lint`, `yarn knip`, `yarn dup`, `yarn npm audit --severity high`, `yarn test`, `yarn build`, then **Lighthouse CI** (`lhci autorun` against `next start` with the stub API) using the budgets in `quality.md`.
 3. **security** job: gitleaks over the full history. CodeQL runs through GitHub's default setup (enable it in repo Settings → Code security).
-4. **images** job (only on `main`, after 1 and 2): Buildx multi-arch build and push to ghcr.io, tagged with the commit sha and `main`.
-5. **deploy** job (only on `main`, after 4, environment `production` with required reviewers optional): SSH to the VM (`DEPLOY_HOST` and `DEPLOY_SSH_KEY` secrets) and run `deploy.sh`. The job fails if the smoke test fails.
+4. **images** job (only on `main`, after 1 and 2): Buildx build (`linux/amd64`) and push to ghcr.io, tagged with the commit sha and `main`.
+5. **deploy** job (only on `main`, after 4, environment `production` with required reviewers optional): SSH to the Azure VM (`DEPLOY_HOST` and `DEPLOY_SSH_KEY` secrets) and run `deploy.sh`. The job fails if the smoke test fails.
 
 Branch protection on `main` requires jobs 1–3. `.github/dependabot.yml` opens weekly grouped updates for `backend/`, `frontend/`, and GitHub Actions. The CI badge goes in the README.
 

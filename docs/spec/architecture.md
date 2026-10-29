@@ -11,7 +11,7 @@ Foldback is a Next.js frontend and an Express API, deployed as two containers be
 | Package manager | Yarn 4 (Berry, via Corepack, `nodeLinker: node-modules`, `enableScripts: false` with a per-package allow-list), two separate packages (`backend/`, `frontend/`), each with its own `yarn.lock`. Not a monorepo |
 | API | Express 5 (^5.2), compiled by `tsc` to `dist/` and run with plain `node` in production. `tsx` watch in dev |
 | Realtime | Socket.IO 4 (^4.8). Used only to tell clients "this contract changed" |
-| Database | PostgreSQL 16 with the plain `pg` driver. No ORM. Hand-written SQL. Numbered `.sql` migrations run by `scripts/migrate.ts` (`migrate`, `status`, `reset`) |
+| Database | PostgreSQL 16 **hosted separately from the app** (Azure Database for PostgreSQL Flexible Server, see `deploy.md`), with the plain `pg` driver. Two roles: an owner for migrations and a DML-only `foldback_app` for the running app. No ORM. Hand-written SQL. Numbered `.sql` migrations run by `scripts/migrate.ts` (`migrate`, `status`, `reset`) |
 | Validation | zod ^4 strict objects on every body, params, and query, and on env |
 | Auth | JWT (`jsonwebtoken`) in an httpOnly cookie, bcrypt password hashing, email login, guest demo accounts |
 | Security | helmet, cors allow-list (`CORS_ORIGINS`), express-rate-limit per IP and per user, `TRUST_PROXY`, Origin check on mutations |
@@ -26,7 +26,7 @@ Foldback is a Next.js frontend and an Express API, deployed as two containers be
 | Tests | Jest 30 + ts-jest + supertest. Integration tests use a real Postgres test database. See `test.md` |
 | Lint | ESLint 9 flat config (`eslint-config-next` on the frontend, `typescript-eslint` on the backend) |
 | CI | GitHub Actions: typecheck, lint, and test for both packages, then build and push images to ghcr.io on `main` |
-| Deploy | Multi-stage Dockerfiles, Docker Compose on one Oracle Cloud Ampere (ARM64) VM, Caddy 2 for TLS. See `deploy.md` |
+| Deploy | Multi-stage Dockerfiles, Docker Compose on one Azure VM (x64), Azure Database for PostgreSQL Flexible Server for data, Caddy 2 for TLS. See `deploy.md` |
 
 Not used, even though our previous project had them: worker_threads, Groq, market-data libraries, charting packages, Google sign-in, username login, autoscaling scripts. Nothing here needs them.
 
@@ -41,12 +41,13 @@ Not used, even though our previous project had them: worker_threads, Groq, marke
           backend :8787 (Express 5 + Socket.IO)   frontend :3000 (Next.js standalone)
            |        |          |
      Postgres 16  PayPal     Gemini, Groq
-     (volume)     sandbox    Messages API
+     (managed,    sandbox    LLM APIs
+      separate)
 ```
 
 One domain serves both, so the auth cookie is first-party, there are no cross-origin requests in production, and PayPal return URLs are simple. `/metrics` is not exposed publicly by Caddy. It is reachable only inside the Compose network, or with `METRICS_TOKEN`.
 
-There is a single backend instance by design. In-memory state (rate-limit counters, socket rooms) sits behind small interfaces, so a Redis-backed version could replace it later. Durable state lives only in Postgres.
+The database is a separate service, reached only through `DATABASE_URL`, so the backend container is stateless and can be replaced or duplicated. We still run **one** backend instance for now. Running more needs two small changes, both behind existing interfaces: a shared store for rate-limit counters, and a Redis adapter for Socket.IO rooms. Everything that must be correct across instances is already in Postgres (advisory locks, unique indexes, the guard triggers). Housekeeping jobs (guest cleanup) are safe on every instance because they are idempotent.
 
 ## Backend layout and layering
 
@@ -228,7 +229,7 @@ Otherwise the route returns `409 share_not_payable` (or the more specific `contr
 
 ## Concurrency
 
-- **Contract lock.** `withContractLock(contractId, fn)` takes `pg_try_advisory_lock(hashtextextended(contractId, 0))` on a dedicated pooled client for the whole of resolve, clock, and authorize, then releases it in `finally`. If the lock is busy, it returns `409 resolve_in_progress`. Two browser tabs pressing Resolve can never run two capture waves.
+- **Contract lock.** `withContractLock(contractId, fn)` takes `pg_try_advisory_lock(hashtextextended(contractId, 0))` on a dedicated pooled client for the whole of resolve, clock, and authorize, then releases it in `finally`. If the lock is busy, it returns `409 resolve_in_progress`. Two browser tabs pressing Resolve can never run two capture waves. The lock is session-level, so the same client must call `pg_advisory_unlock` in `finally` before it is released (a leaked lock would leave the contract "busy" until that connection dies). The authorize path takes the same lock. Inside each of transaction 1 and transaction 2, start with `SELECT 1 FROM contracts WHERE id = $1 FOR UPDATE`. Use a **direct** (not pooled) database connection, because transaction-mode poolers break session-level advisory locks.
 - **One in-flight PayPal call per share.** A partial unique index on `paypal_operations(share_id) WHERE outcome IN ('pending','unknown')` makes a second concurrent mutating call fail at insert time, before any HTTP request is sent.
 - **PayPal calls never run inside a database transaction.** The pattern is: tx 1 inserts a `pending` operation and changes the share status, then commits. Then the HTTP call. Then tx 2 records the outcome and the new status. A crash between tx 1 and tx 2 leaves a `pending` operation, which is treated as unknown.
 - **Every recovery path reads from the database.** On boot, nothing is retried automatically. Unknowns wait for sync.

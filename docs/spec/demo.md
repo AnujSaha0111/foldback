@@ -102,7 +102,7 @@ Local: Docker for Postgres, `yarn install` in both packages, `.env` files, `yarn
 - PayPal Orders v2 with `intent: AUTHORIZE`, then Payments v2 capture and void. Every mutating call has a derived `PayPal-Request-Id`, so retries replay instead of double-charging. Lost responses park the share in an "unknown" state until a GET confirms what PayPal actually did.
 - Free hosted models, called with plain `fetch` through a fallback chain: Gemini Flash models first, then Groq `openai/gpt-oss-120b` and `gpt-oss-20b`, then OpenRouter free. Strict JSON-schema output for the rule reader and tool calling for the assistant. A server validator re-checks the math, rejects dollar figures not found in the chat, and recomputes timezone offsets. Code, not the model, carries the money logic. Per-IP rate limits and a daily AI call cap keep the public demo inside the free quotas.
 - Bryntum Scheduler: one read-only board with Deadline, Grace, Now, and agent-Proposed markers, updating live from server state.
-- Production-grade stack: TypeScript strict throughout. Express 5 with routes → controllers → services → repositories. PostgreSQL 16 with a constraint-heavy schema: allowed state transitions, write-once fields, and idempotency are enforced by the database itself. Socket.IO for live board updates. JWT cookie auth with private guest workspaces. winston logs with request ids, Prometheus metrics, and health checks. Next.js 16 + MUI + Redux Toolkit. Jest suites against real Postgres, run in GitHub Actions. Multi-arch Docker images, deployed with Docker Compose and Caddy (HTTPS) on an Oracle Cloud ARM VM.
+- Production-grade stack: TypeScript strict throughout. Express 5 with routes → controllers → services → repositories. PostgreSQL 16 with a constraint-heavy schema: allowed state transitions, write-once fields, and idempotency are enforced by the database itself. Socket.IO for live board updates. JWT cookie auth with private guest workspaces. winston logs with request ids, Prometheus metrics, and health checks. Next.js 16 + MUI + Redux Toolkit. Jest suites against real Postgres, run in GitHub Actions. Multi-arch Docker images, deployed with Docker Compose and Caddy (HTTPS) on an Azure VM, with Azure Database for PostgreSQL as a separate managed service.
 
 **Challenges.** Making money state safe under lost responses. Keeping the AI useful while making it structurally unable to move money: the agent's actions are proposals, and its simulation calls the same pure decision function as the real resolver.
 
@@ -110,14 +110,14 @@ Local: Docker for Postgres, `yarn install` in both packages, `.env` files, `yarn
 
 **What's next.** PayPal webhooks alongside sync, reauthorization for deadlines longer than 3 days, notifications sent from the organizer's own channels, and unequal shares.
 
-**Built with:** paypal, paypal-orders-api, gemini, groq, gpt-oss, bryntum, nextjs, react, mui, redux, typescript, express, socket.io, postgresql, docker, caddy, oracle-cloud, github-actions
+**Built with:** paypal, paypal-orders-api, gemini, groq, gpt-oss, bryntum, nextjs, react, mui, redux, typescript, express, socket.io, postgresql, docker, caddy, azure, github-actions
 
 **Tools paragraph:**
 
 - PayPal sandbox REST: create order (`AUTHORIZE`), authorize, capture, void, get order, get authorization.
 - Google Gemini (3.x Flash and Flash-Lite) with Groq (`openai/gpt-oss-120b`, `gpt-oss-20b`) as fallback, and OpenRouter free as last resort: rule extraction with strict structured outputs, and the organizer assistant with five tools. It never sets amounts or calls PayPal.
 - Bryntum Scheduler: the live board.
-- Oracle Cloud (Always Free Ampere VM), Docker Compose, Caddy: the hosted demo, with HTTPS.
+- Microsoft Azure (a VM, plus Azure Database for PostgreSQL Flexible Server), Docker Compose, Caddy: the hosted demo, with HTTPS.
 
 **What we did not build:** marketplace onboarding, payouts, subscriptions, refunds, unequal shares, or messaging.
 

@@ -56,11 +56,11 @@ deploy/compose.dev.yml
 
 ## Exit check
 
-- [ ] `yarn migrate` then `yarn migrate status` show `0001` applied. A second `migrate` is a no-op.
-- [ ] Phase 1 cases 1–17 in `test.md` pass against real Postgres.
-- [ ] `yarn typecheck` and `yarn lint` are clean.
-- [ ] `learn/03-database.md` is written.
+- [x] `yarn migrate` then `yarn migrate status` show `0001` applied. A second `migrate` is a no-op.
+- [x] All 31 Phase 1 cases in `test.md` pass against real Postgres, running as the non-owner `foldback_app` role.
+- [x] `yarn typecheck` and `yarn lint` are clean.
+- [x] `learn/03-database.md` is written.
 
 ## Exit note
 
-Changes made during the review:
+Changes made during the review: none. The review session was skipped to save time, so the design in `data-model.md` was approved as written. Added during implementation: constraint names, the extra checks listed under "Implementation notes" in `data-model.md`, tests 15 to 17, and a `src/db/migrator.ts` module behind the CLI. Result (28 Oct 2026, Postgres 16 in Codespaces): `yarn migrate` applied `0001_init`, `migrate:status` shows it applied, and all 17 tests pass. ts-jest warned about `isolatedModules`, fixed by enabling it in `tsconfig.json`. Then an independent senior-database-engineer review (28 Oct 2026) reproduced 7 high-severity gaps and the schema was amended in place (see "Independent review" in `data-model.md`). Result after the amendment, run on Postgres 18 locally: all 31 tests pass, lint and format clean.
