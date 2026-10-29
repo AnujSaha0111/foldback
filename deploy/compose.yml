@@ -1,0 +1,99 @@
+# Production stack on the Mac mini. Run from the working folder (~/foldback), never from the git clone:
+#   docker compose up -d
+# Values come from ~/foldback/.env (mode 600, template: env.production.example). Each service receives only
+# the variables it needs, so the backend never sees the owner role or its password.
+name: foldback
+
+x-backend-image: &backend-image ${BACKEND_IMAGE:-ghcr.io/anujsaha0111/paypal-hackathon/backend}:${BACKEND_TAG:-latest}
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: foldback
+      # Both come from .env. Empty values fail safely: the image refuses an empty superuser password, and
+      # postgres-init.sh refuses to create the app role without one.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: foldback
+      # Read once by postgres-init.sh on the first start, to create the app role before any migration.
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD}
+    # No ports: Postgres is reachable only on this Compose network. Backups use `docker compose exec`.
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres-init.sh:/docker-entrypoint-initdb.d/10-app-role.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U foldback -d foldback"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    mem_limit: 1g
+    logging: *logging
+
+  # One-shot job: applies pending migrations as the table owner, then exits. The backend waits for it.
+  migrate:
+    image: *backend-image
+    command: ["node", "dist/cli/migrate.js", "migrate"]
+    environment:
+      # No password in the URL: the pg driver reads it from PGPASSWORD.
+      MIGRATE_DATABASE_URL: postgres://foldback@postgres:5432/foldback
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    mem_limit: 256m
+    logging: *logging
+
+  backend:
+    image: *backend-image
+    environment:
+      NODE_ENV: production
+      PORT: "8787"
+      DATABASE_URL: postgres://foldback_app@postgres:5432/foldback
+      PGPASSWORD: ${APP_DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      CORS_ORIGINS: ${CORS_ORIGINS:?set CORS_ORIGINS in .env}
+      APP_BASE_URL: ${APP_BASE_URL:?set APP_BASE_URL in .env}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
+      # One proxy hop in front of the app: the Cloudflare Tunnel client on the host.
+      TRUST_PROXY: "1"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      METRICS_TOKEN: ${METRICS_TOKEN:-}
+      PAYPAL_ENV: sandbox
+      SIGNUPS_ENABLED: ${SIGNUPS_ENABLED:-true}
+      AI_ENABLED: ${AI_ENABLED:-true}
+      AI_DAILY_CALLS: ${AI_DAILY_CALLS:-600}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+    # Localhost only. The tunnel client on the host forwards api.{domain} here.
+    ports:
+      - "127.0.0.1:8787:8787"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:8787/health/ready').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    restart: unless-stopped
+    mem_limit: 512m
+    logging: *logging
+
+volumes:
+  pgdata:
