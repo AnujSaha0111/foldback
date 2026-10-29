@@ -15,7 +15,7 @@ The plan changed on 29 October 2026: the earlier Azure plan (VM, managed Postgre
                               |  cloudflared -> 127.0.0.1:8787  |
                               |  backend container (Node 24)    |
                               |  postgres:16 container, volume  |
-                              |  daily backups -> disk + offsite|
+                              |  daily backups (internal disk)   |
                               +---------------------------------+
    Team access to the Mac (admin only, never public): Tailscale + SSH keys
 ```
@@ -50,7 +50,7 @@ What is set up, and why. All of it was done over SSH, from a Windows laptop.
 | Firewall | macOS application firewall on | Nothing needs to come in: the tunnel and Tailscale are outbound-only |
 | Tailscale | The **Homebrew `tailscaled` system daemon** (`/Library/LaunchDaemons/com.tailscale.tailscaled.plist`), not the menu-bar app | The app's tunnel drops whenever the app is not running in a logged-in session. The daemon connects at boot, before any login. Key expiry is disabled for the Mac in the Tailscale admin console |
 | Docker | **Colima** (Homebrew `colima`, `docker`, `docker-compose`), 4 CPUs, 6 GB, 60 GB disk, under `foldback` | Installs and runs entirely from the command line, so no GUI step is needed on a machine far away. Started at login by `deploy/launchd/com.foldback.colima.plist` |
-| Tunnel client | Homebrew `cloudflared`, installed as a system service by the dashboard command | Runs on the host, not as a container: only images from `ghcr.io/anujsaha0111` and the official `postgres:16` run on the Mac |
+| Tunnel client | Homebrew `cloudflared`, a locally managed tunnel run by a launch daemon at boot (see Cloudflare Tunnel) | Runs on the host, not as a container: only images from `ghcr.io/anujsaha0111` and the official `postgres:16` run on the Mac |
 | Code | No git clone with credentials on the Mac | The repository is private, so files reach the Mac by `git archive | ssh`. Production needs only the `deploy/` folder, copied to `~foldback/foldback` |
 
 Gotcha: saving **System Settings → General → Sharing → Remote Login** rewrites the SSH allow-list from what that window shows, which drops `foldback`. Add Foldback there with **+**, or run `sudo dseditgroup -o edit -a foldback -t user com.apple.access_ssh`.
@@ -110,9 +110,26 @@ Each service gets only its own variables (explicit `environment:`), every servic
 
 ## Cloudflare Tunnel
 
-1. The Mac owner creates the tunnel in the Cloudflare dashboard (Zero Trust → Networks → Tunnels) and adds the public hostname `api.<domain>` → `http://localhost:8787`.
-2. The dashboard shows an install command that contains the tunnel token. The owner runs it once on the Mac with `sudo`; it installs `cloudflared` as a system service that starts at boot. The token never leaves the owner's hands.
-3. The dashboard shows the tunnel as Healthy. Socket.IO works through it.
+The domain is on Cloudflare's Free plan. The tunnel is **locally managed** (created with `cloudflared` on the Mac), because the Zero Trust dashboard asks for payment details during onboarding even on its free plan. Tunnels themselves are free.
+
+1. On the Mac, as the admin account: `cloudflared tunnel login` prints a link; the owner opens it in a browser, picks the domain, and authorizes. This writes a login certificate (`~/.cloudflared/cert.pem`).
+2. `cloudflared tunnel create foldback-api`, then `cloudflared tunnel route dns foldback-api api.<domain>` (adds the CNAME in Cloudflare).
+3. `/etc/cloudflared/config.yml` (root only, with the tunnel's credentials file beside it) routes exactly one hostname, and returns 404 for everything else:
+
+   ```yaml
+   tunnel: <tunnel id>
+   credentials-file: /etc/cloudflared/<tunnel id>.json
+   ingress:
+     - hostname: api.<domain>
+       service: http://localhost:8787
+     - service: http_status:404
+   ```
+
+4. `sudo cloudflared service install` creates the launch daemon `/Library/LaunchDaemons/com.cloudflare.cloudflared.plist`, which starts at boot. **Gotcha:** on macOS the generated plist runs `cloudflared` with no arguments, so it never connects ("use cloudflared tunnel run"). Its `ProgramArguments` must be `cloudflared --no-autoupdate --config /etc/cloudflared/config.yml tunnel run`; reload it with `launchctl bootout system <plist>` and `launchctl bootstrap system <plist>`.
+5. Delete the login certificate afterwards. The running tunnel needs only its credentials file, and the certificate can change DNS for the whole domain. To change the tunnel later, log in again, make the change, delete it again.
+6. In the Cloudflare dashboard: SSL/TLS → Edge Certificates → **Always Use HTTPS** on, **Minimum TLS 1.2**. Plain HTTP then redirects (the session cookie is `Secure`), and TLS 1.0 and 1.1 are refused.
+
+Check: `cloudflared tunnel info foldback-api` lists the connections, and `https://api.<domain>/health/live` returns 200. Socket.IO works through the tunnel.
 
 ## Frontend on Vercel
 
@@ -141,7 +158,7 @@ All run as `foldback` from `~/foldback/scripts`, with macOS's bash 3.2. `lib.sh`
 |---|---|
 | `deploy.sh [--force]` | Pulls the image named by `BACKEND_TAG`. If it differs from the running one: tags the running image `foldback-backend:previous`, runs `docker compose up -d` (migrate first), waits for the backend's health check, then runs `smoke.sh` with the image's commit. On failure it puts the previous image back and records the bad image in `.bad-image`, so the five-minute check does not retry it. Migrations are forward-only: a rollback restores the old backend, not the old schema |
 | `smoke.sh <url> <origin> [sha]` | `/health/live` and `/health/ready` are 200, `/api/health` shows `paypal_env: sandbox` and the expected commit, and a guest sign-in (with an allowed `Origin`) gets two sample plans |
-| `backup.sh` | `pg_dump -Fc` through `docker compose exec` into `BACKUP_DIR` (the external disk `/Volumes/FoldbackBackup/foldback` once it is plugged in), checked with `pg_restore --list`, older than `BACKUP_KEEP_DAYS` (14) removed. With `OFFSITE_DIR` set, an AES-256 encrypted copy goes there (a cloud-drive folder); it refuses to copy off the Mac unencrypted |
+| `backup.sh` | `pg_dump -Fc` through `docker compose exec` into `BACKUP_DIR` (`~/foldback/backups` on the Mac's internal disk; there is no external disk, so these protect against bad data and bad deploys, not against losing the Mac), checked with `pg_restore --list`, older than `BACKUP_KEEP_DAYS` (14) removed. With `OFFSITE_DIR` set, an AES-256 encrypted copy goes there (a cloud-drive folder); it refuses to copy off the Mac unencrypted |
 | `restore.sh check <dump>` | Restores into a scratch database, prints row counts, drops it. Safe at any time |
 | `restore.sh production <dump>` | Asks you to type `restore foldback`, takes a safety backup, stops the backend, replaces the database, starts the stack |
 | `housekeeping.sh` | `node dist/cli/housekeeping.js` in a throwaway `migrate` container (owner role) |
