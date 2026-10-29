@@ -49,6 +49,7 @@ cd backend
 cp .env.example .env        # PowerShell: Copy-Item .env.example .env
 corepack enable
 corepack yarn install
+corepack yarn hooks          # once per clone: pre-commit checks and the commit message check
 corepack yarn migrate
 corepack yarn test
 ```
@@ -65,10 +66,12 @@ Run, in each package you touched (`backend/` or `frontend/`):
 corepack yarn format:check
 corepack yarn typecheck
 corepack yarn lint
+corepack yarn knip
+corepack yarn dup
 corepack yarn test
 ```
 
-More gates (dead-code check, duplicate check, bundle budgets) arrive with CI in Phase 3. The rules are in [quality.md](spec/quality.md). The short version:
+CI runs the same gates plus the build, the shared-types check, a secret scan, and a dependency audit. Bundle budgets arrive with the frontend. The pre-commit hook (installed by `corepack yarn hooks`) already runs Prettier, ESLint, and typecheck on what you stage, and rejects a commit message that carries an AI attribution line. The rules are in [quality.md](spec/quality.md). The short version:
 
 - Search the code before writing a new function, type, or component. Reuse it.
 - Never edit a migration that is already merged. Add `NNNN_name.sql`.

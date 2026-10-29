@@ -30,7 +30,7 @@ backend/src/repositories/{users,contracts,shares,events}.repo.ts
 backend/src/domain/statuses.ts
 backend/src/realtime/{io,notify}.ts
 backend/src/shared/{api-types,statuses,rules}.ts
-backend/scripts/sync-types.ts
+backend/scripts/sync-types.ts  backend/src/cli/{migrate,housekeeping}.ts
 backend/Dockerfile  backend/.env.example
 deploy/compose.yml  deploy/Caddyfile  deploy/env.production.example
 deploy/scripts/{deploy,smoke,backup,restore}.sh

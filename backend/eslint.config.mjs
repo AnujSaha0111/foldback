@@ -15,10 +15,29 @@ export default [
       "max-depth": ["error", 3],
       "max-lines-per-function": ["error", { max: 80, skipBlankLines: true, skipComments: true }],
       "max-lines": ["error", { max: 400, skipBlankLines: true, skipComments: true }],
+      // SQL is text plus $n parameters, never built from values (quality.md section 2).
+      "no-restricted-syntax": [
+        "error",
+        {
+          // ${COLUMNS} style constants (fixed column lists) are allowed; any other expression is not.
+          selector:
+            "CallExpression[callee.property.name='query'] > TemplateLiteral.arguments:first-child > :not(TemplateElement):not(Identifier[name=/^[A-Z][A-Z0-9_]*$/])",
+          message: "Do not build SQL with ${}. Pass values as $1, $2 parameters.",
+        },
+        {
+          selector: "CallExpression[callee.property.name='query'] > BinaryExpression.arguments:first-child",
+          message: "Do not build SQL by concatenation. Pass values as $1, $2 parameters.",
+        },
+      ],
     },
   },
   {
-    files: ["scripts/**", "test/**"],
-    rules: { "no-console": "off", "max-lines-per-function": "off", "max-lines": "off" },
+    files: ["scripts/**", "src/cli/**", "test/**"],
+    rules: { "no-console": "off" },
+  },
+  {
+    files: ["test/**"],
+    // Test helpers build DDL and table names from constants they own.
+    rules: { "max-lines-per-function": "off", "max-lines": "off", "no-restricted-syntax": "off" },
   },
 ];

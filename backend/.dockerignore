@@ -1,0 +1,14 @@
+node_modules
+dist
+coverage
+test
+scripts
+docs
+.env
+.env.*
+!.env.example
+.husky
+.yarn
+Dockerfile
+*.md
+*.tsbuildinfo

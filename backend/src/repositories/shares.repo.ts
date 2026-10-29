@@ -92,10 +92,13 @@ export async function insertSeedShares(db: Db, contractId: string, shares: SeedS
     const p = (n: number): string => `$${base + n}`;
     return `(${p(1)}, $1, 'sample', ${p(2)}, ${p(3)}, ${p(4)}, ${p(5)}, ${p(6)}, ${p(7)})`;
   });
+  // Only generated $n placeholders are interpolated here, never values.
+  /* eslint-disable no-restricted-syntax */
   await db.query(
     `INSERT INTO shares (id, contract_id, money_source, position, display_name, is_grace_subject, status,
        amount_cents, sample_label)
      VALUES ${rows.join(", ")}`,
     values,
   );
+  /* eslint-enable no-restricted-syntax */
 }

@@ -10,13 +10,19 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "node --env-file-if-exists=.env ./node_modules/jest/bin/jest.js --runInBand",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "housekeeping": "tsx --env-file-if-exists=.env scripts/housekeeping.ts",
-    "migrate": "tsx --env-file-if-exists=.env scripts/migrate.ts migrate",
-    "migrate:status": "tsx --env-file-if-exists=.env scripts/migrate.ts status",
-    "migrate:reset": "tsx --env-file-if-exists=.env scripts/migrate.ts reset"
+    "knip": "knip",
+    "dup": "jscpd",
+    "test": "node --env-file-if-exists=.env ./node_modules/jest/bin/jest.js --runInBand",
+    "sync-types": "tsx scripts/sync-types.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node --env-file-if-exists=.env dist/server.js",
+    "hooks": "cd .. && husky backend/.husky",
+    "housekeeping": "tsx --env-file-if-exists=.env src/cli/housekeeping.ts",
+    "migrate": "tsx --env-file-if-exists=.env src/cli/migrate.ts migrate",
+    "migrate:status": "tsx --env-file-if-exists=.env src/cli/migrate.ts status",
+    "migrate:reset": "tsx --env-file-if-exists=.env src/cli/migrate.ts reset"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -42,7 +48,11 @@
     "@types/pg": "^8.23.1",
     "@types/supertest": "^7.2.1",
     "eslint": "^9",
+    "husky": "^9.1.7",
     "jest": "^30",
+    "jscpd": "^5.4.2",
+    "knip": "^6.43.0",
+    "lint-staged": "^17.6.0",
     "prettier": "^3.9.10",
     "socket.io-client": "^4.8.4",
     "supertest": "^7.3.1",
@@ -50,5 +60,12 @@
     "tsx": "^4.23.15",
     "typescript": "^6",
     "typescript-eslint": "^8.72.1"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "prettier --write",
+      "eslint --max-warnings=0"
+    ],
+    "*.{json,md,yml,mjs,cjs}": "prettier --write"
   }
 }

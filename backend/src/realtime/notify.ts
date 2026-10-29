@@ -22,9 +22,3 @@ export function createNotifier(io: Server): Notifier {
     },
   };
 }
-
-/** For code and tests that run without a socket server. */
-export const noopNotifier: Notifier = {
-  contractChanged: () => undefined,
-  shareChanged: () => undefined,
-};

@@ -371,7 +371,7 @@ On boot and every 6 hours, delete expired guests **who have no live money** (que
 ## Migrations
 
 - Files: `backend/migrations/NNNN_name.sql`, forward-only, each run inside a transaction.
-- `scripts/migrate.ts` keeps `schema_migrations(version text PRIMARY KEY, name text, checksum text, applied_at timestamptz)`.
+- `src/cli/migrate.ts` keeps `schema_migrations(version text PRIMARY KEY, name text, checksum text, applied_at timestamptz)`.
   - `migrate` applies pending files in order.
   - `status` lists applied and pending migrations.
   - `reset` drops and recreates the schema, and refuses when `NODE_ENV=production`.

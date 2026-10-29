@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const DEFAULT_LLM_CHAIN =
+const DEFAULT_LLM_CHAIN =
   "gemini:gemini-3.8-flash,gemini:gemini-3.6-flash,gemini:gemini-3.5-flash-lite,groq:openai/gpt-oss-120b,groq:openai/gpt-oss-20b,openrouter:openrouter/free";
 
 const PROVIDERS = new Set(["gemini", "groq", "openrouter"]);

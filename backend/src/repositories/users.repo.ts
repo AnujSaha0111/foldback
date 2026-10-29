@@ -2,7 +2,7 @@ import type { Pool, PoolClient } from "pg";
 
 type Db = Pick<Pool | PoolClient, "query">;
 
-export type UserKind = "member" | "guest";
+type UserKind = "member" | "guest";
 
 /** A user as the rest of the app sees them. The password hash is never part of it. */
 export interface User {
