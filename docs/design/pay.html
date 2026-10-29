@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your share · Foldback</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script>try{var t=localStorage.getItem("fb-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="landing.css">
+<link rel="stylesheet" href="pay.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav"><div class="container nav__bar">
+  <a class="logo" href="landing.html" aria-label="Foldback home"><span class="logo__a" aria-hidden="true">Fold<i></i></span><span class="logo__b" aria-hidden="true">back<i></i></span></a>
+  <span class="tag tag--badge">Sandbox</span>
+</div></header>
+
+<div class="mockbar"><div class="container mockbar__in">
+  <span class="mockbar__label">MOCK STATE</span>
+  <div class="seg" data-switch="#pay" role="group" aria-label="Mock state">
+    <button type="button" data-state="waiting" aria-pressed="true">Waiting</button>
+    <button type="button" data-state="checkout_open">Checkout open</button>
+    <button type="button" data-state="confirming">Confirming</button>
+    <button type="button" data-state="held">Held</button>
+    <button type="button" data-state="unknown">Unknown</button>
+    <button type="button" data-state="cancelled">Cancelled</button>
+    <button type="button" data-state="kept">Kept</button>
+    <button type="button" data-state="released">Released</button>
+    <button type="button" data-state="expired">Expired</button>
+    <button type="button" data-state="sample">Sample</button>
+  </div>
+</div></div>
+
+<main id="main">
+  <div id="pay" data-state="waiting">
+    <section class="pay__top" aria-labelledby="t">
+      <div class="pay__col">
+        <p class="pay__who">Maya Shah, your share for</p>
+        <h1 class="pay__title" id="t">Cabin weekend</h1>
+        <p class="pay__amt" aria-label="80 dollars">$80.00</p>
+      </div>
+    </section>
+
+    <div class="pay__col pay__body">
+      <div data-only="waiting checkout_open confirming held unknown cancelled sample">
+        <p class="pay__cond">This is a hold, not a charge.</p>
+        <p>It's only taken if all 4 people pay. You have until Mon 9 Nov, 6:00pm PT. Otherwise it's released and you pay nothing.</p>
+      </div>
+
+      <div aria-live="polite">
+        <p class="pay__msg pay__msg--big" data-only="kept" hidden>Everyone paid. Your share was captured.</p>
+        <p class="pay__msg pay__msg--big" data-only="released" hidden>The group didn't make it, so your hold was released. You were not charged.</p>
+        <p class="pay__msg pay__msg--big" data-only="expired" hidden>The deadline passed before this share was held. Nothing was charged.</p>
+      </div>
+
+      <ul class="who" aria-label="Who has paid">
+        <li class="who__sum"><span><span class="squares" aria-hidden="true" id="sq"><i></i><i></i><i></i><i></i></span><span id="count">3 of 4 held</span></span><span class="num">$320.00</span></li>
+        <li><span>Alex Chen</span><span class="tag" data-o>Held</span></li>
+        <li><span>Sam Ortiz</span><span class="tag" data-o>Held</span></li>
+        <li><span>Jordan Lee</span><span class="tag" data-o>Held</span></li>
+        <li><span>Maya Shah <span class="you">(you)</span></span><span class="tag" id="you">Waiting</span></li>
+      </ul>
+
+      <div class="act" aria-live="polite">
+        <div data-only="waiting cancelled">
+          <p class="pay__msg" data-only="cancelled" hidden style="margin-bottom:var(--s-4)">Checkout closed. Nothing was held.</p>
+          <button class="btn btn--block" type="button">Hold my share with PayPal <span aria-hidden="true">→</span></button>
+          <p class="field__help">You approve in a PayPal window. No card form here.</p>
+        </div>
+        <div data-only="checkout_open" hidden>
+          <button class="btn btn--block" type="button">Continue in PayPal <span aria-hidden="true">→</span></button>
+          <p class="field__help">Your checkout is still open.</p>
+        </div>
+        <p class="pay__msg" data-only="confirming" hidden>Confirming with PayPal…</p>
+        <div data-only="held" hidden>
+          <p class="pay__msg">Your $80.00 is held. You'll only be charged if everyone pays.</p>
+          <p class="hold-id num">Hold SAMPLE-AUTH-MAYA</p>
+        </div>
+        <p class="pay__msg" data-only="unknown" hidden>PayPal did not return a clear result. Your share stays reserved while we check.</p>
+        <p class="pay__msg" data-only="sample" hidden>This is a sample plan. No PayPal payment is possible.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="pay__foot"><div class="pay__col"><span>Sandbox only: no real money moves.</span><button type="button" data-theme-toggle>Dark theme</button></div></footer>
+
+<script src="mock.js"></script>
+<script>
+  var MAP = {
+    waiting: { you: ["waiting", "Waiting"], oth: ["held", "Held"], n: 3, c: "3 of 4 held" },
+    checkout_open: { you: ["waiting", "Checkout open"], oth: ["held", "Held"], n: 3, c: "3 of 4 held" },
+    confirming: { you: ["waiting", "Confirming"], oth: ["held", "Held"], n: 3, c: "3 of 4 held" },
+    held: { you: ["held", "Held"], oth: ["held", "Held"], n: 4, c: "4 of 4 held" },
+    unknown: { you: ["attention", "Checking"], oth: ["held", "Held"], n: 3, c: "3 of 4 held" },
+    cancelled: { you: ["waiting", "Waiting"], oth: ["held", "Held"], n: 3, c: "3 of 4 held" },
+    kept: { you: ["kept", "Kept"], oth: ["kept", "Kept"], n: 4, c: "4 of 4 kept" },
+    released: { you: ["released", "Released"], oth: ["released", "Released"], n: 0, c: "0 of 4 held" },
+    expired: { you: ["waiting", "Missed deadline"], oth: ["held", "Held"], n: 3, c: "3 of 4 held" },
+    sample: { you: ["waiting", "Waiting"], oth: ["held", "Held"], n: 3, c: "3 of 4 held" }
+  };
+  function apply(state) {
+    var m = MAP[state];
+    var y = document.getElementById("you"); y.className = "tag tag--" + m.you[0]; y.textContent = m.you[1];
+    document.querySelectorAll("[data-o]").forEach(function (t) { t.className = "tag tag--" + m.oth[0]; t.textContent = m.oth[1]; });
+    document.querySelectorAll("#sq i").forEach(function (s, i) { s.className = i < m.n ? "on" : ""; });
+    document.getElementById("count").textContent = m.c;
+    var c = document.querySelector('.pay__msg[data-only="cancelled"]'); if (c) c.hidden = state !== "cancelled";
+  }
+  var payEl = document.getElementById("pay");
+  payEl.addEventListener("statechange", function (e) { apply(e.detail); });
+  apply(payEl.getAttribute("data-state"));
+</script>
+</body>
+</html>

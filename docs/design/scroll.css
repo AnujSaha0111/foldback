@@ -1,0 +1,58 @@
+/* Scroll scenes for the landing page. --p comes from scroll.js; --q is "assembled" progress (0 apart, 1 together). */
+
+.scene { --p: 0.6; --q: clamp(0, calc((var(--p) - 0.15) / 0.4), 1); position: relative; overflow: hidden; }
+
+/* Scene 1: big words slide across an illustrated phone, like text over a photo. */
+.scene--poster {
+  background: var(--navy); color: #fff; display: grid; place-items: center;
+  min-height: clamp(32rem, 92vh, 52rem);
+}
+.poster__art { position: relative; z-index: 1; width: min(17rem, 60vw); transform: translateY(calc((0.5 - var(--p)) * 140px)); }
+.poster__h { position: absolute; inset: 0; z-index: 2; margin: 0; pointer-events: none; }
+.poster__w {
+  position: absolute; left: 0; right: 0; text-align: center; white-space: nowrap; font-weight: 600;
+  font-size: clamp(4rem, 15vw, 13rem); letter-spacing: -0.06em; line-height: 0.85;
+}
+.poster__w--a { top: 12%; color: #fff; transform: translateX(calc((var(--p) - 0.5) * 36vw)); }
+.poster__w--b { bottom: 12%; color: var(--sky); transform: translateX(calc((0.5 - var(--p)) * 36vw)); }
+
+/* Scene 2: four squares slide in from four sides and lock into a grid. The fourth stays open. */
+.scene--squares { --sq: var(--navy); padding-block: var(--s-8); background: var(--layer); }
+[data-theme="dark"] .scene--squares { --sq: #78a9ff; }
+.sq__wrap { display: grid; gap: var(--s-6); align-items: center; }
+.sq__art { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; width: min(100%, 22rem); aspect-ratio: 1; }
+.sq__art i {
+  display: block; background: var(--sq); opacity: calc(0.15 + 0.85 * var(--q));
+  transform: translate(calc((1 - var(--q)) * var(--x)), calc((1 - var(--q)) * var(--y)));
+}
+.sq__art i:nth-child(1) { --x: -60vw; --y: -30vh; }
+.sq__art i:nth-child(2) { --x: 60vw; --y: -40vh; }
+.sq__art i:nth-child(3) { --x: -50vw; --y: 40vh; }
+.sq__art i:nth-child(4) { --x: 60vw; --y: 30vh; background: transparent; border: 0.6rem solid var(--blue); }
+.sq__count { margin-top: var(--s-4); font-family: var(--font-mono); font-size: var(--fs-small); }
+
+/* Scene 3: two blocks with folded corners slide together. Kept and Released. */
+.scene--fold { --f: clamp(1.5rem, 4vw, 3rem); background: var(--sky); color: #000; padding-block: var(--s-8); }
+.fold__head { margin-bottom: var(--s-6); max-width: 36rem; }
+.fold { display: grid; grid-template-columns: minmax(0, 1fr); }
+.fold > div { position: relative; min-height: 14rem; padding: var(--s-5); color: #fff; display: flex; flex-direction: column; justify-content: flex-end; gap: var(--s-3); }
+.fold__k { font-size: clamp(2.5rem, 8vw, 6rem); font-weight: 600; letter-spacing: -0.05em; line-height: 0.95; }
+.fold p { max-width: 20rem; }
+.fold__a { background: var(--navy); transform: translateY(calc((1 - var(--q)) * -24vh)); clip-path: polygon(0 0, calc(100% - var(--f)) 0, 100% var(--f), 100% 100%, 0 100%); }
+.fold__a::after { content: ""; position: absolute; top: 0; right: 0; width: var(--f); height: var(--f); background: #fff; clip-path: polygon(0 0, 0 100%, 100% 100%); }
+.fold__b { background: #000; transform: translateY(calc((1 - var(--q)) * 24vh)); clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--f)), calc(100% - var(--f)) 100%, 0 100%); }
+.fold__b::after { content: ""; position: absolute; bottom: 0; right: 0; width: var(--f); height: var(--f); background: #fff; clip-path: polygon(0 0, 100% 0, 0 100%); }
+
+@media (min-width: 600px) {
+  .fold { grid-template-columns: 1fr 1fr; }
+  .fold > div { min-height: 22rem; }
+  .fold__a { transform: translateX(calc((1 - var(--q)) * -40vw)); }
+  .fold__b { transform: translateX(calc((1 - var(--q)) * 40vw)); }
+}
+@media (min-width: 768px) {
+  .sq__wrap { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s-8); }
+  .sq__art { justify-self: end; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene * { transition: none !important; }
+}

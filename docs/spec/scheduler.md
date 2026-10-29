@@ -55,7 +55,7 @@ Selecting an event or a row calls the parent with `shareId`. The parent shows th
   "resources": [{ "id": "shr_…", "name": "Alex Chen", "badge": "Sample" }],
   "events": [
     { "id": "shr_…:state", "resourceId": "shr_…", "name": "Held", "status": "held",
-      "startDate": "…", "endDate": "…", "eventColor": "orange", "moneySource": "sample",
+      "startDate": "…", "endDate": "…", "eventColor": "blue", "moneySource": "sample",
       "paypalId": null }
   ],
   "timeRanges": [
@@ -85,15 +85,17 @@ One event per share. `D` = `deadline_at`, `G` = `grace_until`, `S` / `E` = windo
 | `checkout_open` | Paying… | same as waiting | same | gray |
 | `declined` | Checkout closed | same as waiting | same | gray |
 | `authorize_unknown` | Hold unknown | D − 2h | D + 2h | red |
-| `held` | Held | S | D, or G when the contract is `grace` | orange |
+| `held` | Held | S | D, or G when the contract is `grace` | blue |
 | `capture_unknown` | Capture unknown | D | D + 6h | red |
 | `kept` | Kept | D − 1h | E | green |
 | `capture_failed` | Capture refused | D | E | red |
 | `void_unknown` | Release unknown | G or D | + 6h | red |
-| `released` | Released | G or D | E | blue |
+| `released` | Released | G or D | E | gray, drawn outlined (class `fb-released`) |
 | `expired` | Missed deadline | D | D + 4h | gray |
 
 Times are clamped to `[S, E]`.
+
+Colors follow the approved design in `ui.md` → Visual design (`docs/design/board.html` is the reference). Held is blue, Kept green, Released an outlined gray bar, unknown and refused states red, Waiting and Missed deadline gray. A label that does not fit inside a short bar is drawn beside it, so the status word is never clipped.
 
 ## Sample versus sandbox
 

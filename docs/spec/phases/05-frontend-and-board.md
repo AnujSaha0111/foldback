@@ -27,7 +27,9 @@ frontend/  (create-next-app, App Router, TypeScript, Yarn, ESLint 9)
   src/app/plans/page.tsx              src/app/plans/[id]/page.tsx
   src/features/{auth,rules,board}/
   src/features/board/FoldbackScheduler.tsx   dynamic import, ssr:false
-  src/components/  src/lib/format.ts
+  src/components/<ComponentName>/     index.tsx (markup and logic), styled.ts (MUI styled() parts, tokens only), index.test.tsx; optional types.ts
+  src/features/<feature>/components/<ComponentName>/   same shape for feature-owned components
+  src/lib/format.ts  src/lib/status.ts
   src/middleware.ts                   redirect to /login when no fb_session cookie on /plans*
   Dockerfile
 backend/src/services/projection.service.ts  + GET /api/contracts/:id/scheduler
@@ -36,6 +38,19 @@ frontend/src/**/*.test.ts(x)
 ```
 
 CI gets the frontend job with every `quality.md` §7 gate, including Lighthouse CI and `budgets.json`. The frontend image is added to Compose.
+
+## Frontend engineering standard
+
+Written like a production codebase, modular and without repetition.
+
+- **One Redux store** (`src/store`): `configureStore`, typed `useAppDispatch` and `useAppSelector` (`.withTypes`), one slice per concern (`session`, `theme`, `boardSelection`, `assistant`, `ui`), memoized selectors beside each slice. Server data lives only in RTK Query; slices hold UI state only.
+- **One `baseApi`**, extended per feature with `injectEndpoints`. Tags are declared once. A listener middleware turns socket events into tag invalidations. No `fetch` calls in components.
+- **Theme in the store**: `theme` slice, default `light`, toggle in the footer and header menu, persisted in `localStorage` (guarded), applied as `data-theme` and to the MUI theme. The MUI theme is generated from `docs/design/tokens.css` (radius 0, no shadows).
+- **Single source for status**: one map `status → label, tone` in `src/lib/status.ts`, used by the tag, the board bar, the person card and the Pay page. A new status is added in one place.
+- **Component folders**: every component is `components/<ComponentName>/index.tsx` plus `styled.ts`. `index.tsx` has no styling beyond using the styled parts; `styled.ts` holds all `styled()` definitions and reads only theme tokens (no hex, no magic numbers). Import by folder (`import { Logo } from "@/components/Logo"`), so the folder name is the public name. Tests sit beside the component as `index.test.tsx`.
+- **Primitives once**: `Logo`, `Button`, `Field`, `StatusTag`, `Callout`, `DataTable`, `Money`, `Page`. Features compose them; no copy-pasted markup or inline hex values.
+- **Scroll motion as a hook**: `useScrollProgress(ref)` sets one CSS variable; scenes are pure CSS from it. Disabled under `prefers-reduced-motion`. Never on the Pay page.
+- Strict TypeScript, no `any`, errors shown as the API `message`, every component has a test for its states, files stay small (split a component past about 150 lines).
 
 ## Do not
 

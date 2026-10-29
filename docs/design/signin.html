@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · Foldback</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script>try{var t=localStorage.getItem("fb-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="landing.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="container nav__bar">
+    <a class="logo" href="landing.html" aria-label="Foldback home"><span class="logo__a" aria-hidden="true">Fold<i></i></span><span class="logo__b" aria-hidden="true">back<i></i></span></a>
+    <a class="btn btn--link" href="landing.html">Back to home</a>
+  </div>
+</header>
+
+<div class="mockbar"><div class="container mockbar__in">
+  <span class="mockbar__label">MOCK STATE</span>
+  <div class="seg" data-switch="#auth" role="group" aria-label="Mock state">
+    <button type="button" data-state="signin" aria-pressed="true">Sign in</button>
+    <button type="button" data-state="error">Sign in error</button>
+    <button type="button" data-state="create">Create account</button>
+  </div>
+</div></div>
+
+<main id="main" class="auth">
+  <div class="auth__form" id="auth" data-state="signin">
+    <div data-only="signin error">
+      <h1>Sign in</h1>
+      <p class="muted">New to Foldback? <a href="#" data-goto="create">Create account</a></p>
+      <form class="stack" style="margin-top:var(--s-6)" onsubmit="return false" novalidate>
+        <div class="field"><label class="field__label" for="e1">Email</label><input class="input" id="e1" type="email" autocomplete="email" placeholder="name@example.com"></div>
+        <div class="field"><label class="field__label" for="p1">Password</label><input class="input" id="p1" type="password" autocomplete="current-password"></div>
+        <p class="field__error" role="alert" data-only="error">Email or password is incorrect.</p>
+        <button class="btn btn--block" type="submit">Sign in <span aria-hidden="true">→</span></button>
+      </form>
+    </div>
+
+    <div data-only="create" hidden>
+      <h1>Create account</h1>
+      <p class="muted">Already have one? <a href="#" data-goto="signin">Sign in</a></p>
+      <form class="stack" style="margin-top:var(--s-6)" onsubmit="return false" novalidate>
+        <div class="field"><label class="field__label" for="n2">Name</label><input class="input" id="n2" type="text" autocomplete="name" placeholder="Alex Chen"></div>
+        <div class="field"><label class="field__label" for="e2">Email</label><input class="input" id="e2" type="email" autocomplete="email" placeholder="name@example.com"></div>
+        <div class="field"><label class="field__label" for="p2">Password</label><input class="input" id="p2" type="password" autocomplete="new-password" aria-describedby="p2h"><p class="field__help" id="p2h">At least 10 characters</p></div>
+        <button class="btn btn--block" type="submit">Create account <span aria-hidden="true">→</span></button>
+      </form>
+    </div>
+
+    <div class="auth__or">Or</div>
+    <a class="btn btn--secondary btn--block" href="plans.html">Try it as a guest <span aria-hidden="true">→</span></a>
+    <p class="field__help" style="margin-top:var(--s-3)">No sign-up. You get two sample plans and your own private workspace for 7 days.</p>
+  </div>
+
+  <aside class="auth__panel" aria-hidden="true">
+    <p class="display">Three holds in. One to go.</p>
+    <div class="mark4"><i></i><i></i><i></i><i class="open"></i></div>
+  </aside>
+</main>
+
+<footer class="footer"><div class="container footer__bar"><span class="grow">Sandbox only: no real money moves.</span><button class="theme-toggle" type="button" data-theme-toggle>Dark theme</button></div></footer>
+
+<script src="mock.js"></script>
+<script>
+  document.querySelectorAll("[data-goto]").forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      e.preventDefault();
+      var s = a.getAttribute("data-goto");
+      document.querySelectorAll(".seg button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-state") === s)); });
+      window.fbSetState(document.getElementById("auth"), s);
+    });
+  });
+  if (location.hash === "#create") document.querySelector('[data-state="create"]').click();
+</script>
+</body>
+</html>
