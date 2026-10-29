@@ -6,6 +6,7 @@ import helmet from "helmet";
 import type { Pool } from "pg";
 import type { Env } from "./config/env";
 import { createAuthController } from "./controllers/auth.controller";
+import { createContractsController } from "./controllers/contracts.controller";
 import { createDemoController } from "./controllers/demo.controller";
 import { createHealthController } from "./controllers/health.controller";
 import { requireUser } from "./http/middleware/auth";
@@ -17,6 +18,7 @@ import { requestId } from "./http/middleware/requestId";
 import { requestLogger } from "./http/middleware/requestLogger";
 import type { Logger } from "./observability/logger";
 import { authRoutes } from "./routes/auth.routes";
+import { contractsRoutes } from "./routes/contracts.routes";
 import { demoRoutes } from "./routes/demo.routes";
 import { healthRoutes } from "./routes/health.routes";
 
@@ -48,6 +50,7 @@ export function createApp({ env, pool, logger, limits = DEFAULT_LIMITS }: AppDep
   app.use("/api", limiters.api, originCheck(env.CORS_ORIGINS));
   app.use("/api/auth", authRoutes(createAuthController(env, pool), limiters, guard));
   app.use("/api/demo", demoRoutes(createDemoController(pool), limiters, guard));
+  app.use("/api/contracts", contractsRoutes(createContractsController(pool), guard));
 
   app.use(notFoundHandler);
   app.use(errorHandler(logger));
