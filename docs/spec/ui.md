@@ -151,11 +151,37 @@ Buttons disable while their request is in flight. Failures show the API `message
 
 ## Visual design
 
-To be filled in during phase 2:
+Approved in phase 2. The mockups are plain HTML in `docs/design/` (open `index.html` through any static server, for example `python -m http.server --directory docs/design`). `tokens.css` is the source of truth; the MUI theme in phase 5 is generated from it.
 
-- reference screenshots (stored in `docs/design/references/`, gitignored if they are copyrighted)
-- the chosen template and its license
-- the modifications you asked for
-- the token table (colors, type scale, spacing, radius, shadows)
-- component choices
-- one mockup per screen (desktop and 375 px for the Pay page)
+**Direction.** IBM Carbon's structure (hairline rules, flat layers, filled inputs with a bottom rule, status as words) with PayPal's color and tone (sky blue, black, plain trust copy). No template and no copied code: built from scratch, inspired by ibm.com, IBM Quantum and paypal.com. Reference screenshots are not committed (third-party material).
+
+**Rules.** Radius 0 everywhere. No shadows, gradients, purple, emoji, serif, eyebrow labels, rounded icon boxes, or rows of identical feature cards. One accent. Real copy first. Plex Sans and Plex Mono only (the Plex Serif family is never loaded).
+
+| Token | Value | Use |
+|---|---|---|
+| Sky | `#60CDFF` | Hero and band backgrounds. Text on it is always black (11.7:1). White on sky fails, so it is never used |
+| Ink | `#000000` | Primary button, headlines on sky |
+| Blue | `#0070E0` | Links, Held, focus ring. Text on white 4.8:1. Never as text on sky (2.7:1) |
+| Navy | `#012169` | Footer, dark compare panel, logo flap |
+| Grays | `#F4F4F4` `#E0E0E0` `#525252` `#161616` | Layers, hairlines, secondary text (7.9:1), body |
+| Dark theme | `#161616` page, `#262626` layer, `#78A9FF` links | Toggle in the footer. Sky hero stays sky |
+| Font | IBM Plex Sans 300/400/500/600, Plex Mono 400/500 | Display 600, headings 300, labels 500. Money, ids and times are mono with tabular numerals |
+| Scale | display 40 to 72 px (fluid), h1 28 to 44, h2 22 to 32, body 16, small 14, caption 12 | `clamp()` so one scale serves phone, tablet and desktop |
+| Space | 4 px base: 4, 8, 12, 16, 24, 32, 48, 64, 96 | Gutter 16 / 24 / 32 at phone / tablet / desktop |
+| Motion | 110 ms and 200 ms state changes, one 400 ms rise on landing sections | All off under `prefers-reduced-motion`. None on the Pay page |
+
+**Status.** Always a word. Waiting gray fill, Held blue fill, Kept green fill (`#198038`), Released outlined gray, Failed red (`#DA1E28`), Needs attention yellow with black text. All pairs reach 4.5:1 or more. The board uses the same colors (see `scheduler.md`).
+
+**Logo.** Two blocks, each with a folded corner: `Fold` in black on sky with the fold top-right (navy flap), `back` in white on black with the fold bottom-right (sky flap), a 0.1 em gap between the d and the b. Built in CSS (`.logo`), sized by `font-size`. Favicon: the sky "F" block with its fold (`favicon.svg`). In the dark theme the `back` block turns white with black text.
+
+**Components.** Button (primary black, blue, secondary outlined, link; 48 px tall, arrow aligned right), field (label above, filled box, bottom rule, helper, error), status tag, chip, callout (info, warning), table (gray header, hairline rows), ruled step list, compare panel, nav (collapses to a menu under 900 px), footer, segmented control (mock only), person card, assistant card (messages, tool lines, draft, proposal), board (people rows, status bars, deadline, grace, now and proposed markers).
+
+**Responsive.** Phone under 600, tablet 600 to 1023, desktop 1024 and up. Checked at 375, 768 and 1280: no horizontal page scroll. Board: at 1280 the schedule is about 65% wide with the Person and Assistant cards beside it; at tablet the cards sit side by side below it; at phone it stacks and the schedule scrolls inside its own frame. Pay: one column, max 480 px; "This is a hold, not a charge." and the action button are above the fold at 375 px.
+
+**Theme.** Default light, with a toggle in the footer of every page (bottom right on desktop, like PayPal's footer controls; never in the header, never under the logo) to dark. It applies to every page and tab. The choice is remembered. The light logo is the approved one: `Fold` black on sky, `back` white on black. In dark mode the `back` block turns white with black text, which is accepted.
+
+**Scroll scenes (landing only).** Like PayPal's site, large words move over illustrations as you scroll. Three scenes: (1) `hold` and `don't pay` slide in opposite directions across an illustrated phone showing the Pay page; (2) four squares slide in from four sides and lock into a grid, the fourth left open; (3) a navy `Kept` block and a black `Released` block, each with a folded corner, slide together. The illustrations are drawn as SVG and CSS (no stock photos, no copyright, they follow the palette). `scroll.js` writes one number `--p` per scene and the CSS does the rest, with no library. Under `prefers-reduced-motion` every scene rests in its composed state. Scroll motion is never used on the Pay page.
+
+**PayPal.** The mockup uses our own black button labelled `Hold my share with PayPal`. The official PayPal mark is added in phase 6 from PayPal's brand assets and is not restyled.
+
+**Mockups.** `landing.html` (hold arrival animation), `signin.html` (sign in, error, create account), `plans.html` (empty, reading, clarify, confirm list, plans table), `board.html` (collecting, agent proposal with Approve and Dismiss, kept, released, paused), `pay.html` (waiting, checkout open, confirming, held, unknown, cancelled, kept, released, expired, sample).

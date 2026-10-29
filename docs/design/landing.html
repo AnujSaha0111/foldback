@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foldback · Nobody pays unless the group makes it</title>
+<meta name="description" content="Group payments as PayPal holds. Captured if everyone joins by the deadline, released if not.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script>try{var t=localStorage.getItem("fb-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="landing.css">
+<link rel="stylesheet" href="scroll.css">
+<style>.hero .display { max-width: 15ch; text-wrap: balance; }</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="container nav__bar">
+    <a class="logo" href="landing.html" aria-label="Foldback home"><span class="logo__a" aria-hidden="true">Fold<i></i></span><span class="logo__b" aria-hidden="true">back<i></i></span></a>
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Menu"><span></span></button>
+    <nav id="menu" class="nav__menu" aria-label="Main">
+      <ul class="nav__links">
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#hold">Why a hold</a></li>
+        <li><a href="#board">The board</a></li>
+      </ul>
+      <div class="nav__actions">
+        <a class="btn btn--link" href="signin.html">Sign in</a>
+        <a class="btn btn--sm" href="plans.html">Try it as a guest <span aria-hidden="true">→</span></a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" aria-labelledby="h">
+    <div class="container hero__in">
+      <div class="hero__grid">
+        <div>
+          <h1 id="h" class="display" style="font-weight:600">Nobody pays unless the group makes it.</h1>
+          <p class="lead">Everyone authorizes a PayPal hold for their share. If the headcount is met by the deadline, Foldback captures every hold. If not, it releases them all.</p>
+          <div class="btn-row">
+            <a class="btn" href="plans.html">Try it as a guest <span aria-hidden="true">→</span></a>
+            <a class="btn btn--secondary" href="signin.html">Sign in</a>
+            <a class="btn btn--link" href="signin.html#create">Create account</a>
+          </div>
+          <p class="hero__note">No sign-up. You get two sample plans and your own private workspace for 7 days.</p>
+        </div>
+        <div class="live" id="live" aria-label="Example: cabin weekend plan">
+          <div class="live__head"><strong>Cabin weekend</strong><span class="small muted">Deadline Fri 6 Nov, 6:00pm PT</span></div>
+          <div class="live__row"><span>Alex Chen</span><span><span class="tag tag--waiting" data-hold="0">Waiting</span></span><span class="num r" style="text-align:right">$80.00</span></div>
+          <div class="live__row"><span>Sam Ortiz</span><span><span class="tag tag--waiting" data-hold="1">Waiting</span></span><span class="num" style="text-align:right">$80.00</span></div>
+          <div class="live__row"><span>Jordan Lee</span><span><span class="tag tag--waiting" data-hold="2">Waiting</span></span><span class="num" style="text-align:right">$80.00</span></div>
+          <div class="live__row"><span>Maya Shah <span class="muted small">until Mon 9 Nov</span></span><span><span class="tag tag--waiting">Waiting</span></span><span class="num" style="text-align:right">$80.00</span></div>
+          <div class="live__sum"><span><span class="squares" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span data-live-count>0 of 4 held</span></span><span class="num">$240.00 of $320.00</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene scene--poster" data-scroll>
+    <div class="poster__art">
+      <svg viewBox="0 0 300 560" role="img" aria-label="A phone showing a pay page: $80.00 share for Cabin weekend, a hold, not a charge, three friends Held, Maya Waiting" font-family="IBM Plex Sans, Helvetica Neue, Arial, sans-serif">
+        <rect width="300" height="560" fill="#000"/>
+        <rect x="12" y="12" width="276" height="536" fill="#161616" stroke="#60cdff" stroke-width="2"/>
+        <rect x="14" y="14" width="272" height="150" fill="#60cdff"/>
+        <text x="30" y="52" font-size="13" fill="#000">Maya Shah, your share for</text>
+        <text x="30" y="80" font-size="22" font-weight="500" fill="#000">Cabin weekend</text>
+        <text x="30" y="140" font-size="50" font-weight="500" fill="#000" font-family="IBM Plex Mono, Courier New, monospace">$80.00</text>
+        <text x="30" y="206" font-size="22" font-weight="600" fill="#fff">This is a hold,</text>
+        <text x="30" y="234" font-size="22" font-weight="600" fill="#fff">not a charge.</text>
+        <g font-size="14" fill="#fff">
+          <text x="30" y="290">Alex Chen</text><rect x="206" y="274" width="60" height="22" fill="#0070e0"/><text x="236" y="290" text-anchor="middle" font-size="12" font-weight="500">Held</text>
+          <text x="30" y="330">Sam Ortiz</text><rect x="206" y="314" width="60" height="22" fill="#0070e0"/><text x="236" y="330" text-anchor="middle" font-size="12" font-weight="500">Held</text>
+          <text x="30" y="370">Jordan Lee</text><rect x="206" y="354" width="60" height="22" fill="#0070e0"/><text x="236" y="370" text-anchor="middle" font-size="12" font-weight="500">Held</text>
+          <text x="30" y="410">Maya Shah (you)</text><rect x="196" y="394" width="70" height="22" fill="#393939"/><text x="231" y="410" text-anchor="middle" font-size="12" font-weight="500">Waiting</text>
+        </g>
+        <rect x="30" y="466" width="240" height="50" fill="#fff"/>
+        <text x="150" y="496" text-anchor="middle" font-size="14" font-weight="500" fill="#000">Hold my share with PayPal →</text>
+      </svg>
+    </div>
+    <h2 class="poster__h"><span class="poster__w poster__w--a">hold</span><span class="sr-only">, </span><span class="poster__w poster__w--b">don't pay</span></h2>
+  </section>
+
+  <section class="section" id="how" aria-labelledby="how-h">
+    <div class="container split">
+      <div class="reveal"><h2 id="how-h">How it works</h2><p class="muted" style="margin-top:var(--s-3);max-width:24rem">From a messy group chat to a settled trip, with the organizer approving every step that matters.</p></div>
+      <ol class="steps reveal">
+        <li><span class="num">01</span><div><h3>Paste the group chat</h3><p class="muted">The assistant reads the amount, the people and the deadline, and quotes the line it used for each.</p></div></li>
+        <li><span class="num">02</span><div><h3>Confirm the terms</h3><p class="muted">Nothing is active until you confirm. Code checks the math, not the model.</p></div></li>
+        <li><span class="num">03</span><div><h3>Everyone holds their share</h3><p class="muted">Each friend opens a link on their phone and approves a PayPal hold. No card form.</p></div></li>
+        <li><span class="num">04</span><div><h3>Kept or released</h3><p class="muted">Everyone in by the deadline: captured. Anyone short: every hold is voided and nobody is charged.</p></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="scene scene--squares" data-scroll aria-labelledby="sq-h">
+    <div class="container sq__wrap">
+      <div>
+        <h2 id="sq-h">Four people. One deadline.</h2>
+        <p class="muted" style="margin-top:var(--s-3);max-width:26rem">Each share is its own hold. The group is complete only when the last square closes.</p>
+        <p class="sq__count">3 of 4 held · 1 to go</p>
+      </div>
+      <div class="sq__art" role="img" aria-label="Four squares: three filled for held shares, one outlined for the share still open"><i></i><i></i><i></i><i></i></div>
+    </div>
+  </section>
+
+  <section class="section section--layer" id="hold" aria-labelledby="hold-h">
+    <div class="container">
+      <div class="section__head reveal"><h2 id="hold-h">A hold is not a charge</h2><p>The usual way to book a trip is one person paying for everyone and chasing the rest. A hold reverses that.</p></div>
+      <div class="compare reveal">
+        <div><h3>Pay now, sort it out later</h3><ul><li>Money leaves on day one</li><li>One person fronts the whole $320.00</li><li>If the trip falls through, everyone chases refunds</li></ul></div>
+        <div class="dark"><h3>Hold now, decide at the deadline</h3><ul><li>Nothing is taken while the group is short</li><li>Each person is only ever on the hook for their own share</li><li>Not enough people: every hold is released and nobody pays</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene scene--fold" data-scroll aria-labelledby="fold-h">
+    <div class="container">
+      <div class="fold__head"><h2 id="fold-h">Kept or released. Never in between.</h2></div>
+      <div class="fold">
+        <div class="fold__a"><span class="fold__k">Kept</span><p>Everyone in by the deadline: every hold is captured.</p></div>
+        <div class="fold__b"><span class="fold__k">Released</span><p>Anyone short: every hold is voided and nobody is charged.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="board" aria-labelledby="board-h">
+    <div class="container split">
+      <div class="reveal"><h2 id="board-h">See every hold on one board</h2><p class="muted" style="margin-top:var(--s-3);max-width:26rem">One row per person across the deadline. It updates the moment a friend holds their share on their phone.</p></div>
+      <div class="board-peek reveal" role="img" aria-label="Board: Alex, Sam and Jordan Held until the Friday deadline, Maya Waiting until Monday">
+        <div class="board-peek__row"><div class="board-peek__name muted">Person</div><div class="board-peek__track" style="height:2.25rem"><span class="caption" style="position:absolute;left:30%;top:.6rem;white-space:nowrap">Deadline Fri</span><span class="caption" style="position:absolute;left:70%;top:.6rem;white-space:nowrap">Grace Mon</span></div></div>
+        <div class="board-peek__row"><div class="board-peek__name">Alex Chen</div><div class="board-peek__track"><span class="bar bar--held" style="left:0;width:30%">Held</span></div></div>
+        <div class="board-peek__row"><div class="board-peek__name">Sam Ortiz</div><div class="board-peek__track"><span class="bar bar--held" style="left:0;width:30%">Held</span></div></div>
+        <div class="board-peek__row"><div class="board-peek__name">Jordan Lee</div><div class="board-peek__track"><span class="bar bar--held" style="left:0;width:30%">Held</span></div></div>
+        <div class="board-peek__row"><div class="board-peek__name">Maya Shah</div><div class="board-peek__track"><span class="bar bar--waiting" style="left:0;width:70%">Waiting</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--layer" aria-labelledby="who-h">
+    <div class="container split">
+      <div class="reveal"><h2 id="who-h">The assistant suggests. Code decides.</h2></div>
+      <ul class="steps reveal">
+        <li><span class="num">→</span><div><h3>Simulates</h3><p class="muted">Ask what happens if Maya misses Monday. It runs the real rule and tells you.</p></div></li>
+        <li><span class="num">→</span><div><h3>Drafts</h3><p class="muted">Reminders with each person's own pay link, ready to copy.</p></div></li>
+        <li><span class="num">→</span><div><h3>Proposes</h3><p class="muted">Moves like “advance to the deadline” wait for your approval. It never moves money itself.</p></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="cta">
+    <div class="container btn-row" style="justify-content:space-between;gap:var(--s-5)">
+      <h2 style="max-width:22ch">Try the cabin trip in two minutes.</h2>
+      <a class="btn" href="plans.html">Try it as a guest <span aria-hidden="true">→</span></a>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container footer__bar">
+    <a class="logo" href="landing.html" aria-label="Foldback home"><span class="logo__a" aria-hidden="true">Fold<i></i></span><span class="logo__b" aria-hidden="true">back<i></i></span></a>
+    <span class="grow">Built for the PayPal AI hackathon. Sandbox only: no real money moves.</span>
+    <button class="theme-toggle" type="button" data-theme-toggle>Dark theme</button>
+  </div>
+</footer>
+
+<script src="mock.js"></script>
+<script src="scroll.js"></script>
+<script>
+  // Hero panel: holds arrive one by one on load. Skipped under reduced motion.
+  (function () {
+    var tags = document.querySelectorAll("[data-hold]");
+    var squares = document.querySelectorAll(".squares i");
+    var count = document.querySelector("[data-live-count]");
+    var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function hold(i) {
+      tags[i].className = "tag tag--held"; tags[i].textContent = "Held";
+      squares[i].classList.add("on");
+      count.textContent = (i + 1) + " of 4 held";
+    }
+    tags.forEach(function (t, i) { if (reduce) hold(i); else setTimeout(function () { hold(i); }, 900 + i * 700); });
+  })();
+</script>
+</body>
+</html>

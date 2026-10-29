@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foldback design mockups</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script>try{var t=localStorage.getItem("fb-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="base.css">
+</head>
+<body>
+<main class="container" style="padding-block:var(--s-7)">
+  <a class="logo" href="landing.html" style="font-size:2rem" aria-label="Foldback"><span class="logo__a" aria-hidden="true">Fold<i></i></span><span class="logo__b" aria-hidden="true">back<i></i></span></a>
+  <h1 style="margin-top:var(--s-6)">Design mockups</h1>
+  <p class="muted" style="margin-top:var(--s-2)">Static HTML. Resize the window to check phone, tablet and desktop. Use the mock state bar on each screen.</p>
+  <h2 style="margin-top:var(--s-7)">Status tags</h2>
+  <p class="muted" style="margin-top:var(--s-2)">Always a word. Color never works alone.</p>
+  <p style="margin-top:var(--s-4);display:flex;flex-wrap:wrap;gap:var(--s-2)">
+    <span class="tag tag--waiting">Waiting</span><span class="tag tag--held">Held</span><span class="tag tag--kept">Kept</span><span class="tag tag--released">Released</span><span class="tag tag--failed">Failed</span><span class="tag tag--attention">Needs attention</span>
+  </p>
+  <table class="table" style="margin-top:var(--s-6)">
+    <thead><tr><th scope="col">Screen</th><th scope="col">Route</th><th scope="col">States in the mock bar</th></tr></thead>
+    <tbody>
+      <tr><td><a href="landing.html">Landing</a></td><td class="mono">/</td><td>Hold arrival animation</td></tr>
+      <tr><td><a href="signin.html">Sign in and create account</a></td><td class="mono">/login, /signup</td><td>Sign in, error, create</td></tr>
+      <tr><td><a href="plans.html">Plans</a></td><td class="mono">/plans</td><td>Empty, reading, clarify, confirm</td></tr>
+      <tr><td><a href="board.html">Board</a></td><td class="mono">/plans/[id]</td><td>Collecting, proposal, kept, released, paused</td></tr>
+      <tr><td><a href="pay.html">Pay</a></td><td class="mono">/pay/[shareId]</td><td>Ten statuses</td></tr>
+    </tbody>
+  </table>
+</main>
+<footer class="footer"><div class="container footer__bar"><span class="grow">Sandbox only: no real money moves.</span><button class="theme-toggle" type="button" data-theme-toggle>Dark theme</button></div></footer>
+
+<script src="mock.js"></script>
+</body>
+</html>

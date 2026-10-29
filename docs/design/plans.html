@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plans · Foldback</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script>try{var t=localStorage.getItem("fb-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="plans.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="container nav__bar">
+    <a class="logo" href="landing.html" aria-label="Foldback home"><span class="logo__a" aria-hidden="true">Fold<i></i></span><span class="logo__b" aria-hidden="true">back<i></i></span></a>
+    <span class="nav__tagline">Nobody pays unless the group makes it.</span>
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Menu"><span></span></button>
+    <nav id="menu" class="nav__menu" aria-label="Main">
+      <ul class="nav__links">
+        <li><a href="plans.html" aria-current="page"><strong style="font-weight:500">Plans</strong></a></li>
+        <li><a href="board.html">Cabin weekend</a></li>
+      </ul>
+      <div class="nav__actions">
+        <span class="nav__user">Alex Chen <span class="tag tag--badge">Guest · expires in 7 days</span></span>
+        <button class="btn btn--secondary btn--sm" type="button">Reset demo data</button>
+        <a class="btn btn--link" href="landing.html">Sign out</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<div class="mockbar"><div class="container mockbar__in">
+  <span class="mockbar__label">MOCK STATE</span>
+  <div class="seg" data-switch="#rule" role="group" aria-label="Mock state">
+    <button type="button" data-state="empty" aria-pressed="true">Empty</button>
+    <button type="button" data-state="reading">Reading</button>
+    <button type="button" data-state="clarify">Clarify</button>
+    <button type="button" data-state="confirm">Confirm list</button>
+  </div>
+</div></div>
+
+<main id="main" class="container app">
+  <div class="page-head"><h1>New plan</h1><p>Paste the chat. Read the plan. Confirm it. Then send each person their link.</p></div>
+
+  <div class="plans" id="rule" data-state="empty">
+    <form class="plans__form" onsubmit="return false">
+      <div class="field">
+        <label class="field__label" for="chat">Paste the group chat or describe the plan</label>
+        <textarea class="textarea" id="chat" rows="10" placeholder="The cabin is $320 for the weekend. We need 4 people at $80 each by Friday 6pm Pacific. If we are still short, nobody pays."></textarea>
+        <p class="field__help"><a href="#" id="sample">Use the sample cabin chat</a></p>
+      </div>
+      <div class="btn-row">
+        <button class="btn" type="submit" data-only="empty clarify confirm">Read the plan <span aria-hidden="true">→</span></button>
+        <button class="btn" type="submit" disabled data-only="reading">Reading…</button>
+      </div>
+    </form>
+
+    <div class="plans__result" aria-live="polite">
+      <div class="callout" data-only="empty"><p class="callout__title">Nothing read yet</p><p class="muted">The plan appears here once you press Read the plan. Nothing is active until you confirm.</p></div>
+
+      <div class="callout" data-only="reading"><p class="callout__title">Reading…</p><p class="muted">Finding the price, the people and the deadline in your text.</p></div>
+
+      <div data-only="clarify" hidden>
+        <div class="callout callout--warn">
+          <p class="callout__title">One piece is missing</p>
+          <p>Add the missing pieces: the deadline time.</p>
+        </div>
+        <div class="field" style="margin-top:var(--s-4)"><label class="field__label" for="ans">Your answer</label><input class="input" id="ans" type="text" placeholder="Friday 6pm Pacific"></div>
+        <div class="btn-row" style="margin-top:var(--s-4)"><button class="btn btn--blue" type="button">Answer <span aria-hidden="true">→</span></button></div>
+      </div>
+
+      <div data-only="confirm" hidden>
+        <p class="muted" style="margin-bottom:var(--s-4)">Read from your text. Nothing is active until you confirm.</p>
+        <dl class="defs">
+          <div><dt>Plan</dt><dd>Cabin weekend<span class="quote">“ok the cabin is $320 for the weekend”</span></dd></div>
+          <div><dt>Each person pays</dt><dd class="num">$80.00<span class="quote" style="font-family:var(--font-sans)">“so $80 each if it's the four of us”</span></dd></div>
+          <div><dt>Total</dt><dd class="num">$320.00</dd></div>
+          <div><dt>People</dt><dd><div class="chips"><span class="chip">Alex Chen</span><span class="chip">Sam Ortiz</span><span class="chip">Jordan Lee</span><span class="chip">Maya Shah</span></div></dd></div>
+          <div><dt>Deadline</dt><dd>Fri 6 Nov 2026, 6:00pm PST<span class="quote">“everyone else by friday 6pm pacific”</span></dd></div>
+          <div><dt>Grace</dt><dd>Maya Shah until Mon 9 Nov 2026, 6:00pm PST<span class="quote">“Maya you can have until monday 6pm”</span></dd></div>
+        </dl>
+        <div class="confirm">
+          <a class="btn btn--blue" href="board.html">Confirm these terms <span aria-hidden="true">→</span></a>
+          <p class="field__help">Each person gets a PayPal link that holds their share. If everyone pays by the deadline, Foldback captures every hold. If not, every hold is released and nobody is charged.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="list-head"><h2>Plans</h2></div>
+  <div class="scroll">
+    <table class="table">
+      <thead><tr><th scope="col">Plan</th><th scope="col">Status</th><th scope="col">Holds</th><th scope="col">Type</th></tr></thead>
+      <tbody>
+        <tr><td><a href="board.html">Cabin weekend</a></td><td><span class="tag tag--waiting">Collecting</span></td><td class="num">3 of 4 held</td><td><span class="tag tag--badge">Sandbox</span></td></tr>
+        <tr><td><a href="board.html">Cabin weekend</a></td><td><span class="tag tag--waiting">Collecting</span></td><td class="num">3 of 4 held</td><td><span class="tag tag--badge">Sample</span></td></tr>
+        <tr><td><a href="board.html">Print run</a></td><td><span class="tag tag--waiting">Collecting</span></td><td class="num">3 of 4 held</td><td><span class="tag tag--badge">Sample</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<footer class="footer"><div class="container footer__bar"><span class="grow">Sandbox only: no real money moves.</span><button class="theme-toggle" type="button" data-theme-toggle>Dark theme</button></div></footer>
+
+<script src="mock.js"></script>
+<script>
+  var CHAT = "[Sun 1 Nov, 11:42] Alex Chen: ok the cabin is $320 for the weekend, owner wants the money by friday\n[Sun 1 Nov, 11:43] Sam Ortiz: so $80 each if it's the four of us\n[Sun 1 Nov, 11:43] Jordan Lee: I'm in\n[Sun 1 Nov, 11:45] Maya Shah: I'm in but I don't get paid until monday\n[Sun 1 Nov, 11:46] Alex Chen: Maya you can have until monday 6pm. everyone else by friday 6pm pacific. if we don't have all 4 the trip is off and nobody pays\n[Sun 1 Nov, 11:47] Sam Ortiz: works for me";
+  var chat = document.getElementById("chat");
+  document.getElementById("rule").addEventListener("statechange", function (e) {
+    chat.value = e.detail === "empty" ? "" : (e.detail === "clarify" ? "The cabin is $320 for the weekend, 4 people, $80 each. If we are still short, nobody pays." : CHAT);
+  });
+  document.getElementById("sample").addEventListener("click", function (e) { e.preventDefault(); chat.value = CHAT; });
+</script>
+</body>
+</html>

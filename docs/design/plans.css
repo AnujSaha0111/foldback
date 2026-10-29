@@ -1,0 +1,29 @@
+/* Plans (rule screen). */
+
+.app { padding-block: var(--s-6) var(--s-8); }
+.page-head { margin-bottom: var(--s-6); }
+.page-head p { margin-top: var(--s-2); color: var(--text-2); }
+
+.plans { display: grid; gap: var(--s-6); }
+.plans__result { min-width: 0; }
+.plans__form .btn-row { margin-top: var(--s-4); }
+
+.defs { border-top: 1px solid var(--line-strong); }
+.defs > div { display: grid; gap: var(--s-1); padding: var(--s-4) 0; border-bottom: 1px solid var(--line); }
+.defs dt { font-size: var(--fs-small); color: var(--text-2); }
+.defs dd { font-size: var(--fs-body); }
+.defs .quote { display: block; margin-top: var(--s-1); font-size: var(--fs-small); color: var(--text-2); }
+.defs .chips { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+
+.confirm { margin-top: var(--s-5); }
+.confirm .field__help { max-width: 34rem; margin-top: var(--s-3); font-size: var(--fs-small); }
+
+.list-head { margin: var(--s-8) 0 var(--s-4); }
+.table a { color: var(--link); font-weight: 500; }
+
+@media (min-width: 600px) {
+  .defs > div { grid-template-columns: 11rem minmax(0, 1fr); gap: var(--s-4); }
+}
+@media (min-width: 1024px) {
+  .plans { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: var(--s-7); align-items: start; }
+}

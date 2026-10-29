@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cabin weekend · Foldback</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script>try{var t=localStorage.getItem("fb-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="plans.css">
+<link rel="stylesheet" href="board.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="container nav__bar">
+    <a class="logo" href="landing.html" aria-label="Foldback home"><span class="logo__a" aria-hidden="true">Fold<i></i></span><span class="logo__b" aria-hidden="true">back<i></i></span></a>
+    <span class="nav__tagline">Nobody pays unless the group makes it.</span>
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Menu"><span></span></button>
+    <nav id="menu" class="nav__menu" aria-label="Main">
+      <ul class="nav__links">
+        <li><a href="plans.html">Plans</a></li>
+        <li><a href="board.html" aria-current="page"><strong style="font-weight:500">Cabin weekend</strong></a></li>
+      </ul>
+      <div class="nav__actions">
+        <span class="nav__user">Alex Chen <span class="tag tag--badge">Guest · expires in 7 days</span></span>
+        <button class="btn btn--secondary btn--sm" type="button">Reset demo data</button>
+        <a class="btn btn--link" href="landing.html">Sign out</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<div class="mockbar"><div class="container mockbar__in">
+  <span class="mockbar__label">MOCK STATE</span>
+  <div class="seg" data-switch="#bpage" role="group" aria-label="Mock state">
+    <button type="button" data-state="collecting" aria-pressed="true">Collecting</button>
+    <button type="button" data-state="proposal">Agent proposal</button>
+    <button type="button" data-state="kept">Kept</button>
+    <button type="button" data-state="released">Released</button>
+    <button type="button" data-state="paused">Paused</button>
+  </div>
+</div></div>
+
+<main id="main" class="container app">
+  <div id="bpage" data-state="collecting">
+    <div class="bhead">
+      <div class="bhead__title">
+        <h1>Cabin weekend</h1>
+        <span class="tag" id="cstatus">Collecting</span>
+        <span class="tag tag--badge">Sandbox</span>
+      </div>
+      <div class="bhead__meta">
+        <span><strong id="held">3 of 4 held</strong></span>
+        <span id="clock">Now: Fri 6 Nov, 4:00pm PT</span>
+        <span>Total <strong class="num">$320.00</strong></span>
+      </div>
+      <p class="reason" id="reason" aria-live="polite"></p>
+      <div class="ctl">
+        <div class="ctl__item"><button class="btn btn--secondary btn--sm" type="button" id="adv-d">Advance to deadline</button><span class="ctl__help">Moves Now to Fri 6 Nov, 6:00pm PT</span></div>
+        <div class="ctl__item"><button class="btn btn--secondary btn--sm" type="button" id="adv-g">Advance to grace end</button><span class="ctl__help">Moves Now to Mon 9 Nov, 6:00pm PT</span></div>
+        <div class="ctl__item"><button class="btn btn--sm" type="button" id="resolve">Resolve now</button><span class="ctl__help">Applies the rule at the current time</span></div>
+      </div>
+    </div>
+
+    <div class="callout callout--warn banner" data-only="paused" hidden>
+      <p><strong style="font-weight:500">A PayPal result is unknown, so Foldback paused and sent nothing else.</strong> Check payment to continue.</p>
+      <button class="btn btn--sm" type="button">Check payment</button>
+    </div>
+
+    <div class="bgrid">
+      <section aria-label="Schedule">
+        <div class="board scroll"><div class="board__in" id="board"></div></div>
+        <p class="field__help">Rows are people. Every bar carries its status word. Select a person to see their hold.</p>
+      </section>
+
+      <div class="bside">
+        <section class="card" aria-labelledby="pc">
+          <div class="card__head" id="pc">Person</div>
+          <div class="card__body" id="person"></div>
+        </section>
+
+        <section class="card" aria-labelledby="ac">
+          <div class="card__head" id="ac">Assistant</div>
+          <div class="card__body">
+            <div class="chat" id="chat" aria-live="polite">
+              <p class="msg msg--sys" id="chat-empty">Ask about this plan. The assistant can simulate and draft. It never moves money.</p>
+            </div>
+            <div class="chips2" id="chips">
+              <button type="button" data-q="q1">What happens if Maya doesn't pay?</button>
+              <button type="button" data-q="q2">Draft reminders for anyone unpaid</button>
+              <button type="button" data-q="q3">Move to the deadline</button>
+            </div>
+            <form class="ask" onsubmit="return false">
+              <label class="sr-only" for="askin">Ask about this plan</label>
+              <input class="input" id="askin" type="text" placeholder="Ask about this plan…">
+              <button class="btn btn--sm" type="submit" id="send">Send</button>
+            </form>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer"><div class="container footer__bar"><span class="grow">Sandbox only: no real money moves.</span><button class="theme-toggle" type="button" data-theme-toggle>Dark theme</button></div></footer>
+
+<script src="mock.js"></script>
+<script src="board.js"></script>
+</body>
+</html>

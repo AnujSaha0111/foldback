@@ -40,6 +40,6 @@ An approved visual design for every screen before any frontend code is written.
 
 ## Exit note
 
-Chosen template and license:
+Chosen template and license: none. Built from scratch in plain HTML and CSS (`docs/design/`), inspired by IBM Carbon and PayPal. No third-party code. Fonts IBM Plex Sans and Mono are SIL OFL.
 
-Modifications:
+Modifications asked for: radius 0 everywhere, no serif, avoid the "vibe coded" look, Carbon ledger typography with the Sky poster palette, a two-fold logo (Fold on sky with the fold top-right, back in white on black with the fold bottom-right, tight gap), favicon is the "F" block with its fold, responsive for phone, tablet and desktop.
