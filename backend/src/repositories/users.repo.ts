@@ -95,3 +95,29 @@ export async function findCredentialsByEmail(db: Db, email: string): Promise<Cre
 export async function touchLastLogin(db: Db, id: string): Promise<void> {
   await db.query("UPDATE users SET last_login_at = now() WHERE id = $1", [id]);
 }
+
+/**
+ * Deletes expired guests who hold no live money, and everything they own (cascade). "Live money" mirrors the
+ * schema's delete guard exactly: a held, unknown or failed sandbox share, or one with an authorize, capture or
+ * void call still in flight. Such a guest is skipped, so a hold is never orphaned. If the check were narrower
+ * than the guard, one guest would make the whole statement fail. Returns how many were removed.
+ */
+export async function deleteExpiredGuestsWithoutLiveMoney(db: Db): Promise<number> {
+  const result = await db.query(
+    `DELETE FROM users u
+      WHERE u.kind = 'guest' AND u.expires_at < now()
+        AND NOT EXISTS (
+          SELECT 1 FROM contracts c JOIN shares s ON s.contract_id = c.id
+           WHERE c.owner_id = u.id AND s.money_source = 'sandbox'
+             AND (s.status IN ('held', 'authorize_unknown', 'capture_unknown', 'void_unknown', 'capture_failed')
+                  OR EXISTS (SELECT 1 FROM paypal_operations o
+                              WHERE o.share_id = s.id AND o.outcome IN ('pending', 'unknown')
+                                AND o.kind IN ('authorize', 'capture', 'void'))))`,
+  );
+  return result.rowCount ?? 0;
+}
+
+/** Locks the user's row until the transaction ends, so two requests that rebuild one user's data run one after the other. */
+export async function lockUserRow(client: PoolClient, id: string): Promise<void> {
+  await client.query("SELECT 1 FROM users WHERE id = $1 FOR UPDATE", [id]);
+}

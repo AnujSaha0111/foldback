@@ -35,8 +35,15 @@ const schema = z.object({
     .string()
     .min(1)
     .transform((v) => v.split(",").map((o) => o.trim()))
-    .pipe(z.array(z.url()).min(1)),
+    .pipe(z.array(z.url()).min(1))
+    // Keep only the origin, so "https://app.example.com/" matches what the browser sends and what cors compares.
+    .transform((list) => list.map((o) => new URL(o).origin)),
   APP_BASE_URL: z.url(),
+  /** Parent domain for the session cookie in production, for example `.example.com`, so app. and api. share it. */
+  COOKIE_DOMAIN: z
+    .string()
+    .regex(/^\.?[a-z0-9-]+(\.[a-z0-9-]+)+$/i, "must be a domain such as .example.com")
+    .optional(),
   TRUST_PROXY: z.coerce.number().int().min(0).default(0),
   LOG_LEVEL: z.enum(["error", "warn", "info", "debug"]).default("info"),
   METRICS_TOKEN: z.string().min(16).optional(),
