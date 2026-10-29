@@ -2,7 +2,7 @@
 # Built by CI only (quality.md section 8), for linux/amd64 and linux/arm64 (the Mac mini).
 # Build context is the backend/ folder.
 
-FROM node:24-bookworm-slim AS base
+FROM node:25-bookworm-slim AS base
 RUN corepack enable
 WORKDIR /app
 
@@ -19,7 +19,7 @@ FROM base AS prod-deps
 COPY package.json yarn.lock .yarnrc.yml ./
 RUN yarn workspaces focus --production
 
-FROM node:24-bookworm-slim AS runtime
+FROM node:25-bookworm-slim AS runtime
 RUN apt-get update \
     && apt-get install -y --no-install-recommends tini \
     && rm -rf /var/lib/apt/lists/*
