@@ -18,15 +18,19 @@
     "migrate:reset": "tsx --env-file-if-exists=.env scripts/migrate.ts reset"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "express": "^5",
     "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
     "pg": "^8.23.1",
     "winston": "^3.19.0",
     "zod": "^4"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24",
     "@types/pg": "^8.23.1",
     "@types/supertest": "^7.2.1",
