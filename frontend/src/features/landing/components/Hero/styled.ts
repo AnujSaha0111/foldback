@@ -45,7 +45,11 @@ export const Grid = styled(Inner)({
 export const Copy = styled("div")(onSky);
 
 /** The panel and the trust line under it, so the line reads as the panel's caption. */
-export const Aside = styled("div")(onSky);
+export const Aside = styled("div")({
+  ...onSky,
+  // Centered in the right column, level with the middle of the copy beside it.
+  "@media (min-width: 1024px)": { alignSelf: "center" },
+});
 
 export const Title = styled("h1")({
   maxWidth: "11ch",
