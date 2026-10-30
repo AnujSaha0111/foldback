@@ -5,7 +5,7 @@ import { ButtonLink } from "@/components/Button";
 import { GuestButton } from "@/features/auth/components/GuestButton";
 import { GUEST_NOTE } from "@/features/auth/copy";
 import { LiveHolds } from "../LiveHolds";
-import { Actions, Copy, Grid, Lead, Light, Note, Root, Title, Trust, Word } from "./styled";
+import { Actions, Aside, Copy, Grid, Lead, Light, Note, Root, Title, Trust, Word } from "./styled";
 
 const TITLE = "Nobody pays unless the group makes it.".split(" ");
 
@@ -44,6 +44,9 @@ export function Hero() {
           <Note>
             {GUEST_NOTE} New here? <Link href="/signup">Create account</Link>
           </Note>
+        </Copy>
+        <Aside>
+          <LiveHolds />
           <Trust aria-label="How your money is treated">
             {TRUST.map((item) => (
               <li key={item.text}>
@@ -54,8 +57,7 @@ export function Hero() {
               </li>
             ))}
           </Trust>
-        </Copy>
-        <LiveHolds />
+        </Aside>
       </Grid>
     </Root>
   );

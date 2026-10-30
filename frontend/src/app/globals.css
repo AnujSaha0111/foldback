@@ -30,6 +30,49 @@ html {
   color: #161616;
 }
 
+/* Scrollbars: thin, square, no arrow buttons. The thumb is a bar inset in a ruled track and turns sun on hover. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-3) var(--bg-subtle);
+}
+
+@supports selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
+
+  *::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+    background: var(--bg-subtle);
+  }
+
+  *::-webkit-scrollbar-track {
+    background: var(--bg-subtle);
+    border-left: 1px solid var(--line);
+    border-top: 1px solid var(--line);
+  }
+
+  *::-webkit-scrollbar-thumb {
+    border: 3px solid var(--bg-subtle);
+    border-radius: 0;
+    background: var(--text-3);
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--sun);
+  }
+
+  *::-webkit-scrollbar-button {
+    display: none;
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: var(--bg-subtle);
+  }
+}
+
 body {
   margin: 0;
   overflow-x: clip;

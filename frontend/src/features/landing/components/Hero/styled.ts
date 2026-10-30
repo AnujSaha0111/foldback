@@ -32,17 +32,21 @@ export const Light = styled("span")({
 export const Grid = styled(Inner)({
   display: "grid",
   gridTemplateColumns: "minmax(0, 1fr)",
-  gap: "var(--s-8)",
-  alignItems: "center",
-  paddingBlock: "clamp(2.5rem, 1rem + 6vw, 5.5rem) clamp(3.5rem, 2rem + 6vw, 6.5rem)",
+  gap: "var(--s-7)",
+  alignItems: "start",
+  // Tight on top so the whole first screen, buttons and trust line included, fits at 100% zoom.
+  paddingBlock: "clamp(1.25rem, 0.5rem + 2.2vw, 2.25rem) clamp(2rem, 1rem + 3vw, 3.5rem)",
   "@media (min-width: 1024px)": { gridTemplateColumns: "minmax(0, 1.08fr) minmax(0, 1fr)" },
 });
 
 export const Copy = styled("div")(onSky);
 
+/** The panel and the trust line under it, so the line reads as the panel's caption. */
+export const Aside = styled("div")(onSky);
+
 export const Title = styled("h1")({
   maxWidth: "11ch",
-  fontSize: "clamp(2.75rem, 1.6rem + 4.6vw, 5rem)",
+  fontSize: "clamp(2.5rem, 1.4rem + 4vw, 4.5rem)",
   fontWeight: 600,
   letterSpacing: "-0.038em",
   lineHeight: 1.02,
@@ -70,7 +74,7 @@ const enter = (step: number) => ({
 
 export const Lead = styled("p")({
   maxWidth: "33rem",
-  marginTop: "var(--s-5)",
+  marginTop: "var(--s-4)",
   fontSize: "var(--fs-lead)",
   lineHeight: 1.5,
   color: "rgba(0, 0, 0, 0.78)",
@@ -82,7 +86,7 @@ export const Actions = styled("div")({
   flexWrap: "wrap",
   alignItems: "center",
   gap: "var(--s-3)",
-  marginTop: "var(--s-7)",
+  marginTop: "var(--s-5)",
   ...enter(1),
   "& > div": { display: "contents" },
   "& button, & a": { minHeight: "3.25rem", paddingInline: "var(--s-6)", fontSize: "1rem" },
@@ -103,7 +107,7 @@ export const Trust = styled("ul")({
   display: "flex",
   flexWrap: "wrap",
   gap: "var(--s-2) var(--s-5)",
-  marginTop: "var(--s-7)",
+  marginTop: "var(--s-3)",
   fontSize: "0.8125rem",
   color: "rgba(0, 0, 0, 0.78)",
   ...enter(3),

@@ -6,7 +6,7 @@ import { Inner } from "@/components/Page/styled";
 export const Section = styled("section", { shouldForwardProp: (prop) => prop !== "$layer" })<{
   $layer?: boolean;
 }>(({ $layer }) => ({
-  paddingBlock: "clamp(3.5rem, 2rem + 5vw, 6rem)",
+  paddingBlock: "clamp(2.5rem, 1.5rem + 3.5vw, 4.5rem)",
   background: $layer ? "var(--bg-subtle)" : "transparent",
   borderBlock: $layer ? "1px solid var(--line-soft)" : 0,
   "& h2": { fontSize: "var(--fs-h1)", letterSpacing: "-0.03em" },

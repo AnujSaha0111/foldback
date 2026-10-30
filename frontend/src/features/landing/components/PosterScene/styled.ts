@@ -43,7 +43,7 @@ export const Words = styled("h2")({
 const Word = styled("span")({
   position: "absolute",
   left: "50%",
-  fontSize: "clamp(5rem, 2rem + 16vw, 17rem)",
+  fontSize: "clamp(3.5rem, 1.5rem + 11vw, 11.5rem)",
   fontWeight: 600,
   letterSpacing: "-0.06em",
   lineHeight: 0.8,
@@ -70,20 +70,45 @@ export const WordB = styled(Word)({
   transform: "translateX(calc(-5% - var(--q) * 55%))",
 });
 
-/** On its own dark chip, so it stays readable wherever the phone or the big words pass behind it. */
-export const Caption = styled("p")({
+/** A line beside the phone, mid-height between the two big words. It fades and rises in as the phone turns. */
+const Side = styled("p")({
   position: "absolute",
-  left: "50%",
-  bottom: "3%",
+  top: "44%",
   zIndex: 3,
-  width: "max-content",
-  maxWidth: "min(36rem, calc(100% - 2 * var(--gutter)))",
-  padding: "0.5rem 1rem",
-  transform: "translateX(-50%)",
-  textAlign: "center",
-  fontSize: "var(--fs-small)",
-  color: "#fff",
-  background: "rgba(2, 17, 66, 0.82)",
-  backdropFilter: "blur(10px)",
+  maxWidth: "min(22rem, 26vw)",
+  lineHeight: 1.4,
   opacity: "calc(var(--q) * 1.6 - 0.4)",
+  transform: "translateY(calc((1 - var(--q)) * 16px))",
+  // Narrow screens have no room beside the phone: the line moves to the foot on a dark chip, and the other is dropped.
+  "@media (max-width: 899px)": { display: "none" },
+});
+
+export const Caption = styled(Side)({
+  left: "clamp(1rem, 4vw, 5rem)",
+  fontSize: "1.0625rem",
+  color: "rgba(255, 255, 255, 0.86)",
+  "@media (max-width: 899px)": {
+    display: "block",
+    top: "auto",
+    bottom: "3%",
+    left: "50%",
+    width: "max-content",
+    maxWidth: "min(36rem, calc(100% - 2 * var(--gutter)))",
+    padding: "0.5rem 1rem",
+    transform: "translateX(-50%)",
+    textAlign: "center",
+    fontSize: "var(--fs-small)",
+    color: "#fff",
+    background: "rgba(2, 17, 66, 0.82)",
+    backdropFilter: "blur(10px)",
+  },
+});
+
+/** The other side, in the sun colour: what happens to the holds. */
+export const Outcome = styled(Side)({
+  right: "clamp(1rem, 4vw, 5rem)",
+  textAlign: "right",
+  fontSize: "1.25rem",
+  fontWeight: 500,
+  color: "var(--sun)",
 });

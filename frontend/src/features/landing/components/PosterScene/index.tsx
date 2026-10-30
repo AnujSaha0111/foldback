@@ -1,5 +1,5 @@
 import { PhoneArt } from "./PhoneArt";
-import { Caption, Root, Stage, WordA, WordB, Words } from "./styled";
+import { Caption, Outcome, Root, Stage, WordA, WordB, Words } from "./styled";
 
 export function PosterScene() {
   return (
@@ -12,6 +12,7 @@ export function PosterScene() {
         </Words>
         <PhoneArt />
         <Caption>Each friend opens a link on their phone and approves a PayPal hold. No card form.</Caption>
+        <Outcome>Captured only if everyone is in. If not, every hold is released and nobody pays.</Outcome>
       </Stage>
     </Root>
   );

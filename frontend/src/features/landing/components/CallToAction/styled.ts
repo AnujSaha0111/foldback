@@ -5,7 +5,7 @@ import { Inner, onSky } from "@/components/Page/styled";
 
 export const Root = styled("section")({
   ...onSky,
-  paddingBlock: "clamp(3.5rem, 2rem + 4vw, 5rem)",
+  paddingBlock: "clamp(2.5rem, 1.5rem + 3vw, 3.75rem)",
   background: "var(--field-sky)",
   "& h2": {
     maxWidth: "16ch",
