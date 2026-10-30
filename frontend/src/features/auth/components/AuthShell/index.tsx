@@ -2,9 +2,12 @@ import type { ReactNode } from "react";
 import { ButtonLink } from "@/components/Button";
 import { Header } from "@/components/Header";
 import { Page } from "@/components/Page";
+import { StatusTag } from "@/components/StatusTag";
+import { CONTRACT_STATUS_VIEW } from "@/lib/status";
 import { GUEST_NOTE } from "../../copy";
+import { AuthTabs } from "../AuthTabs";
 import { GuestButton } from "../GuestButton";
-import { Column, Mark, Note, Or, Panel, PanelTitle, Root } from "./styled";
+import { Card, CardHead, CardSum, Column, Mark, Note, Or, Panel, PanelTitle, Root } from "./styled";
 
 interface AuthShellProps {
   children: ReactNode;
@@ -25,6 +28,7 @@ export function AuthShell({ children }: AuthShellProps) {
     >
       <Root>
         <Column>
+          <AuthTabs />
           {children}
           <Or>Or</Or>
           <GuestButton variant="sun" block />
@@ -42,6 +46,24 @@ export function AuthShell({ children }: AuthShellProps) {
             <i />
             <i />
           </Mark>
+          <Card>
+            <CardHead>
+              Cabin weekend
+              <StatusTag view={CONTRACT_STATUS_VIEW.active} />
+            </CardHead>
+            <p>
+              This is a hold, not a charge. It&apos;s only taken if all 4 people pay by Fri 6 Nov, 6:00pm PT.
+            </p>
+            <CardSum>
+              <span>
+                <i />
+                <i />
+                <i />
+                <i />
+              </span>
+              3 of 4 held · $240.00 of $320.00
+            </CardSum>
+          </Card>
         </Panel>
       </Root>
     </Page>

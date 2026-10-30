@@ -1,17 +1,18 @@
 import { PhoneArt } from "./PhoneArt";
-import { Art, Root, WordA, WordB, Words } from "./styled";
+import { Caption, Root, Stage, WordA, WordB, Words } from "./styled";
 
 export function PosterScene() {
   return (
     <Root>
-      <Art>
+      <Stage>
+        <Words>
+          <WordA>hold</WordA>
+          <span className="sr-only">, </span>
+          <WordB>don&apos;t pay</WordB>
+        </Words>
         <PhoneArt />
-      </Art>
-      <Words>
-        <WordA>hold</WordA>
-        <span className="sr-only">, </span>
-        <WordB>don&apos;t pay</WordB>
-      </Words>
+        <Caption>Each friend opens a link on their phone and approves a PayPal hold. No card form.</Caption>
+      </Stage>
     </Root>
   );
 }

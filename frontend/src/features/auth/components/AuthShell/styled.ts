@@ -48,7 +48,43 @@ export const Panel = styled("aside")({
   padding: "clamp(3rem, 6vw, 5.5rem)",
   background: "var(--field-sky)",
   color: "var(--on-sky)",
-  [WIDE]: { display: "block" },
+  [WIDE]: { display: "flex", flexDirection: "column" },
+});
+
+/** A frosted card from the product itself, not an illustration: the sample plan as a friend would see it. */
+export const Card = styled("div")({
+  maxWidth: "26rem",
+  marginTop: "auto",
+  padding: "var(--s-5)",
+  border: "1px solid var(--glass-line)",
+  borderRadius: "var(--r-panel)",
+  background: "var(--glass-bg)",
+  WebkitBackdropFilter: "var(--glass-blur)",
+  backdropFilter: "var(--glass-blur)",
+  boxShadow: "var(--glass-shine), var(--shadow-3)",
+  color: "var(--text)",
+  animation: "fb-rise var(--d-5) var(--ease-out-quart) 400ms both",
+  "& > p": { marginBlock: "var(--s-3)", fontSize: "1.0625rem", lineHeight: 1.45 },
+});
+
+export const CardHead = styled("div")({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  fontSize: "var(--fs-small)",
+  fontWeight: 500,
+});
+
+export const CardSum = styled("div")({
+  display: "flex",
+  alignItems: "center",
+  gap: "var(--s-3)",
+  fontFamily: "var(--font-mono)",
+  fontSize: "0.8125rem",
+  color: "var(--text-2)",
+  "& span": { display: "inline-flex", gap: "3px" },
+  "& i": { width: "10px", height: "10px", background: "var(--blue)" },
+  "& i:last-of-type": { background: "transparent", boxShadow: "inset 0 0 0 2px var(--sun)" },
 });
 
 export const PanelTitle = styled("p")({

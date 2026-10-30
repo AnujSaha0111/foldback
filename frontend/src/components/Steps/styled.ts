@@ -18,3 +18,10 @@ export const Mark = styled("span")({
 });
 
 export const Body = styled("p")({ color: "var(--text-2)" });
+
+export const Extra = styled("div")({
+  display: "flex",
+  flexWrap: "wrap",
+  gap: "var(--s-2)",
+  marginTop: "var(--s-3)",
+});

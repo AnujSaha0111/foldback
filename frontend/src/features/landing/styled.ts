@@ -13,6 +13,8 @@ export const Section = styled("section", { shouldForwardProp: (prop) => prop !==
 
 export const Split = styled(Inner)({
   display: "grid",
+  // minmax(0, …): a wide child (the board peek) scrolls inside its frame instead of widening the page.
+  gridTemplateColumns: "minmax(0, 1fr)",
   gap: "var(--s-6)",
   "@media (min-width: 1024px)": {
     gridTemplateColumns: "minmax(0, 0.8fr) minmax(0, 1.2fr)",

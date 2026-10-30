@@ -11,9 +11,6 @@ export const Root = styled("div")({
   "--my": "50%",
   position: "relative",
   overflow: "hidden",
-  width: "100%",
-  maxWidth: "35rem",
-  justifySelf: "end",
   color: "var(--text)",
   background: "var(--glass-bg)",
   border: "1px solid var(--glass-line)",
@@ -39,6 +36,30 @@ export const Root = styled("div")({
   "& > *": { position: "relative" },
 });
 
+export const Wrap = styled("div")({ width: "100%", maxWidth: "35rem", justifySelf: "end" });
+
+/** Under the panel: what the demo shows, and a way to watch the holds land again. */
+export const Caption = styled("div")({
+  display: "flex",
+  justifyContent: "space-between",
+  marginTop: "var(--s-3)",
+  fontSize: "var(--fs-caption)",
+  color: "rgba(0, 0, 0, 0.66)",
+  "& button": {
+    padding: 0,
+    border: 0,
+    background: "none",
+    color: "#000",
+    font: "inherit",
+    fontWeight: 500,
+    textDecoration: "underline",
+    textDecorationColor: "rgba(0, 0, 0, 0.3)",
+    textUnderlineOffset: "3px",
+    cursor: "pointer",
+  },
+  "& button:hover": { textDecorationColor: "#000" },
+});
+
 export const Head = styled("div")({
   display: "flex",
   flexWrap: "wrap",
@@ -47,7 +68,13 @@ export const Head = styled("div")({
   gap: "var(--s-2) var(--s-5)",
   padding: "var(--s-4) var(--s-5)",
   borderBottom: "1px solid rgba(1, 33, 105, 0.07)",
-  "& strong": { fontWeight: 600, fontSize: "0.9375rem" },
+  "& strong": {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "var(--s-2)",
+    fontWeight: 600,
+    fontSize: "0.9375rem",
+  },
 });
 
 export const Small = styled("span")({ fontSize: "0.8125rem", color: "var(--text-2)" });

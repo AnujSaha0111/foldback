@@ -29,11 +29,6 @@ html {
   color: #161616;
 }
 
-/* Smooth cross-page transitions where the browser supports them. */
-@view-transition {
-  navigation: auto;
-}
-
 body {
   margin: 0;
   overflow-x: clip;
