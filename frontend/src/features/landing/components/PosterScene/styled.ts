@@ -56,9 +56,9 @@ export const WordA = styled(Word)({
   color: "var(--paper)",
   // Half the phone's width plus a gap. "hold" slides in from the left and comes to rest just left of the phone,
   // never behind it: white on the phone's light screen would vanish.
-  "--half": "9.75rem",
+  "--half": "calc(9.125 * min(1rem, 1.8svh) + 1rem)",
   transform: "translateX(calc(-100% - var(--half) - (1 - var(--q)) * 45vw))",
-  "@media (max-width: 599px)": { "--half": "8.5rem" },
+  "@media (max-width: 599px)": { "--half": "calc(9.125 * min(0.86rem, 1.8svh) + 0.75rem)" },
 });
 
 export const WordB = styled(Word)({
@@ -81,6 +81,7 @@ const Side = styled("p")({
   top: "44%",
   zIndex: 3,
   maxWidth: "min(22rem, 26vw)",
+  fontSize: "1.0625rem",
   lineHeight: 1.4,
   opacity: "calc(var(--q) * 1.6 - 0.4)",
   transform: "translateY(calc((1 - var(--q)) * 16px))",
@@ -90,7 +91,6 @@ const Side = styled("p")({
 
 export const Caption = styled(Side)({
   left: "clamp(1rem, 4vw, 5rem)",
-  fontSize: "1.0625rem",
   color: "rgba(255, 255, 255, 0.86)",
   "@media (max-width: 899px)": {
     display: "block",
@@ -113,7 +113,5 @@ export const Caption = styled(Side)({
 export const Outcome = styled(Side)({
   right: "clamp(1rem, 4vw, 5rem)",
   textAlign: "right",
-  fontSize: "1.25rem",
-  fontWeight: 500,
   color: "var(--sun)",
 });

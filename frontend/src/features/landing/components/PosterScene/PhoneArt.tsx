@@ -12,37 +12,44 @@ const PEOPLE = ["Alex Chen", "Sam Ortiz", "Jordan Lee"];
 const Phone = styled("div")({
   position: "relative",
   zIndex: 1,
-  width: "18.25rem",
-  height: "37.5rem",
-  padding: "2px",
-  borderRadius: "49px",
+  // One font size sizes the whole phone, and it follows the screen height, so the phone always fits on a laptop.
+  fontSize: "min(1rem, 1.8svh)",
+  width: "18.25em",
+  height: "37.5em",
+  padding: "0.125em",
+  borderRadius: "3.0625em",
   background: "linear-gradient(135deg, #8d8d93 0%, #3a3a3e 18%, #1d1d20 48%, #47474c 78%, #9a9aa0 100%)",
   boxShadow:
-    "0 0 0 1px rgba(255, 255, 255, 0.12), 0 50px 90px -30px rgba(0, 0, 0, 0.8), 0 18px 40px -20px rgba(255, 122, 26, 0.35)",
+    "0 0 0 1px rgba(255, 255, 255, 0.12), 0 3.125em 5.625em -1.875em rgba(0, 0, 0, 0.8), 0 1.125em 2.5em -1.25em rgba(255, 122, 26, 0.35)",
   transform:
     "perspective(1600px) rotateX(calc(22deg - var(--q) * 22deg)) rotateY(calc(-26deg + var(--q) * 26deg)) rotateZ(calc(6deg - var(--q) * 6deg)) scale(calc(0.86 + var(--q) * 0.14))",
   willChange: "transform",
   "&::before, &::after": {
     content: '""',
     position: "absolute",
-    width: "3px",
-    borderRadius: "2px",
+    width: "0.1875em",
+    borderRadius: "0.125em",
     background: "linear-gradient(90deg, #3a3a3e, #77777d)",
   },
-  "&::before": { left: "-2px", top: "22%", height: "8%", boxShadow: "0 54px 0 #55555a" },
-  "&::after": { right: "-2px", top: "27%", height: "13%" },
-  "@media (max-width: 599px)": { width: "15.75rem", height: "32.5rem" },
+  "&::before": { left: "-0.125em", top: "22%", height: "8%", boxShadow: "0 3.375em 0 #55555a" },
+  "&::after": { right: "-0.125em", top: "27%", height: "13%" },
+  "@media (max-width: 599px)": { fontSize: "min(0.86rem, 1.8svh)" },
 });
 
-const Bezel = styled("div")({ height: "100%", padding: "5px", borderRadius: "47px", background: "#000" });
+const Bezel = styled("div")({
+  height: "100%",
+  padding: "0.3125em",
+  borderRadius: "2.9375em",
+  background: "#000",
+});
 
 /** The screen glass: a bright streak that moves across with scroll, over everything on the screen. */
 const Glass = styled("span")({
   position: "absolute",
   zIndex: 4,
-  inset: "7px",
+  inset: "0.4375em",
   overflow: "hidden",
-  borderRadius: "42px",
+  borderRadius: "2.625em",
   pointerEvents: "none",
   boxShadow: "inset 0 0 0 1px rgba(255, 255, 255, 0.1)",
   "&::before": {
@@ -59,7 +66,7 @@ const Screen = styled("div")({
   position: "relative",
   height: "100%",
   overflow: "hidden",
-  borderRadius: "42px",
+  borderRadius: "2.625em",
   background: "linear-gradient(170deg, #60cdff 0%, #9fe0ff 42%, #ffd3ad 100%)",
   color: "#161616",
   fontFamily: "var(--font-sans)",
@@ -69,61 +76,61 @@ const Home = styled("span")({
   position: "absolute",
   zIndex: 3,
   left: "50%",
-  bottom: "6px",
-  width: "102px",
-  height: "3px",
-  marginLeft: "-51px",
-  borderRadius: "2px",
+  bottom: "0.375em",
+  width: "6.375em",
+  height: "0.1875em",
+  marginLeft: "-3.1875em",
+  borderRadius: "0.125em",
   background: "rgba(0, 0, 0, 0.75)",
 });
 
 const Island = styled("span")({
   position: "absolute",
   zIndex: 3,
-  top: "10px",
+  top: "0.625em",
   left: "50%",
-  width: "92px",
-  height: "26px",
-  marginLeft: "-46px",
-  borderRadius: "20px",
+  width: "5.75em",
+  height: "1.625em",
+  marginLeft: "-2.875em",
+  borderRadius: "1.25em",
   background: "#000",
 });
 
 const Top = styled("div")({
-  padding: "54px 20px 34px",
+  padding: "3.375em 1.25em 2.125em",
   color: "#000",
-  "& p": { fontSize: "12px" },
-  "& strong": { display: "block", marginTop: "2px", fontSize: "17px", fontWeight: 600 },
+  "& p": { fontSize: "0.75em" },
+  "& strong": { display: "block", marginTop: "0.125em", fontSize: "1.0625em", fontWeight: 600 },
   "& b": {
     display: "block",
-    marginTop: "8px",
-    font: "500 40px/1 var(--font-mono)",
+    marginTop: "0.5em",
+    font: "500 2.5em/1 var(--font-mono)",
     letterSpacing: "-0.05em",
   },
 });
 
 const Card = styled("div")({
   position: "relative",
-  margin: "-18px 10px 0",
-  padding: "16px 14px",
-  borderRadius: "12px",
+  margin: "-1.125em 0.625em 0",
+  padding: "1em 0.875em",
+  borderRadius: "0.75em",
   background: "rgba(255, 255, 255, 0.66)",
   border: "1px solid rgba(255, 255, 255, 0.85)",
-  backdropFilter: "blur(14px) saturate(170%)",
-  boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 10px 26px -12px rgba(1, 33, 105, 0.35)",
-  "& > strong": { fontSize: "15px", fontWeight: 600 },
-  "& > p": { marginTop: "4px", fontSize: "11px", lineHeight: 1.45, color: "#525252" },
+  backdropFilter: "blur(0.875em) saturate(170%)",
+  boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 0.625em 1.625em -0.75em rgba(1, 33, 105, 0.35)",
+  "& > strong": { fontSize: "0.9375em", fontWeight: 600 },
+  "& > p": { marginTop: "0.25em", fontSize: "0.6875em", lineHeight: 1.45, color: "#525252" },
 });
 
 const List = styled("ul")({
-  marginTop: "12px",
-  fontSize: "11.5px",
+  marginTop: "0.75em",
+  fontSize: "0.7188em",
   "& li": {
     position: "relative",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: "6px 0",
+    padding: "0.375em 0",
     borderTop: "1px solid #ebebeb",
   },
 });
@@ -131,12 +138,12 @@ const List = styled("ul")({
 const tag = (bg: string, fg: string): CSSObject => ({
   display: "inline-flex",
   alignItems: "center",
-  height: "18px",
-  padding: "0 6px",
-  borderRadius: "3px",
+  height: "1.125em",
+  padding: "0 0.375em",
+  borderRadius: "0.1875em",
   background: bg,
   color: fg,
-  fontSize: "10px",
+  fontSize: "0.625em",
   fontWeight: 600,
 });
 
@@ -156,14 +163,14 @@ const Squares = styled("div")({
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  marginBottom: "4px",
-  fontSize: "11px",
+  marginBottom: "0.25em",
+  fontSize: "0.6875em",
   fontWeight: 500,
-  "& > span:first-of-type": { display: "inline-flex", gap: "3px" },
-  "& i": { width: "9px", height: "9px", background: "var(--blue)" },
+  "& > span:first-of-type": { display: "inline-flex", gap: "0.1875em" },
+  "& i": { width: "0.5625em", height: "0.5625em", background: "var(--blue)" },
   "& i:last-of-type": {
     background: "transparent",
-    boxShadow: "inset 0 0 0 2px var(--sun)",
+    boxShadow: "inset 0 0 0 0.125em var(--sun)",
     "&::after": {
       content: '""',
       display: "block",
@@ -186,9 +193,9 @@ const Count = styled("span")({
 
 const Bottom = styled("div")({
   position: "absolute",
-  left: "10px",
-  right: "10px",
-  bottom: "30px",
+  left: "0.625em",
+  right: "0.625em",
+  bottom: "1.875em",
   display: "grid",
   "& > *": { gridArea: "1 / 1" },
 });
@@ -197,23 +204,23 @@ const Action = styled("span")({
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  height: "44px",
-  padding: "0 14px",
+  height: "2.75em",
+  padding: "0 0.875em",
   backgroundImage: "var(--sun-grad)",
   color: "#000",
-  fontSize: "13px",
+  fontSize: "0.8125em",
   fontWeight: 600,
   opacity: "calc(1 - var(--held))",
 });
 
 const Receipt = styled("span")({
-  padding: "12px 14px",
+  padding: "0.75em 0.875em",
   background: "var(--blue-50)",
-  borderLeft: "3px solid var(--blue)",
-  fontSize: "12px",
+  borderLeft: "0.1875em solid var(--blue)",
+  fontSize: "0.75em",
   lineHeight: 1.4,
   opacity: "var(--held)",
-  transform: "translateY(calc((1 - var(--held)) * 8px))",
+  transform: "translateY(calc((1 - var(--held)) * 0.5em))",
 });
 
 /** The Pay page on a phone, built from the real tokens so it follows the palette. */

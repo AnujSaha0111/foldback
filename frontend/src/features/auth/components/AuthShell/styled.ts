@@ -52,7 +52,7 @@ export const Note = styled("p")({
 /** Sky with soft light; the squares drop in, the open one in orange. */
 export const Panel = styled("aside")({
   display: "none",
-  padding: "clamp(3rem, 6vw, 5.5rem)",
+  padding: "clamp(1.5rem, 3vw, 3rem)",
   background: "var(--field-sky)",
   color: "var(--on-sky)",
   [WIDE]: { display: "flex", flexDirection: "column" },
@@ -104,13 +104,14 @@ export const PanelTitle = styled("p")({
 
 export const Mark = styled("div")({
   display: "grid",
-  gridTemplateColumns: "repeat(2, 6.5rem)",
-  gap: "0.75rem",
-  marginTop: "var(--s-7)",
+  gridTemplateColumns: "repeat(2, 5rem)",
+  gap: "0.5rem",
+  marginTop: "var(--s-5)",
+  marginBottom: "var(--s-5)",
   "& i": {
     display: "block",
-    width: "6.5rem",
-    height: "6.5rem",
+    width: "5rem",
+    height: "5rem",
     background: "var(--navy)",
     clipPath: "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%)",
     animation: "fb-pop 800ms var(--ease-out-expo) both",

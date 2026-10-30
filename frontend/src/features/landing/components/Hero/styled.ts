@@ -8,8 +8,9 @@ export const Root = styled("section")({
   position: "relative",
   isolation: "isolate",
   overflow: "hidden",
-  // Fills the first screen under the header, so the next (dark) section never shows at the foot.
-  minHeight: "calc(100svh - 5rem)",
+  // Reaches the foot of the first screen, so the next (dark) section never shows there. The header is never shorter
+  // than 3.5 rem, so this is never too short.
+  minHeight: "calc(100svh - 3.5rem)",
   background: "var(--field-sky)",
   color: "var(--on-sky)",
 });
@@ -100,7 +101,7 @@ export const Actions = styled("div")({
 
 export const Note = styled("p")({
   maxWidth: "36rem",
-  marginTop: "var(--s-4)",
+  marginTop: "1.25rem",
   fontSize: "var(--fs-small)",
   color: "rgba(0, 0, 0, 0.72)",
   ...enter(2),
