@@ -6,9 +6,9 @@ import { Inner } from "@/components/Page/styled";
 export const Section = styled("section", { shouldForwardProp: (prop) => prop !== "$layer" })<{
   $layer?: boolean;
 }>(({ $layer }) => ({
-  paddingBlock: "var(--s-7)",
-  background: $layer ? "var(--layer)" : "transparent",
-  "@media (min-width: 1024px)": { paddingBlock: "var(--s-9)" },
+  paddingBlock: "clamp(3.5rem, 2rem + 5vw, 6rem)",
+  background: $layer ? "var(--bg-subtle)" : "transparent",
+  borderBlock: $layer ? "1px solid var(--line-soft)" : 0,
 }));
 
 export const Split = styled(Inner)({

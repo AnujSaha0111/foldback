@@ -2,7 +2,7 @@
 
 import { useId } from "react";
 import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
-import { Area, Help, Input, Label, Root } from "./styled";
+import { Area, Control, Help, Input, Label, Root } from "./styled";
 
 interface LabelProps {
   label: string;
@@ -24,7 +24,9 @@ export function Field({ label, help, ...input }: FieldProps) {
   return (
     <Root>
       <Label htmlFor={id}>{label}</Label>
-      <Input id={id} aria-describedby={describedBy} {...input} />
+      <Control>
+        <Input id={id} aria-describedby={describedBy} {...input} />
+      </Control>
       {help ? <Help id={helpId}>{help}</Help> : null}
     </Root>
   );
@@ -35,7 +37,9 @@ export function TextAreaField({ label, help, ...area }: TextAreaFieldProps) {
   return (
     <Root>
       <Label htmlFor={id}>{label}</Label>
-      <Area id={id} aria-describedby={describedBy} {...area} />
+      <Control>
+        <Area id={id} aria-describedby={describedBy} {...area} />
+      </Control>
       {help ? <Help id={helpId}>{help}</Help> : null}
     </Root>
   );

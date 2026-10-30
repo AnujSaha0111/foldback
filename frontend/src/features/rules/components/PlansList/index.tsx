@@ -23,7 +23,16 @@ const columns = [
   {
     header: "Holds",
     cell: (plan: ContractSummary) => (
-      <Holds>{plan.headcount === null ? "—" : `${plan.held_count} of ${plan.headcount} held`}</Holds>
+      <Holds>
+        {plan.headcount === null ? null : (
+          <span aria-hidden="true">
+            {Array.from({ length: plan.headcount }, (_, index) => (
+              <i key={index} data-on={index < plan.held_count} />
+            ))}
+          </span>
+        )}
+        <span>{plan.headcount === null ? "—" : `${plan.held_count} of ${plan.headcount} held`}</span>
+      </Holds>
     ),
   },
   {

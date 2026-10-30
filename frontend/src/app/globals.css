@@ -24,8 +24,19 @@ html {
   }
 }
 
+::selection {
+  background: var(--sky-200);
+  color: #161616;
+}
+
+/* Smooth cross-page transitions where the browser supports them. */
+@view-transition {
+  navigation: auto;
+}
+
 body {
   margin: 0;
+  overflow-x: clip;
   background: var(--bg);
   color: var(--text);
   font: 400 var(--fs-body) / 1.5 var(--font-sans);
@@ -112,6 +123,90 @@ textarea,
 select {
   font: inherit;
   color: inherit;
+}
+
+/* Shared motion. Components name these; durations and curves come from tokens.css. */
+@keyframes fb-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes fb-word {
+  from {
+    opacity: 0;
+    transform: translateY(105%);
+    filter: blur(8px);
+  }
+}
+
+@keyframes fb-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+    filter: blur(2px);
+  }
+}
+
+@keyframes fb-live {
+  from {
+    opacity: 0.9;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+
+@keyframes fb-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+@keyframes fb-squares {
+  0%,
+  70%,
+  100% {
+    opacity: 0.2;
+  }
+  35% {
+    opacity: 1;
+  }
+}
+
+@keyframes fb-sheet {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes fb-grow {
+  from {
+    opacity: 0;
+    transform: scaleX(0.04);
+  }
+}
+
+/* Registered so a folded corner can grow smoothly on hover. */
+@property --f {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 2rem;
+}
+
+@keyframes fb-drift {
+  to {
+    transform: translate3d(-6vw, 5vw, 0) scale(1.12);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

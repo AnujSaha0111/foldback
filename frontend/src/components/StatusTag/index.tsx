@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type { StatusView } from "@/lib/status";
 import { Tag } from "./styled";
 
@@ -6,6 +9,12 @@ interface StatusTagProps {
   view: StatusView;
 }
 
+/** Pops when its status changes (a hold arriving), never on first paint. */
 export function StatusTag({ view }: StatusTagProps) {
-  return <Tag $tone={view.tone}>{view.label}</Tag>;
+  const [first] = useState(view.label);
+  return (
+    <Tag key={view.label} $tone={view.tone} data-pop={first === view.label ? undefined : true}>
+      {view.label}
+    </Tag>
+  );
 }

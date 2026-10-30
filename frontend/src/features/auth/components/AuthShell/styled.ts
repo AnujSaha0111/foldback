@@ -7,22 +7,23 @@ const WIDE = "@media (min-width: 900px)";
 export const Root = styled("div")({
   display: "grid",
   minHeight: "calc(100dvh - 4rem)",
-  [WIDE]: { gridTemplateColumns: "minmax(0, 32rem) minmax(0, 1fr)" },
+  [WIDE]: { gridTemplateColumns: "minmax(0, 34rem) minmax(0, 1fr)" },
 });
 
 export const Column = styled("div")({
   width: "100%",
   maxWidth: "32rem",
-  padding: "var(--s-6) var(--gutter) var(--s-7)",
+  padding: "var(--s-8) var(--gutter)",
+  animation: "fb-rise var(--d-5) var(--ease-out-quart) both",
   "& h1": { marginBottom: "var(--s-2)" },
-  [WIDE]: { paddingInline: "var(--s-7)" },
+  [WIDE]: { alignSelf: "center", paddingInline: "var(--s-8)" },
 });
 
 export const Switch = styled("p")({ color: "var(--text-2)" });
 
 export const Fields = styled("form")({
-  marginTop: "var(--s-6)",
-  "& > button": { marginTop: "var(--s-5)" },
+  marginTop: "var(--s-7)",
+  "& > button": { marginTop: "var(--s-5)", minHeight: "3.25rem" },
 });
 
 export const Or = styled("div")({
@@ -41,27 +42,42 @@ export const Note = styled("p")({
   color: "var(--text-2)",
 });
 
+/** Sky with soft light; the squares drop in, the open one in orange. */
 export const Panel = styled("aside")({
   display: "none",
-  padding: "var(--s-7)",
-  background: "var(--sky)",
+  padding: "clamp(3rem, 6vw, 5.5rem)",
+  background: "var(--field-sky)",
   color: "var(--on-sky)",
   [WIDE]: { display: "block" },
 });
 
 export const PanelTitle = styled("p")({
   maxWidth: "11ch",
-  fontSize: "clamp(2rem, 1rem + 3vw, 3.5rem)",
+  fontSize: "clamp(2.75rem, 1.5rem + 3vw, 4.25rem)",
   fontWeight: 600,
-  letterSpacing: "-0.035em",
+  letterSpacing: "-0.04em",
   lineHeight: 1.02,
 });
 
 export const Mark = styled("div")({
   display: "grid",
-  gridTemplateColumns: "repeat(2, 5.5rem)",
-  gap: "0.9rem",
-  marginTop: "var(--s-7)",
-  "& i": { display: "block", width: "5.5rem", height: "5.5rem", background: "var(--navy)" },
-  "& i:last-of-type": { border: "6px solid var(--blue)", background: "transparent" },
+  gridTemplateColumns: "repeat(2, 6.5rem)",
+  gap: "0.75rem",
+  marginTop: "var(--s-8)",
+  "& i": {
+    display: "block",
+    width: "6.5rem",
+    height: "6.5rem",
+    background: "var(--navy)",
+    clipPath: "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%)",
+    animation: "fb-pop 800ms var(--ease-out-expo) both",
+  },
+  "& i:nth-of-type(2)": { animationDelay: "90ms" },
+  "& i:nth-of-type(3)": { animationDelay: "180ms" },
+  "& i:last-of-type": {
+    animationDelay: "270ms",
+    clipPath: "none",
+    background: "transparent",
+    boxShadow: "inset 0 0 0 4px var(--sun)",
+  },
 });

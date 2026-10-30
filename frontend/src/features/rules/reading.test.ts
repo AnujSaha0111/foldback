@@ -1,6 +1,6 @@
 import type { ApiExtraction } from "@/types/generated/api-types";
 import { termsOf } from "@/types/generated/terms";
-import { isQuestion, nextReading, quoteFor } from "./reading";
+import { isQuestion, markQuotes, nextReading, quoteFor } from "./reading";
 
 const complete: ApiExtraction = {
   title: "Cabin weekend",
@@ -87,5 +87,41 @@ describe("quoteFor", () => {
   it("finds the quote for a field, or nothing", () => {
     expect(quoteFor(complete, "title")).toBe("the cabin");
     expect(quoteFor(complete, "people")).toBeNull();
+  });
+});
+
+describe("markQuotes", () => {
+  const evidence = [
+    { field: "share_cents", quote: "$80 each" },
+    { field: "title", quote: "The Cabin" },
+    { field: "people", quote: "not in the text" },
+  ];
+
+  it("marks each quote where it appears, ignoring case, and keeps the rest as plain text", () => {
+    expect(markQuotes("ok the cabin is $320, so $80 each", evidence)).toEqual([
+      { text: "ok ", field: null },
+      { text: "the cabin", field: "title" },
+      { text: " is $320, so ", field: null },
+      { text: "$80 each", field: "share_cents" },
+    ]);
+  });
+
+  it("joins back into the exact text it was given", () => {
+    const text = "Line one\nso $80 each\nthe cabin";
+    expect(
+      markQuotes(text, evidence)
+        .map((segment) => segment.text)
+        .join(""),
+    ).toBe(text);
+  });
+
+  it("skips a quote that overlaps one already marked", () => {
+    const overlapping = [
+      { field: "a", quote: "cabin is" },
+      { field: "b", quote: "is $320" },
+    ];
+    expect(markQuotes("cabin is $320", overlapping).filter((segment) => segment.field)).toEqual([
+      { text: "cabin is", field: "a" },
+    ]);
   });
 });

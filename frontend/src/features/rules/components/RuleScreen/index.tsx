@@ -10,7 +10,6 @@ import {
   useResetDemoMutation,
 } from "@/api/contractsApi";
 import { Button } from "@/components/Button";
-import { Callout } from "@/components/Callout";
 import { TextAreaField } from "@/components/Field";
 import { FormError } from "@/components/FormError";
 import {
@@ -23,10 +22,16 @@ import { isQuestion, nextReading } from "../../reading";
 import type { Reading } from "../../reading";
 import { ClarifyForm } from "../ClarifyForm";
 import { TermsList } from "../TermsList";
-import { Actions, Grid, Head, Muted, Result, SampleLink } from "./styled";
+import { Transcript } from "../Transcript";
+import { FlowSteps, NothingRead, ReadingNow } from "./parts";
+import { Actions, Grid, Head, Panel, SampleLink } from "./styled";
 
 /** A question from the API is a step in the flow, so it is shown as a question and not as an error. */
 const failure = (error: ApiFailure | undefined) => (isQuestion(error) ? undefined : error);
+
+/** Paste (0), Read (1, also while answering a question), Confirm (2). */
+const stepOf = (loading: boolean, reading: Reading) =>
+  loading || reading.kind === "question" ? 1 : reading.kind === "ready" ? 2 : 0;
 
 /** A demo reset deletes the plan being read, so it starts the screen again rather than leave terms nobody can confirm. */
 export function RuleScreen() {
@@ -42,12 +47,16 @@ export function RuleScreen() {
 function RuleFlow() {
   const [text, setText] = useState("");
   const [reading, setReading] = useState<Reading>({ kind: "none" });
+  // After a read the text turns into a transcript with its quotes marked; Edit text brings the box back.
+  const [editing, setEditing] = useState(false);
+  const [pointedAt, setPointedAt] = useState<string | null>(null);
   const [readRule, read] = useReadRuleMutation();
   const [clarifyRule, clarify] = useClarifyRuleMutation();
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     clarify.reset();
+    setEditing(false);
     const rule_text = text.trim();
     // The sample texts carry a fixed date, so "friday" means the same day as in the demo video.
     const body = FIXTURE_TEXTS.includes(rule_text) ? { rule_text, use_fixture_time: true } : { rule_text };
@@ -60,61 +69,88 @@ function RuleFlow() {
     return next !== reading;
   };
 
+  const showTranscript = !read.isLoading && reading.kind === "ready" && !editing;
+
   return (
     <>
       <Head>
-        <h1>New plan</h1>
-        <p>Paste the chat. Read the plan. Confirm it. Then send each person their link.</p>
+        <div>
+          <h1>New plan</h1>
+          <p>Paste the chat. Read the plan. Confirm it. Then send each person their link.</p>
+        </div>
+        <FlowSteps step={stepOf(read.isLoading, reading)} />
       </Head>
       <Grid>
-        <form onSubmit={(event) => void submit(event)}>
-          <TextAreaField
-            label="Paste the group chat or describe the plan"
-            value={text}
-            onChange={(event) => setText(event.target.value)}
-            rows={10}
-            maxLength={MAX_RULE_TEXT_CHARS}
-            placeholder={CABIN_RULE_TEXT}
-            required
-            help={
-              <SampleLink type="button" onClick={() => setText(CABIN_CHAT_TEXT)}>
-                Use the sample cabin chat
-              </SampleLink>
-            }
-          />
-          <Actions>
-            <Button type="submit" disabled={read.isLoading}>
-              {read.isLoading ? "Reading…" : "Read the plan"}
-            </Button>
-            <FormError error={failure(read.error)} />
-          </Actions>
-        </form>
-        <Result aria-live="polite">
-          {read.isLoading ? (
-            <Callout title="Reading…">
-              <Muted>Finding the price, the people and the deadline in your text.</Muted>
-            </Callout>
-          ) : null}
-          {!read.isLoading && reading.kind === "none" ? (
-            <Callout title="Nothing read yet">
-              <Muted>
-                The plan appears here once you press Read the plan. Nothing is active until you confirm.
-              </Muted>
-            </Callout>
-          ) : null}
-          {!read.isLoading && reading.kind === "question" ? (
-            <ClarifyForm
-              question={reading.question}
-              busy={clarify.isLoading}
-              error={failure(clarify.error)}
-              onAnswer={(value) => answer(reading.contractId, value)}
+        <Panel aria-label="Your text">
+          {showTranscript && reading.kind === "ready" ? (
+            <Transcript
+              text={text}
+              evidence={reading.extraction.evidence}
+              active={pointedAt}
+              onEdit={() => setEditing(true)}
             />
           ) : null}
-          {!read.isLoading && reading.kind === "ready" ? (
-            <TermsList contractId={reading.contractId} extraction={reading.extraction} />
-          ) : null}
-        </Result>
+          <form hidden={showTranscript} onSubmit={(event) => void submit(event)}>
+            <TextAreaField
+              label="Paste the group chat or describe the plan"
+              value={text}
+              onChange={(event) => setText(event.target.value)}
+              rows={10}
+              maxLength={MAX_RULE_TEXT_CHARS}
+              placeholder={CABIN_RULE_TEXT}
+              required
+              help={
+                <SampleLink type="button" onClick={() => setText(CABIN_CHAT_TEXT)}>
+                  Use the sample cabin chat
+                </SampleLink>
+              }
+            />
+            <Actions>
+              <Button type="submit" disabled={read.isLoading}>
+                {read.isLoading ? "Reading…" : "Read the plan"}
+              </Button>
+              <FormError error={failure(read.error)} />
+            </Actions>
+          </form>
+        </Panel>
+        <Panel $raised aria-live="polite" aria-label="The plan as read">
+          {read.isLoading ? (
+            <ReadingNow />
+          ) : (
+            <Outcome
+              reading={reading}
+              clarifying={clarify.isLoading}
+              clarifyError={failure(clarify.error)}
+              onAnswer={answer}
+              onPoint={setPointedAt}
+            />
+          )}
+        </Panel>
       </Grid>
     </>
   );
+}
+
+interface OutcomeProps {
+  reading: Reading;
+  clarifying: boolean;
+  clarifyError: ApiFailure | undefined;
+  onAnswer: (id: string, value: string) => Promise<boolean>;
+  onPoint: (field: string | null) => void;
+}
+
+/** What the read produced: nothing yet, a question to answer, or the terms to confirm. */
+function Outcome({ reading, clarifying, clarifyError, onAnswer, onPoint }: OutcomeProps) {
+  if (reading.kind === "none") return <NothingRead />;
+  if (reading.kind === "question") {
+    return (
+      <ClarifyForm
+        question={reading.question}
+        busy={clarifying}
+        error={clarifyError}
+        onAnswer={(value) => onAnswer(reading.contractId, value)}
+      />
+    );
+  }
+  return <TermsList contractId={reading.contractId} extraction={reading.extraction} onPoint={onPoint} />;
 }

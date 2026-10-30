@@ -12,8 +12,8 @@ export const Root = styled(ScrollScene)({
   "--f": "clamp(1.5rem, 4vw, 3rem)",
   position: "relative",
   overflow: "hidden",
-  paddingBlock: "var(--s-8)",
-  background: "var(--sky)",
+  paddingBlock: "clamp(3.5rem, 2rem + 5vw, 6rem)",
+  background: "var(--field-sky)",
   color: "var(--ink)",
 });
 
@@ -35,7 +35,9 @@ const Block = styled("div")({
   padding: "var(--s-5)",
   color: "var(--paper)",
   [WIDE]: { minHeight: "22rem" },
-  "& p": { maxWidth: "20rem" },
+  "& p": { maxWidth: "22rem", minHeight: "3em" },
+  transition: "--f var(--d-4) var(--ease-out-expo)",
+  "&:hover": { "--f": "clamp(2.25rem, 6vw, 4.5rem)" },
   "&::after": {
     content: '""',
     position: "absolute",
@@ -47,7 +49,8 @@ const Block = styled("div")({
 });
 
 export const Kept = styled(Block)({
-  background: "var(--navy)",
+  backgroundImage: "var(--sun-grad)",
+  color: "#000",
   clipPath: "polygon(0 0, calc(100% - var(--f)) 0, 100% var(--f), 100% 100%, 0 100%)",
   transform: "translateY(calc((1 - var(--q)) * -24vh))",
   [WIDE]: { transform: "translateX(calc((1 - var(--q)) * -40vw))" },

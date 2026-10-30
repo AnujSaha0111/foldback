@@ -5,8 +5,12 @@ import { TONES } from "@/components/StatusTag/styled";
 import type { Tone } from "@/lib/status";
 
 export const Root = styled("div")({
-  border: "1px solid var(--line-strong)",
+  overflow: "hidden",
+  border: "1px solid var(--line)",
+  borderRadius: "var(--r-panel)",
   background: "var(--bg)",
+  boxShadow: "var(--shadow-3)",
+  "& > div:first-of-type": { background: "var(--bg-subtle)", color: "var(--text-2)" },
 });
 
 export const Row = styled("div")({
@@ -50,9 +54,12 @@ export const Bar = styled("span", {
   display: "flex",
   alignItems: "center",
   width: $width,
-  padding: "0 0.4rem",
+  padding: "0 0.6rem",
+  borderRadius: "var(--r-tag)",
   fontSize: "var(--fs-caption)",
-  fontWeight: 500,
+  fontWeight: 600,
   whiteSpace: "nowrap",
+  transformOrigin: "0 50%",
+  "[data-in='true'] &": { animation: "fb-grow var(--d-5) var(--ease-out-quart) both" },
   ...TONES[$tone],
 }));

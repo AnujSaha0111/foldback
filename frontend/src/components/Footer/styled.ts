@@ -2,10 +2,14 @@
 
 import { styled } from "@mui/material/styles";
 
+/** The one warm band: the sun gradient with a little grain, black text in both themes. */
 export const Root = styled("footer")({
-  background: "var(--navy)",
-  color: "var(--paper)",
+  position: "relative",
+  backgroundImage: "var(--sun-grad)",
+  color: "#000",
   fontSize: "var(--fs-small)",
+  "--logo-b-bg": "#000",
+  "--logo-b-fg": "#fff",
 });
 
 export const Row = styled("div")({

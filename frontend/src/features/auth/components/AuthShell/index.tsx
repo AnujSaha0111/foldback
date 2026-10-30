@@ -27,11 +27,15 @@ export function AuthShell({ children }: AuthShellProps) {
         <Column>
           {children}
           <Or>Or</Or>
-          <GuestButton variant="secondary" block />
+          <GuestButton variant="sun" block />
           <Note>{GUEST_NOTE}</Note>
         </Column>
         <Panel aria-hidden="true">
-          <PanelTitle>Three holds in. One to go.</PanelTitle>
+          <PanelTitle>
+            Three holds in.
+            <br />
+            One to go.
+          </PanelTitle>
           <Mark>
             <i />
             <i />
