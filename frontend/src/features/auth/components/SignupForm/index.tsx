@@ -19,9 +19,8 @@ export function SignupForm() {
 
   return (
     <AuthForm
-      title="Create account"
-      prompt="Already have one?"
-      other={{ href: "/login", label: "Sign in" }}
+      title="Create your account"
+      lead="Plans you make stay yours. Sandbox only."
       submitLabel="Create account"
       busyLabel="Creating account…"
       busy={isLoading}

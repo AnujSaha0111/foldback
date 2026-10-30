@@ -69,3 +69,22 @@ export function markQuotes(text: string, evidence: ApiExtraction["evidence"]): S
   if (at < text.length) segments.push({ text: text.slice(at), field: null });
   return segments;
 }
+
+/** The marked text split into lines, so each chat message can be laid out on its own. Empty lines are kept. */
+export function toLines(segments: Segment[]): Segment[][] {
+  const lines: Segment[][] = [[]];
+  for (const segment of segments) {
+    segment.text.split("\n").forEach((piece, index) => {
+      if (index > 0) lines.push([]);
+      if (piece) lines[lines.length - 1]?.push({ text: piece, field: segment.field });
+    });
+  }
+  return lines;
+}
+
+/** "[Sun 1 Nov, 11:42] Alex Chen: hi" becomes its time, its speaker and the rest. Null when it is not a chat line. */
+export function chatPrefix(text: string): { time: string; speaker: string; rest: string } | null {
+  const match = /^\[([^\]]{1,40})\]\s*([^:\n]{1,40}):\s?/.exec(text);
+  if (!match) return null;
+  return { time: match[1] ?? "", speaker: match[2] ?? "", rest: text.slice(match[0].length) };
+}

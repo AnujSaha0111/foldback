@@ -29,7 +29,7 @@ export function ClarifyForm({ question, busy, error, onAnswer }: ClarifyFormProp
 
   return (
     <>
-      <Callout title="One piece is missing" warn>
+      <Callout title="One piece is missing">
         <p>{question}</p>
       </Callout>
       <Form onSubmit={(event) => void submit(event)}>
@@ -41,7 +41,7 @@ export function ClarifyForm({ question, busy, error, onAnswer }: ClarifyFormProp
           autoComplete="off"
           required
         />
-        <Button type="submit" variant="blue" disabled={busy}>
+        <Button type="submit" disabled={busy}>
           {busy ? "Reading…" : "Answer"}
         </Button>
         <FormError error={error} />

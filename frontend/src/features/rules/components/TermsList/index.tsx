@@ -61,7 +61,12 @@ export function TermsList({ contractId, extraction, onPoint }: TermsListProps) {
 
   return (
     <>
-      <Intro>Read from your text. Nothing is active until you confirm.</Intro>
+      <Intro>
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M2.5 8.5l3.5 3.5 7.5-8" />
+        </svg>
+        Read from your text. Nothing is active until you confirm.
+      </Intro>
       <List>
         <Term {...term("Plan", "title")}>{terms.title}</Term>
         <Term {...term("Each person pays", "share_cents")}>

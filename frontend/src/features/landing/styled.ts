@@ -9,6 +9,7 @@ export const Section = styled("section", { shouldForwardProp: (prop) => prop !==
   paddingBlock: "clamp(3.5rem, 2rem + 5vw, 6rem)",
   background: $layer ? "var(--bg-subtle)" : "transparent",
   borderBlock: $layer ? "1px solid var(--line-soft)" : 0,
+  "& h2": { fontSize: "var(--fs-h1)", letterSpacing: "-0.03em" },
 }));
 
 export const Split = styled(Inner)({

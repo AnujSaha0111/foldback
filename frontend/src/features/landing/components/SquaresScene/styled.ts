@@ -13,6 +13,7 @@ export const Root = styled(ScrollScene)({
   overflow: "hidden",
   paddingBlock: "var(--s-8)",
   background: "var(--warm)",
+  "& h2": { fontSize: "var(--fs-h1)", letterSpacing: "-0.03em" },
   "[data-theme='dark'] &": { background: "#1b1714", "--sq": "var(--link)" },
 });
 

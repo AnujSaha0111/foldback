@@ -1,6 +1,6 @@
 import type { ApiExtraction } from "@/types/generated/api-types";
 import { termsOf } from "@/types/generated/terms";
-import { isQuestion, markQuotes, nextReading, quoteFor } from "./reading";
+import { chatPrefix, isQuestion, markQuotes, nextReading, quoteFor, toLines } from "./reading";
 
 const complete: ApiExtraction = {
   title: "Cabin weekend",
@@ -123,5 +123,39 @@ describe("markQuotes", () => {
     expect(markQuotes("cabin is $320", overlapping).filter((segment) => segment.field)).toEqual([
       { text: "cabin is", field: "a" },
     ]);
+  });
+});
+
+describe("toLines", () => {
+  it("splits marked text into lines, keeping each mark with its line", () => {
+    expect(
+      toLines([
+        { text: "one\ntwo ", field: null },
+        { text: "quote", field: "title" },
+        { text: "\n\nthree", field: null },
+      ]),
+    ).toEqual([
+      [{ text: "one", field: null }],
+      [
+        { text: "two ", field: null },
+        { text: "quote", field: "title" },
+      ],
+      [],
+      [{ text: "three", field: null }],
+    ]);
+  });
+});
+
+describe("chatPrefix", () => {
+  it("reads the time and speaker of a pasted chat line", () => {
+    expect(chatPrefix("[Sun 1 Nov, 11:42] Alex Chen: ok the cabin")).toEqual({
+      time: "Sun 1 Nov, 11:42",
+      speaker: "Alex Chen",
+      rest: "ok the cabin",
+    });
+  });
+
+  it("leaves plain text alone", () => {
+    expect(chatPrefix("The cabin is $320. Pay by: Friday")).toBeNull();
   });
 });

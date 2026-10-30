@@ -180,3 +180,15 @@ export const Caption = styled("div")({
   fontSize: "var(--fs-caption)",
   color: "var(--text-3)",
 });
+
+export const Legend = styled("span")({
+  display: "inline-flex",
+  gap: "var(--s-4)",
+  "& span": { display: "inline-flex", alignItems: "center", gap: "6px" },
+  "& span::before": { content: '""', width: "14px", height: "2px" },
+  "& [data-kind='now']::before": { background: "var(--blue)" },
+  "& [data-kind='deadline']::before": { background: "var(--sun)" },
+  "& [data-kind='grace']::before": {
+    background: "repeating-linear-gradient(90deg, var(--text) 0 3px, transparent 3px 6px)",
+  },
+});

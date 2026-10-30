@@ -17,7 +17,11 @@ export const Root = styled(ScrollScene)({
   color: "var(--ink)",
 });
 
-export const Head = styled("div")({ maxWidth: "36rem", marginBottom: "var(--s-6)" });
+export const Head = styled("div")({
+  maxWidth: "40rem",
+  marginBottom: "var(--s-6)",
+  "& h2": { fontSize: "var(--fs-h1)", letterSpacing: "-0.03em" },
+});
 
 export const Pair = styled("div")({
   display: "grid",

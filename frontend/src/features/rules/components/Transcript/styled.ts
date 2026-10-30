@@ -17,8 +17,9 @@ export const Body = styled("div")({
   padding: "var(--s-4)",
   background: "var(--layer)",
   fontSize: "0.9375rem",
-  lineHeight: 1.7,
+  lineHeight: 1.6,
   whiteSpace: "pre-wrap",
+  "& p": { minHeight: "1em", paddingBlock: "3px" },
   overflowWrap: "anywhere",
 });
 
@@ -33,3 +34,12 @@ export const Mark = styled("mark")({
     backgroundImage: "linear-gradient(rgba(96, 205, 255, 0.35), rgba(96, 205, 255, 0.35))",
   },
 });
+
+export const Stamp = styled("span")({
+  marginRight: "var(--s-2)",
+  fontFamily: "var(--font-mono)",
+  fontSize: "0.75rem",
+  color: "var(--text-3)",
+});
+
+export const Speaker = styled("b")({ fontWeight: 500 });

@@ -54,6 +54,9 @@ const contractsApi = baseApi.injectEndpoints({
 /** Lets every user of the reset mutation see the same result, however far apart they are on the page. */
 export const DEMO_RESET_KEY = "demo-reset";
 
+/** A plan as it already sits in the cache, without asking the API (the header uses it to name the open board). */
+export const useCachedContract = contractsApi.endpoints.getContract.useQueryState;
+
 export const {
   useGetContractsQuery,
   useGetContractQuery,

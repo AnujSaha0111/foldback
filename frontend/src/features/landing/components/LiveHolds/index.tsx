@@ -51,7 +51,7 @@ export function LiveHolds() {
         <Head>
           <strong>
             {SAMPLE.title}
-            <StatusTag view={CONTRACT_STATUS_VIEW.active} />
+            <StatusTag view={CONTRACT_STATUS_VIEW.active} live />
           </strong>
           <Small>Deadline {formatMoment(SAMPLE.deadline, SAMPLE.timeZone, true)}</Small>
         </Head>

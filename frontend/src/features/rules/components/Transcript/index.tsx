@@ -1,7 +1,8 @@
 import { Button } from "@/components/Button";
 import type { ApiExtraction } from "@/types/generated/api-types";
-import { markQuotes } from "../../reading";
-import { Body, Head, Mark } from "./styled";
+import { chatPrefix, markQuotes, toLines } from "../../reading";
+import type { Segment } from "../../reading";
+import { Body, Head, Mark, Speaker, Stamp } from "./styled";
 
 interface TranscriptProps {
   text: string;
@@ -22,16 +23,36 @@ export function Transcript({ text, evidence, active, onEdit }: TranscriptProps) 
         </Button>
       </Head>
       <Body tabIndex={0} aria-label="Your text, with the lines that were read marked">
-        {markQuotes(text, evidence).map((segment, index) =>
-          segment.field ? (
-            <Mark key={index} data-lit={segment.field === active}>
-              {segment.text}
-            </Mark>
-          ) : (
-            segment.text
-          ),
-        )}
+        {toLines(markQuotes(text, evidence)).map((line, row) => (
+          <Line key={row} segments={line} active={active} />
+        ))}
       </Body>
     </div>
+  );
+}
+
+/** One line of the chat: its time in grey mono and its speaker in bold, when it has them, then the message. */
+function Line({ segments, active }: { segments: Segment[]; active: string | null }) {
+  const [first, ...rest] = segments;
+  const prefix = first && !first.field ? chatPrefix(first.text) : null;
+  const parts = prefix ? [{ text: prefix.rest, field: null }, ...rest] : segments;
+  return (
+    <p>
+      {prefix ? (
+        <>
+          <Stamp>{prefix.time}</Stamp>
+          <Speaker>{prefix.speaker}:</Speaker>{" "}
+        </>
+      ) : null}
+      {parts.map((part, index) =>
+        part.field ? (
+          <Mark key={index} data-lit={part.field === active}>
+            {part.text}
+          </Mark>
+        ) : (
+          part.text
+        ),
+      )}
+    </p>
   );
 }

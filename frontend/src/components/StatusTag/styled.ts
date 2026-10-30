@@ -28,6 +28,7 @@ export const Tag = styled("span", { shouldForwardProp: (prop) => prop !== "$tone
   ({ $tone }) => ({
     display: "inline-flex",
     alignItems: "center",
+    gap: "6px",
     height: "1.375rem",
     padding: "0 var(--s-2)",
     border: "1px solid transparent",
@@ -41,3 +42,19 @@ export const Tag = styled("span", { shouldForwardProp: (prop) => prop !== "$tone
     ...TONES[$tone],
   }),
 );
+
+export const Live = styled("span")({
+  position: "relative",
+  width: "6px",
+  height: "6px",
+  borderRadius: "50%",
+  background: "currentColor",
+  "&::after": {
+    content: '""',
+    position: "absolute",
+    inset: "-3px",
+    borderRadius: "50%",
+    border: "1px solid currentColor",
+    animation: "fb-live 2s var(--ease-out-quart) infinite",
+  },
+});

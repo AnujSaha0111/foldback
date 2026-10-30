@@ -78,3 +78,12 @@ export const Layout = styled("div")({
 });
 
 export const Back = styled("div")({ marginTop: "var(--s-5)" });
+
+/** The deadline's countdown, in the deadline's own colour. */
+export const Urgent = styled("small")({
+  display: "block",
+  marginTop: "2px",
+  fontSize: "0.75rem",
+  fontWeight: 500,
+  color: "var(--sun-deep)",
+});

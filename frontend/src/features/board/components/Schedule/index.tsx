@@ -5,7 +5,20 @@ import { Avatar } from "@/components/Avatar";
 import { SHARE_STATUS_VIEW } from "@/lib/status";
 import type { ApiContract, ApiShare } from "@/types/generated/api-types";
 import { buildTimeline } from "../../timeline";
-import { Bar, Caption, Foot, Frame, Grid, HeadCell, Marker, Person, Row, Scroll, Track } from "./styled";
+import {
+  Bar,
+  Caption,
+  Foot,
+  Frame,
+  Grid,
+  HeadCell,
+  Legend,
+  Marker,
+  Person,
+  Row,
+  Scroll,
+  Track,
+} from "./styled";
 
 interface ScheduleProps {
   contract: ApiContract;
@@ -82,6 +95,11 @@ export function Schedule({ contract, shares, selectedId, onSelect }: SchedulePro
       </Scroll>
       <Caption>
         <span>Rows are people. Every bar carries its status word. Select a person to see their hold.</span>
+        <Legend aria-hidden="true">
+          <span data-kind="now">Now</span>
+          <span data-kind="deadline">Deadline</span>
+          <span data-kind="grace">Grace</span>
+        </Legend>
       </Caption>
     </Frame>
   );

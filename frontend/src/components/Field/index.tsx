@@ -1,8 +1,8 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState } from "react";
 import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
-import { Area, Control, Help, Input, Label, Root } from "./styled";
+import { Area, Control, Help, Input, Label, Reveal, Root } from "./styled";
 
 interface LabelProps {
   label: string;
@@ -19,13 +19,27 @@ function useFieldIds(help: ReactNode) {
   return { id, helpId, describedBy: help ? helpId : undefined };
 }
 
-export function Field({ label, help, ...input }: FieldProps) {
+export function Field({ label, help, type, ...input }: FieldProps) {
   const { id, helpId, describedBy } = useFieldIds(help);
+  const [shown, setShown] = useState(false);
+  const password = type === "password";
   return (
     <Root>
       <Label htmlFor={id}>{label}</Label>
       <Control>
-        <Input id={id} aria-describedby={describedBy} {...input} />
+        <Input
+          id={id}
+          type={password && shown ? "text" : type}
+          aria-describedby={describedBy}
+          data-reveal={password || undefined}
+          {...input}
+        />
+        {password ? (
+          <Reveal type="button" aria-controls={id} aria-pressed={shown} onClick={() => setShown(!shown)}>
+            {shown ? "Hide" : "Show"}
+            <span className="sr-only"> password</span>
+          </Reveal>
+        ) : null}
       </Control>
       {help ? <Help id={helpId}>{help}</Help> : null}
     </Root>

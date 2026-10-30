@@ -2,9 +2,24 @@
 
 import { styled } from "@mui/material/styles";
 
-export const Intro = styled("p")({ marginBottom: "var(--s-3)", color: "var(--text-2)" });
+export const Intro = styled("p")({
+  display: "flex",
+  alignItems: "center",
+  gap: "var(--s-3)",
+  paddingBottom: "var(--s-4)",
+  marginBottom: "var(--s-2)",
+  borderBottom: "1px solid var(--line-strong)",
+  "& svg": {
+    width: "16px",
+    height: "16px",
+    fill: "none",
+    stroke: "var(--blue)",
+    strokeWidth: 1.8,
+    flex: "none",
+  },
+});
 
-export const List = styled("dl")({ margin: 0, borderTop: "1px solid var(--line-strong)" });
+export const List = styled("dl")({ margin: 0 });
 
 /** Rows rise in one after another; the one under the pointer highlights at once and fades out. */
 export const Row = styled("div")({

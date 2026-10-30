@@ -13,9 +13,22 @@ import { CONTRACT_STATUS_VIEW } from "@/lib/status";
 import type { ApiContract, ApiShare } from "@/types/generated/api-types";
 import { PersonCard } from "../PersonCard";
 import { Schedule } from "../Schedule";
-import { Back, Head, Layout, Meter, Reason, Squares, Stat, Stats } from "./styled";
+import { Back, Head, Layout, Meter, Reason, Squares, Stat, Stats, Urgent } from "./styled";
 
 const HELD = new Set(["held", "kept", "capture_unknown", "capture_failed"]);
+const HOUR_MS = 3_600_000;
+
+/** "In 2 hours", "In 3 days" or "Deadline passed", measured from the demo clock. */
+function timeLeft(now: string, deadline: string): string {
+  const hours = Math.round((new Date(deadline).getTime() - new Date(now).getTime()) / HOUR_MS);
+  if (hours <= 0) return "Deadline passed";
+  if (hours < 48) return `In ${hours} ${hours === 1 ? "hour" : "hours"}`;
+  return `In ${Math.round(hours / 24)} days`;
+}
+
+/** "Maya has grace until Mon 9 Nov" for the stat strip. */
+const graceLine = (name: string, until: string, timeZone: string) =>
+  ` · ${name.split(" ")[0]} has grace until ${formatMoment(until, timeZone, true).split(",")[0]}`;
 
 /** The plan's board: the numbers that matter, people across the days, and the selected person's hold. */
 export function Board({ id }: { id: string }) {
@@ -31,14 +44,18 @@ export function Board({ id }: { id: string }) {
     <>
       <Head>
         <h1>{contract.title ?? "Untitled plan"}</h1>
-        <StatusTag view={CONTRACT_STATUS_VIEW[contract.status]} />
+        <StatusTag view={CONTRACT_STATUS_VIEW[contract.status]} live={contract.status === "active"} />
         <Badge>{contract.money_source === "sample" ? "Sample" : "Sandbox"}</Badge>
       </Head>
       <Numbers contract={contract} shares={shares} timeZone={timeZone} />
       {contract.resolution_reason ? <Reason aria-live="polite">{contract.resolution_reason}</Reason> : null}
       <Layout>
         <Schedule contract={contract} shares={shares} selectedId={selectedId} onSelect={setPicked} />
-        <PersonCard share={shares.find((share) => share.id === selectedId)} timeZone={timeZone} />
+        <PersonCard
+          share={shares.find((share) => share.id === selectedId)}
+          timeZone={timeZone}
+          graceUntil={contract.grace_until}
+        />
       </Layout>
       <Back>
         <ButtonLink href="/plans" variant="link" arrow={false}>
@@ -99,11 +116,14 @@ function Numbers({
         <div>
           {contract.deadline_at ? <Mono>{formatMoment(contract.deadline_at, timeZone, true)}</Mono> : "—"}
         </div>
-        {contract.grace_person_name && contract.grace_until ? (
-          <small>
-            {contract.grace_person_name} has until {formatMoment(contract.grace_until, timeZone, true)}
-          </small>
-        ) : null}
+        <Urgent>
+          {contract.deadline_at && contract.demo_now
+            ? timeLeft(contract.demo_now, contract.deadline_at)
+            : null}
+          {contract.grace_person_name && contract.grace_until
+            ? graceLine(contract.grace_person_name, contract.grace_until, timeZone)
+            : null}
+        </Urgent>
       </Stat>
     </Stats>
   );

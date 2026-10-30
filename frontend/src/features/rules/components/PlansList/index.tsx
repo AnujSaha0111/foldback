@@ -28,7 +28,9 @@ const columns = [
   },
   {
     header: "Status",
-    cell: (plan: ContractSummary) => <StatusTag view={CONTRACT_STATUS_VIEW[plan.status]} />,
+    cell: (plan: ContractSummary) => (
+      <StatusTag view={CONTRACT_STATUS_VIEW[plan.status]} live={plan.status === "active"} />
+    ),
   },
   {
     header: "Holds",

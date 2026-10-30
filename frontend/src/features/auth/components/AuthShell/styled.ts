@@ -6,20 +6,27 @@ const WIDE = "@media (min-width: 900px)";
 
 export const Root = styled("div")({
   display: "grid",
-  minHeight: "calc(100dvh - 4rem)",
+  minHeight: "100dvh",
   [WIDE]: { gridTemplateColumns: "minmax(0, 34rem) minmax(0, 1fr)" },
 });
 
 export const Column = styled("div")({
   width: "100%",
   maxWidth: "32rem",
-  padding: "var(--s-8) var(--gutter)",
+  padding: "var(--s-6) var(--gutter) var(--s-8)",
   animation: "fb-rise var(--d-5) var(--ease-out-quart) both",
   "& h1": { marginBottom: "var(--s-2)" },
-  [WIDE]: { alignSelf: "center", paddingInline: "var(--s-8)" },
+  [WIDE]: { paddingInline: "var(--s-8)" },
 });
 
 export const Switch = styled("p")({ color: "var(--text-2)" });
+
+export const Top = styled("div")({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  marginBottom: "var(--s-9)",
+});
 
 export const Fields = styled("form")({
   marginTop: "var(--s-7)",

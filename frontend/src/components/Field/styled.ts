@@ -47,7 +47,24 @@ const FILLED: CSSObject = {
   "&:focus-visible": { outline: "none" },
 };
 
-export const Input = styled("input")(FILLED);
+export const Input = styled("input")({ ...FILLED, "&[data-reveal]": { paddingRight: "4.5rem" } });
+
+/** Show / Hide inside a password box. */
+export const Reveal = styled("button")({
+  position: "absolute",
+  right: "0.25rem",
+  top: "50%",
+  transform: "translateY(-50%)",
+  height: "2.5rem",
+  padding: "0 var(--s-3)",
+  border: 0,
+  background: "none",
+  color: "var(--text-2)",
+  fontSize: "var(--fs-small)",
+  fontWeight: 500,
+  cursor: "pointer",
+  "&:hover": { color: "var(--text)" },
+});
 
 export const Area = styled("textarea")({ ...FILLED, minHeight: "9rem", lineHeight: 1.6, resize: "vertical" });
 
