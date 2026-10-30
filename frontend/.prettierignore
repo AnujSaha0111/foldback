@@ -5,3 +5,4 @@ node_modules
 next-env.d.ts
 src/types/generated
 src/theme/tokens.css
+.vercel

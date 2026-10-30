@@ -1,0 +1,3 @@
+# Deploy from frontend/ only. The Vercel CLI does not read .gitignore, so a deploy from here would upload every
+# local .env file. Ignoring everything makes that mistake fail with nothing sent.
+*

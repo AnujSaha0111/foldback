@@ -1,0 +1,6 @@
+# The Vercel CLI uploads this folder and does not read .gitignore. It skips node_modules and .next by itself.
+.env*
+.swc
+.yarn
+coverage
+*.tsbuildinfo
