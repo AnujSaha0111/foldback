@@ -24,7 +24,7 @@ The plan changed on 29 October 2026: the earlier Azure plan (VM, managed Postgre
 
 | Env | Where | Database | Notes |
 |---|---|---|---|
-| dev | your machine | `deploy/compose.dev.yml` → `postgres:16` on 5432 | `yarn dev` in `backend/` and `frontend/`. Next.js rewrites `/api` and `/socket.io` to `localhost:8787` |
+| dev | your machine | `deploy/compose.dev.yml` → `postgres:16` on 5432 | `yarn dev` in `backend/` and `frontend/`. The browser calls the API directly at `NEXT_PUBLIC_API_URL` (default `http://localhost:8787`; there are no rewrites) |
 | test | your machine and CI | `postgres:16` on 5433 (tmpfs) | Integration tests migrate a fresh schema per run |
 | production | Mac mini (backend + database), Vercel (frontend) | `postgres:16` container on the Mac, on the Compose network only | `deploy/compose.yml`, run from `~foldback/foldback` |
 
@@ -34,7 +34,7 @@ The plan changed on 29 October 2026: the earlier Azure plan (VM, managed Postgre
 |---|---|---|
 | Mac mini, its macOS admin account, the Tailscale network it is on, server operations | Manveer | The Mac also holds the owner's personal data, so the owner is the only operator (see Remote access) |
 | The domain, the Cloudflare account, the tunnel | Manveer | Creates the tunnel himself, so its token never leaves the Mac owner. Adds the DNS record Vercel asks for |
-| Vercel project | Nishit | Built from GitHub (`frontend/`) |
+| Vercel project | Nishit | His Hobby account, deployed from the CLI (`frontend/`), no Git integration |
 | GitHub repository and the ghcr.io package | Anuj | The package stays private until submission (see Docker image) |
 
 ## The Mac mini host
@@ -134,7 +134,7 @@ Check: `cloudflared tunnel info foldback-api` lists the connections, and `https:
 
 ## Frontend on Vercel
 
-Vercel builds `frontend/` from GitHub and serves it at `app.<domain>`. There is no frontend Dockerfile. The browser calls the API at `https://api.<domain>` with credentials; the session cookie is set for `COOKIE_DOMAIN`, so both subdomains are the same site and `SameSite=Lax` holds. CORS allows only `CORS_ORIGINS`.
+The frontend is deployed to a **Vercel Hobby project owned by Nishit**, from the CLI (`vercel deploy --prod`), and served at `app.<domain>`. The repository stays private, and Vercel's Git integration is not used, because Hobby blocks Git deploys of a private repo that has collaborators. The project has Root Directory `frontend`, Node 24, `ENABLE_EXPERIMENTAL_COREPACK=1` and `NEXT_PUBLIC_API_URL=https://api.<domain>`. A CI job runs the deploy once Anuj adds three repository secrets (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`). `app.<domain>` is a DNS-only CNAME (Cloudflare proxy off), added by Manveer. There is no frontend Dockerfile. The browser calls the API at `https://api.<domain>` with credentials; the session cookie is set for `COOKIE_DOMAIN`, so both subdomains are the same site and `SameSite=Lax` holds. CORS allows only `CORS_ORIGINS`.
 
 ## First deploy (in order)
 
@@ -193,7 +193,7 @@ Runs on every pull request and on pushes to `main`:
 1. **backend:** Node 24, `yarn install --immutable`, `format:check`, `typecheck`, `lint`, `knip`, `dup`, `sync-types --check`, `build`, `test --coverage` against a `postgres:16` service.
 2. **security:** gitleaks over the whole history (checksum-verified binary), and `yarn npm audit --severity high`. CodeQL runs through GitHub's default setup.
 3. **image** (after 1 and 2): builds the backend image and checks that its modules load. On pushes to `main` it publishes `linux/amd64` and `linux/arm64` to ghcr.io.
-4. **frontend** (phase 5): every `quality.md` §7 gate plus Lighthouse CI. Vercel builds and deploys the frontend itself.
+4. **frontend** (phase 5): every `quality.md` §7 gate plus Lighthouse CI. A later job deploys the frontend with the Vercel CLI (see Frontend on Vercel).
 
 **Deploys are pull-based.** There is no deploy job and no self-hosted runner: the repository is public at submission, and a self-hosted runner on a public repository can run a stranger's pull request on the Mac. The Mac's `com.foldback.deploy` job pulls each new `:latest` within five minutes.
 

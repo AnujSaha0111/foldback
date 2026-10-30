@@ -50,6 +50,32 @@ jobs:
       - run: yarn build
       - run: yarn test --coverage
 
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      NEXT_PUBLIC_API_URL: https://api.foldback.tech
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: corepack enable
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+      - run: yarn install --immutable
+      - run: yarn format:check
+      - run: yarn typecheck
+      - run: yarn lint
+      - run: yarn knip
+      - run: yarn dup
+      - run: (cd ../backend && corepack enable && yarn install --immutable && yarn sync-types --check)
+      - run: yarn build
+      - run: yarn test --coverage
+
   security:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -72,15 +98,17 @@ jobs:
         with:
           node-version: 24
           cache: yarn
-          cache-dependency-path: backend/yarn.lock
+          cache-dependency-path: |
+            backend/yarn.lock
+            frontend/yarn.lock
       - name: yarn npm audit
-        working-directory: backend
         run: |
-          yarn install --immutable
-          yarn npm audit --severity high
+          for dir in backend frontend; do
+            (cd "$dir" && yarn install --immutable && yarn npm audit --severity high)
+          done
 
   image:
-    needs: [backend, security]
+    needs: [backend, frontend, security]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:

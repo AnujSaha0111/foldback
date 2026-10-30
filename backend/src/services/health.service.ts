@@ -3,18 +3,10 @@ import type { Env } from "../config/env";
 import { migrationsCurrent } from "../db/migrator";
 import { hasUsableModel } from "../integrations/llm/client";
 import { AppError } from "../http/errors";
+import type { HealthSummary } from "../shared/api-types";
 import { countCallsToday } from "../repositories/aiUsage.repo";
 
 export type Readiness = "ok" | "unavailable" | "migrations_pending";
-
-export interface HealthSummary {
-  ok: true;
-  service: "foldback";
-  version: string;
-  paypal_env: "sandbox";
-  llm: boolean;
-  ai_calls_left: number;
-}
 
 /** Ready only when Postgres answers and every migration is applied. Never throws. */
 export async function readiness(pool: Pool): Promise<Readiness> {

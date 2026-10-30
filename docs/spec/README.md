@@ -58,7 +58,7 @@ Start at [phases/00-spike.md](phases/00-spike.md).
 | 2 UI design | `phases/02-ui-design.md` | done |
 | 3 Backend foundation | `phases/03-backend-foundation.md` | done |
 | 4 Rule reader | `phases/04-rule-reader.md` | done |
-| 5 Frontend and board | `phases/05-frontend-and-board.md` | ready (needs 3 only) |
+| 5 Frontend and board | `phases/05-frontend-and-board.md` | in progress: 5a skeleton built, in review |
 | 6 Pay link and hold | `phases/06-pay-and-hold.md` | blocked on 4 and 5 |
 | 7 Resolve: keep or release | `phases/07-resolve.md` | blocked on 6 |
 | 8 Organizer agent | `phases/08-agent.md` | blocked on 7 |

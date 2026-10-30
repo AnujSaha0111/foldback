@@ -18,7 +18,7 @@ The real frontend, built to the approved design. A visitor lands, tries it as a 
 
 ```text
 frontend/  (create-next-app, App Router, TypeScript, Yarn, ESLint 9)
-  next.config.ts                      dev rewrites /api and /socket.io → :8787; in production the API is https://api.<domain> (deploy.md)
+  next.config.ts                      no rewrites: the browser calls NEXT_PUBLIC_API_URL (dev default http://localhost:8787, production https://api.<domain>), and the production build refuses to start without it
   package.json scripts                "dev": "next dev --webpack", "build": "next build --webpack" (Turbopack crashes on Bryntum, see scheduler.md)
   src/theme/                          tokens + MUI theme from phase 2; AppRouterCacheProvider
   src/store/  src/api/                RTK Query baseApi (credentials: include), tags: Me, ContractList, Contract, Scheduler, PublicShare
@@ -36,7 +36,7 @@ backend/test/integration/scheduler.test.ts
 frontend/src/**/*.test.ts(x)
 ```
 
-CI gets the frontend job with every `quality.md` §7 gate, including Lighthouse CI and `budgets.json`. Vercel builds `frontend/` from GitHub and serves it at `app.<domain>`; there is no frontend Dockerfile or Compose service (`deploy.md` → Frontend on Vercel).
+CI gets the frontend job with every `quality.md` §7 gate, including Lighthouse CI and `budgets.json`. The frontend is deployed to Nishit's Vercel Hobby project with the CLI (the repo stays private) and served at `app.<domain>`; there is no frontend Dockerfile or Compose service (`deploy.md` → Frontend on Vercel).
 
 ## Frontend engineering standard
 
@@ -59,7 +59,7 @@ Written like a production codebase, modular and without repetition.
 
 ## Exit check
 
-- [ ] Phase 5 cases pass. Both packages typecheck, lint, and test clean. CI is green and Vercel has deployed `main`.
+- [ ] Phase 5 cases pass. Both packages typecheck, lint, and test clean. CI is green and the frontend is deployed to Vercel from `main`.
 - [ ] On production at 1280 px, the sample cabin board shows three Held and Maya Waiting with all markers, with no horizontal scroll and readable labels.
 - [ ] Two browser tabs on the same board: an action in one updates the other within a second.
 - [ ] Lighthouse CI budgets (`quality.md` §4) pass for `/`, `/login`, `/plans`, and `/plans/[id]`. Record the transferred sizes in the exit note.
