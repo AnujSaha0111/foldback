@@ -9,7 +9,7 @@ Hour budget: about 76 team-hours, roughly 5 per day. Each phase budget includes 
 | 0 Spike | 28–29 Oct | 6h | PayPal + UI | — | [x] |
 | 1 Database design | 29–30 Oct | 5h | Data | 0 | [x] |
 | 2 UI design | 30 Oct – 1 Nov | 4h | Product + UI | 0 (runs beside 1 and 3) | [ ] |
-| 3 Backend foundation + first deploy | 31 Oct – 2 Nov | 10h | Backend + Ops | 1 | [ ] |
+| 3 Backend foundation + first deploy | 31 Oct – 2 Nov | 10h | Backend + Ops | 1 | [x] |
 | 4 Rule reader | 2–3 Nov | 6h | Rules | 3 | [ ] |
 | 5 Frontend and board | 3–5 Nov | 10h | UI | 2, 3 | [ ] |
 | 6 Pay link and hold | 5–6 Nov | 7h | PayPal + UI | 4, 5 | [ ] |
@@ -22,7 +22,7 @@ Why this order:
 - The **spike** proves the three risky integrations before any design time is spent on them.
 - **Database design** comes before code, because every service is built on the schema and its constraints.
 - **UI design** runs in parallel with backend work, so neither waits on the other.
-- **First deploy in phase 3:** the Azure VM, the managed database, Caddy, and CI/CD are set up while the app is only `/health`. Every later phase then ships to production, and the final days are not spent on infrastructure surprises.
+- **First deploy in phase 3:** the Mac mini host, Postgres, the Cloudflare Tunnel, and CI/CD are set up while the app is only `/health`. Every later phase then ships to production, and the final days are not spent on infrastructure surprises.
 
 Hats (switch in this order even if one person does everything):
 

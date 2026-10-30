@@ -71,13 +71,13 @@ In production the database is the `postgres` service in `deploy/compose.yml`, an
 
 ## Exit check
 
-- [ ] Phase 3 cases pass. `yarn typecheck` and `yarn lint` are clean. CI is green.
-- [ ] `https://api.{domain}/api/health` shows the commit sha of the image the Mac pulled from CI.
-- [ ] Guest sign-in on production returns two sample plans.
-- [ ] `learn/05-backend-foundation.md` is written.
+- [x] Phase 3 cases pass. `yarn typecheck` and `yarn lint` are clean. CI is green.
+- [x] `https://api.{domain}/api/health` shows the commit sha of the image the Mac pulled from CI.
+- [x] Guest sign-in on production returns two sample plans.
+- [x] `learn/05-backend-foundation.md` is written.
 
 ## Exit note
 
-Domain:
+Domain: `api.foldback.tech` (the frontend will be `app.foldback.tech` on Vercel). Cloudflare Tunnel from the Mac mini, run by Manveer.
 
-CI run URL:
+CI run URL: https://github.com/AnujSaha0111/PayPal-Hackathon/actions/runs/40939549867 (merge of the 3f deploy PR). `/api/health` on production reported commit `bc5aae5` on 30 Oct 2026. Manveer also tested rollback, backup and restore, three reboots, and a foreign-origin request (403).
