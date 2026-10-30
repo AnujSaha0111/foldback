@@ -10,7 +10,7 @@ Hour budget: about 76 team-hours, roughly 5 per day. Each phase budget includes 
 | 1 Database design | 29–30 Oct | 5h | Data | 0 | [x] |
 | 2 UI design | 30 Oct – 1 Nov | 4h | Product + UI | 0 (runs beside 1 and 3) | [ ] |
 | 3 Backend foundation + first deploy | 31 Oct – 2 Nov | 10h | Backend + Ops | 1 | [x] |
-| 4 Rule reader | 2–3 Nov | 6h | Rules | 3 | [ ] |
+| 4 Rule reader | 2–3 Nov | 6h | Rules | 3 | [x] |
 | 5 Frontend and board | 3–5 Nov | 10h | UI | 2, 3 | [ ] |
 | 6 Pay link and hold | 5–6 Nov | 7h | PayPal + UI | 4, 5 | [ ] |
 | 7 Resolve: keep or release | 6–7 Nov | 8h | Rules + PayPal | 6 | [ ] |
