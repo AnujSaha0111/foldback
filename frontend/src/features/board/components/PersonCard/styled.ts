@@ -30,29 +30,6 @@ export const Body = styled("div")({
 
 export const Top = styled("div")({ display: "flex", alignItems: "flex-start", gap: "var(--s-4)" });
 
-export const Avatar = styled("span")({
-  position: "relative",
-  display: "grid",
-  placeItems: "center",
-  width: "2.75rem",
-  height: "2.75rem",
-  flex: "none",
-  background: "var(--sky)",
-  color: "#000",
-  fontWeight: 600,
-  clipPath: "polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 0 100%)",
-  "&::after": {
-    content: '""',
-    position: "absolute",
-    top: 0,
-    right: 0,
-    width: "9px",
-    height: "9px",
-    background: "var(--navy)",
-    clipPath: "polygon(0 0, 0 100%, 100% 100%)",
-  },
-});
-
 export const Name = styled("div")({
   flex: 1,
   minWidth: 0,

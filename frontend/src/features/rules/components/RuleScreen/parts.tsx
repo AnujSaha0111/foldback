@@ -1,4 +1,4 @@
-import { Empty, Flow, Glyph, Loader, Muted, Skeleton } from "./styled";
+import { Count, Empty, Flow, Glyph, Loader, Muted, SampleLink, Skeleton, Tools } from "./styled";
 
 const STEPS = ["Paste", "Read", "Confirm", "Share links"];
 
@@ -51,8 +51,23 @@ export function NothingRead() {
   return (
     <Empty>
       <Glyph aria-hidden="true">{four}</Glyph>
-      <p>Nothing read yet</p>
-      <Muted>The plan appears here once you press Read the plan. Nothing is active until you confirm.</Muted>
+      <p>Your plan appears here</p>
+      <Muted>
+        The assistant reads the amount, the people and the deadline from your text and shows the line it used
+        for each. Nothing is active until you confirm.
+      </Muted>
     </Empty>
+  );
+}
+
+/** Under the text box: the sample chat on the left, a live character count on the right. */
+export function TextTools({ count, onSample }: { count: number; onSample: () => void }) {
+  return (
+    <Tools>
+      <SampleLink type="button" onClick={onSample}>
+        Use the sample cabin chat
+      </SampleLink>
+      <Count>{count} characters</Count>
+    </Tools>
   );
 }

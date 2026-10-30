@@ -112,15 +112,3 @@ export const Marker = styled("span", { shouldForwardProp: (prop) => prop !== "$l
     ? "repeating-linear-gradient(to bottom, var(--text) 0 5px, transparent 5px 10px)"
     : "var(--sun)",
 }));
-
-export const Initials = styled("span")({
-  display: "grid",
-  placeItems: "center",
-  width: "1.5rem",
-  height: "1.5rem",
-  background: "var(--sky)",
-  color: "#000",
-  fontSize: "0.6875rem",
-  fontWeight: 600,
-  clipPath: "polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%)",
-});

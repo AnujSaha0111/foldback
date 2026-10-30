@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useGetMeQuery, useLogoutMutation } from "@/api/authApi";
 import { baseApi } from "@/api/baseApi";
+import { Avatar } from "@/components/Avatar";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Header } from "@/components/Header";
@@ -70,6 +71,7 @@ export function AppHeader() {
           <>
             {user ? (
               <User>
+                <Avatar name={user.display_name} />
                 {user.display_name}
                 {guestDays === null ? null : (
                   <Badge>

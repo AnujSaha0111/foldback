@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Avatar } from "@/components/Avatar";
 import { Badge } from "@/components/Badge";
 import { Button, ButtonLink } from "@/components/Button";
 import { Money } from "@/components/Money";
@@ -9,8 +10,7 @@ import { StatusTag } from "@/components/StatusTag";
 import { formatMoment } from "@/lib/format";
 import { SHARE_STATUS_VIEW } from "@/lib/status";
 import type { ApiShare } from "@/types/generated/api-types";
-import { initials } from "../Schedule";
-import { Actions, Amount, Avatar, Body, Empty, Facts, Head, Name, Root, Top } from "./styled";
+import { Actions, Amount, Body, Empty, Facts, Head, Name, Root, Top } from "./styled";
 
 interface PersonCardProps {
   share: ApiShare | undefined;
@@ -46,7 +46,7 @@ function Details({ share, timeZone }: { share: ApiShare; timeZone: string }) {
   return (
     <Body>
       <Top>
-        <Avatar aria-hidden="true">{initials(share.display_name)}</Avatar>
+        <Avatar name={share.display_name} size="lg" />
         <Name>
           <strong>{share.display_name}</strong>
           <div>

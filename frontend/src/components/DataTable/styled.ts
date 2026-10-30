@@ -4,6 +4,8 @@ import { styled } from "@mui/material/styles";
 
 /** Wide tables scroll inside this frame, so the page itself never scrolls sideways. */
 export const Frame = styled("div")({
+  // Positioned, so screen-reader-only labels inside stay inside the scroll area too.
+  position: "relative",
   overflowX: "auto",
   border: "1px solid var(--line)",
   borderRadius: "var(--r-panel)",
@@ -32,6 +34,7 @@ export const Table = styled("table")({
     verticalAlign: "middle",
   },
   "& tr:last-child td": { borderBottom: 0 },
+  "& [data-align='right']": { textAlign: "right" },
   // Highlight appears at once and fades out, like native lists.
   "& tbody tr": { transition: "background-color 150ms var(--ease-out-quad)" },
   "& tbody tr:hover": { background: "var(--layer-selected)", transitionDuration: "0ms" },

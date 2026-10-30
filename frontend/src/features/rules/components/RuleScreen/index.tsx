@@ -23,8 +23,8 @@ import type { Reading } from "../../reading";
 import { ClarifyForm } from "../ClarifyForm";
 import { TermsList } from "../TermsList";
 import { Transcript } from "../Transcript";
-import { FlowSteps, NothingRead, ReadingNow } from "./parts";
-import { Actions, Grid, Head, Panel, SampleLink } from "./styled";
+import { FlowSteps, NothingRead, ReadingNow, TextTools } from "./parts";
+import { Actions, Grid, Head, Panel } from "./styled";
 
 /** A question from the API is a step in the flow, so it is shown as a question and not as an error. */
 const failure = (error: ApiFailure | undefined) => (isQuestion(error) ? undefined : error);
@@ -99,12 +99,8 @@ function RuleFlow() {
               maxLength={MAX_RULE_TEXT_CHARS}
               placeholder={CABIN_RULE_TEXT}
               required
-              help={
-                <SampleLink type="button" onClick={() => setText(CABIN_CHAT_TEXT)}>
-                  Use the sample cabin chat
-                </SampleLink>
-              }
             />
+            <TextTools count={text.length} onSample={() => setText(CABIN_CHAT_TEXT)} />
             <Actions>
               <Button type="submit" disabled={read.isLoading}>
                 {read.isLoading ? "Reading…" : "Read the plan"}

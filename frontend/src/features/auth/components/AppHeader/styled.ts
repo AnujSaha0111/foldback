@@ -17,5 +17,5 @@ export const User = styled("span")({
   alignItems: "center",
   gap: "var(--s-2)",
   fontSize: "var(--fs-small)",
-  color: "var(--text-2)",
+  color: "var(--text)",
 });

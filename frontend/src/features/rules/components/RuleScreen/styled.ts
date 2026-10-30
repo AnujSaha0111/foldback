@@ -56,19 +56,38 @@ export const Panel = styled("section", { shouldForwardProp: (prop) => prop !== "
 
 export const Actions = styled("div")({ marginTop: "var(--s-4)" });
 
+/** Under the box: the sample link on the left, a live character count on the right. */
+export const Tools = styled("div")({
+  display: "flex",
+  flexWrap: "wrap",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "var(--s-3)",
+  marginTop: "var(--s-4)",
+});
+
 export const SampleLink = styled("button")({
   padding: 0,
   border: 0,
-  background: "none",
+  background: "linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat",
   color: "var(--link)",
+  font: "inherit",
+  fontSize: "0.9375rem",
+  fontWeight: 500,
   cursor: "pointer",
-  textDecoration: "underline",
-  textUnderlineOffset: "3px",
+  transition: "background-size var(--d-3) var(--ease-out-quart)",
+  "&:hover": { backgroundSize: "100% 1px" },
+});
+
+export const Count = styled("span")({
+  fontFamily: "var(--font-mono)",
+  fontSize: "0.75rem",
+  color: "var(--text-3)",
 });
 
 export const Muted = styled("p")({ color: "var(--text-2)" });
 
-/** Nothing read yet: the four-square mark, the last square in orange, and one sentence. */
+/** Before anything is read: the four-square mark, the last square in orange, and one sentence. */
 export const Empty = styled("div")({
   display: "grid",
   justifyItems: "start",

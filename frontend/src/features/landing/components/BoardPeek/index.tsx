@@ -1,8 +1,9 @@
+import { Avatar } from "@/components/Avatar";
 import { Reveal } from "@/components/Reveal";
 import { SHARE_STATUS_VIEW } from "@/lib/status";
 import { SAMPLE } from "../../sample";
 import { Muted, Section, Split } from "../../styled";
-import { Bar, Grid, HeadCell, Initials, Marker, Name, Root, Stage, Track } from "./styled";
+import { Bar, Grid, HeadCell, Marker, Name, Root, Stage, Track } from "./styled";
 
 // Three columns: Fri 6, Sat 7 – Sun 8, Mon 9. The deadline is 6pm Friday, Maya's grace 6pm Monday.
 const DEADLINE = 0.25;
@@ -37,7 +38,7 @@ export function BoardPeek() {
                   return (
                     <div key={person.name} style={{ display: "contents" }}>
                       <Name>
-                        <Initials aria-hidden="true">{person.name[0]}</Initials>
+                        <Avatar name={person.name} size="sm" />
                         {person.name.split(" ")[0]}
                       </Name>
                       <Track>

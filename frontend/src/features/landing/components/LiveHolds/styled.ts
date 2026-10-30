@@ -96,30 +96,6 @@ export const Row = styled("div")({
   "@media (min-width: 600px)": { gridTemplateColumns: "1.75rem minmax(0, 1fr) auto 5.5rem" },
 });
 
-/** The logo's fold at small scale: a sky square with a navy corner. */
-export const Initials = styled("span")({
-  position: "relative",
-  display: "grid",
-  placeItems: "center",
-  width: "1.75rem",
-  height: "1.75rem",
-  background: "var(--sky)",
-  color: "#000",
-  fontSize: "0.75rem",
-  fontWeight: 600,
-  clipPath: "polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 0 100%)",
-  "&::after": {
-    content: '""',
-    position: "absolute",
-    top: 0,
-    right: 0,
-    width: "7px",
-    height: "7px",
-    background: "var(--navy)",
-    clipPath: "polygon(0 0, 0 100%, 100% 100%)",
-  },
-});
-
 export const Amount = styled(Mono)({ textAlign: "right" });
 
 export const Sum = styled("div")({

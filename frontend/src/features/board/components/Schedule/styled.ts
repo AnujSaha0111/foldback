@@ -180,16 +180,3 @@ export const Caption = styled("div")({
   fontSize: "var(--fs-caption)",
   color: "var(--text-3)",
 });
-
-export const Initials = styled("span")({
-  display: "grid",
-  placeItems: "center",
-  width: "1.75rem",
-  height: "1.75rem",
-  flex: "none",
-  background: "var(--sky)",
-  color: "#000",
-  fontSize: "0.75rem",
-  fontWeight: 600,
-  clipPath: "polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 0 100%)",
-});

@@ -1,23 +1,11 @@
 "use client";
 
 import type { KeyboardEvent } from "react";
+import { Avatar } from "@/components/Avatar";
 import { SHARE_STATUS_VIEW } from "@/lib/status";
 import type { ApiContract, ApiShare } from "@/types/generated/api-types";
 import { buildTimeline } from "../../timeline";
-import {
-  Bar,
-  Caption,
-  Foot,
-  Frame,
-  Grid,
-  HeadCell,
-  Initials,
-  Marker,
-  Person,
-  Row,
-  Scroll,
-  Track,
-} from "./styled";
+import { Bar, Caption, Foot, Frame, Grid, HeadCell, Marker, Person, Row, Scroll, Track } from "./styled";
 
 interface ScheduleProps {
   contract: ApiContract;
@@ -25,13 +13,6 @@ interface ScheduleProps {
   selectedId: string | null;
   onSelect: (id: string) => void;
 }
-
-export const initials = (name: string) =>
-  name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2);
 
 /** Rows are people across the days of the plan. Every bar carries its status word. Select a person to see their hold. */
 export function Schedule({ contract, shares, selectedId, onSelect }: ScheduleProps) {
@@ -69,7 +50,7 @@ export function Schedule({ contract, shares, selectedId, onSelect }: SchedulePro
                 onKeyDown={select(share.id)}
               >
                 <Person role="rowheader">
-                  <Initials aria-hidden="true">{initials(share.display_name)}</Initials>
+                  <Avatar name={share.display_name} />
                   {share.display_name}
                 </Person>
                 <Track $cols={cols}>

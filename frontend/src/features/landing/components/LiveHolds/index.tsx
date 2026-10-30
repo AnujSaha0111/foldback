@@ -2,23 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
+import { Avatar } from "@/components/Avatar";
 import { StatusTag } from "@/components/StatusTag";
 import { formatMoment, formatMoney } from "@/lib/format";
 import { CONTRACT_STATUS_VIEW, SHARE_STATUS_VIEW } from "@/lib/status";
 import { SAMPLE } from "../../sample";
 import { useLean } from "./useLean";
-import { Amount, Caption, Head, Initials, Meter, Root, Row, Small, Squares, Sum, ToGo, Wrap } from "./styled";
+import { Amount, Caption, Head, Meter, Root, Row, Small, Squares, Sum, ToGo, Wrap } from "./styled";
 
 const FIRST_HOLD_MS = 900;
 const BETWEEN_HOLDS_MS = 700;
 const PAYERS = SAMPLE.people.filter((person) => person.holds).length;
 const TOTAL = SAMPLE.shareCents * SAMPLE.people.length;
-
-const initials = (name: string) =>
-  name
-    .split(" ")
-    .map((part) => part[0])
-    .join("");
 
 /** The hero panel: holds arrive one by one on load. Under reduced motion they are all in from the start. */
 export function LiveHolds() {
@@ -62,7 +57,7 @@ export function LiveHolds() {
         </Head>
         {SAMPLE.people.map((person, index) => (
           <Row key={person.name}>
-            <Initials aria-hidden="true">{initials(person.name)}</Initials>
+            <Avatar name={person.name} />
             <span>
               {person.name} {person.note ? <Small>{person.note}</Small> : null}
             </span>

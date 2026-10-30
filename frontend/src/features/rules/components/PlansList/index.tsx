@@ -5,16 +5,26 @@ import { useGetContractsQuery } from "@/api/contractsApi";
 import { Badge } from "@/components/Badge";
 import { DataTable } from "@/components/DataTable";
 import { FormError } from "@/components/FormError";
+import { Mono } from "@/components/Money/styled";
 import { StatusTag } from "@/components/StatusTag";
+import { formatMoment, formatMoney } from "@/lib/format";
 import { CONTRACT_STATUS_VIEW } from "@/lib/status";
 import type { ContractSummary } from "@/types/generated/api-types";
 import type { ContractStatus } from "@/types/generated/statuses";
-import { Holds, Root } from "./styled";
+import { Go, Head, Holds, Root, Sub } from "./styled";
+
+// The list has no plan time zone, so a deadline is shown in the viewer's own zone, with its name.
+const viewerZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 const columns = [
   {
     header: "Plan",
-    cell: (plan: ContractSummary) => <Link href={`/plans/${plan.id}`}>{plan.title ?? "Untitled plan"}</Link>,
+    cell: (plan: ContractSummary) => (
+      <>
+        <Link href={`/plans/${plan.id}`}>{plan.title ?? "Untitled plan"}</Link>
+        {plan.deadline_at ? <Sub>Deadline {formatMoment(plan.deadline_at, viewerZone(), true)}</Sub> : null}
+      </>
+    ),
   },
   {
     header: "Status",
@@ -36,8 +46,25 @@ const columns = [
     ),
   },
   {
+    header: "Total",
+    align: "right" as const,
+    cell: (plan: ContractSummary) =>
+      plan.headcount !== null && plan.share_cents !== null ? (
+        <Mono>{formatMoney(plan.headcount * plan.share_cents)}</Mono>
+      ) : null,
+  },
+  {
     header: "Type",
     cell: (plan: ContractSummary) => <Badge>{plan.money_source === "sample" ? "Sample" : "Sandbox"}</Badge>,
+  },
+  {
+    header: "Open",
+    hideHeader: true,
+    cell: () => (
+      <Go aria-hidden="true" data-go>
+        →
+      </Go>
+    ),
   },
 ];
 
@@ -53,7 +80,10 @@ export function PlansList() {
   const plans = data?.filter((plan) => !DRAFTS.has(plan.status));
   return (
     <Root aria-labelledby="plans-title">
-      <h2 id="plans-title">Plans</h2>
+      <Head>
+        <h2 id="plans-title">Plans</h2>
+        {plans ? <span>{plans.length === 1 ? "1 plan" : `${plans.length} plans`}</span> : null}
+      </Head>
       <FormError error={error} />
       {plans ? <DataTable columns={columns} rows={plans} rowKey={(plan) => plan.id} /> : null}
     </Root>
