@@ -91,6 +91,50 @@ export interface ShareChangedEvent {
 
 export type JoinAck = { ok: true } | { ok: false; error: "unauthenticated" | "not_found" | "bad_request" };
 
+/** One reading of a pasted chat. Every value is checked by the server before it is stored (docs/spec/ai.md). */
+export interface ApiExtraction {
+  title: string | null;
+  currency: "USD" | null;
+  total_cents: number | null;
+  share_cents: number | null;
+  headcount: number | null;
+  deadline_at: string | null;
+  timezone: string | null;
+  grace_person_name: string | null;
+  grace_until: string | null;
+  people: string[];
+  missing: string[];
+  clarification_question: string | null;
+  evidence: { field: string; quote: string }[];
+}
+
+/** POST /api/contracts and /clarify when the reading is complete. */
+export interface RuleResult {
+  contract_id: string;
+  extraction: ApiExtraction;
+}
+
+/** The 422 body of the same routes when the reading needs an answer. */
+export interface RuleClarification extends ApiError {
+  contract_id: string;
+  missing: string[];
+  extraction: ApiExtraction | null;
+}
+
+/** POST /api/contracts/:id/confirm. The terms exactly as they were read: the server compares every field. */
+export interface ConfirmTerms {
+  title: string;
+  currency: string;
+  total_cents: number;
+  share_cents: number;
+  headcount: number;
+  deadline_at: string;
+  timezone: string;
+  grace_person_name: string | null;
+  grace_until: string | null;
+  people: string[];
+}
+
 /** GET /api/health. Public, and safe to show: it holds no secret. */
 export interface HealthSummary {
   ok: true;

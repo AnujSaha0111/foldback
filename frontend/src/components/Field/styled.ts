@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import type { CSSObject } from "@mui/material/styles";
 
 export const Root = styled("div")({ "& + &": { marginTop: "var(--s-5)" } });
 
@@ -11,7 +12,7 @@ export const Label = styled("label")({
   color: "var(--text-2)",
 });
 
-export const Input = styled("input")({
+const FILLED: CSSObject = {
   display: "block",
   width: "100%",
   minHeight: "3rem",
@@ -22,9 +23,13 @@ export const Input = styled("input")({
   color: "var(--text)",
   "&::placeholder": { color: "var(--text-2)", opacity: 0.8 },
   "&:focus-visible": { outlineOffset: 0 },
-});
+};
 
-export const Help = styled("p")({
+export const Input = styled("input")(FILLED);
+
+export const Area = styled("textarea")({ ...FILLED, minHeight: "9rem", lineHeight: 1.5, resize: "vertical" });
+
+export const Help = styled("div")({
   marginTop: "var(--s-2)",
   fontSize: "var(--fs-caption)",
   color: "var(--text-2)",

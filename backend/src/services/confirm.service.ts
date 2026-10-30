@@ -1,6 +1,7 @@
 import type { Pool } from "pg";
 import { withTransaction } from "../db/tx";
-import { demoClockStart, sameTerms, termsOf } from "../domain/confirm";
+import { demoClockStart, sameTerms } from "../domain/confirm";
+import { termsOf } from "../shared/terms";
 import type { Terms } from "../domain/confirm";
 import { ExtractionSchema } from "../domain/extraction";
 import { AppError } from "../http/errors";

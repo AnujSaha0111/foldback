@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { Field } from "./index";
+import { Field, TextAreaField } from "./index";
 
 describe("Field", () => {
   it("ties the label to the input", () => {
@@ -15,5 +15,13 @@ describe("Field", () => {
   it("has no description without a helper", () => {
     render(<Field label="Name" />);
     expect(screen.getByLabelText("Name")).not.toHaveAttribute("aria-describedby");
+  });
+});
+
+describe("TextAreaField", () => {
+  it("ties the label and helper to the textarea", () => {
+    render(<TextAreaField label="Chat" help="Paste it here" />);
+    expect(screen.getByLabelText("Chat").tagName).toBe("TEXTAREA");
+    expect(screen.getByLabelText("Chat")).toHaveAccessibleDescription("Paste it here");
   });
 });

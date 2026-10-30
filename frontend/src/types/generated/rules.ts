@@ -50,3 +50,7 @@ export const MAX_DEMO_CONTRACTS = 200;
 export const CLARIFY_FALLBACK_QUESTION =
   "I could not read a complete rule. Restate the price, the people, and the deadline.";
 export const CLARIFY_LIMIT_MESSAGE = "Start a new rule with all the details in one message.";
+
+/** Said before a reset in the dialog and after it in the API response. */
+export const RESET_HOLDS_WARNING =
+  "Sandbox holds that already exist in PayPal stay there until they are voided or expire.";

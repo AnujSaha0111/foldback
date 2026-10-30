@@ -51,7 +51,7 @@ Primary button `Confirm these terms`, with the helper from `ai.md` beneath it. A
 
 On `needs_clarification`: show the question in a callout, a single-line input labeled `Your answer`, and a button `Answer`. That calls clarify, then shows the new result. The textarea stays filled. No confirm button appears until the extraction is complete.
 
-Below everything, a list titled `Plans`: existing contracts (title, status word, `{held} of {headcount} held`, a `Sample` or `Sandbox` badge). Each row links to its board.
+Below everything, a list titled `Plans`: confirmed contracts, because a reading nobody has confirmed has no people or board yet (title, status word, `{held} of {headcount} held`, a `Sample` or `Sandbox` badge). Each row links to its board.
 
 ## 2. Board screen (`/plans/[id]`)
 
@@ -131,7 +131,7 @@ No card form. The PayPal window is the approval.
 
 ## Reset
 
-`Reset demo data` opens an MUI confirm dialog with the warning sentence from the reset API. It resets only the signed-in user's plans. After a reset, navigate to `/plans`.
+`Reset demo data` opens an MUI confirm dialog, loaded only when pressed, with the warning about existing sandbox holds. It resets only the signed-in user's plans. After a reset, navigate to `/plans`.
 
 ## Copy rules
 

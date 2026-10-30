@@ -5,10 +5,10 @@ import { AppError } from "../http/errors";
 import { deleteAllByOwner } from "../repositories/contracts.repo";
 import { lockUserRow } from "../repositories/users.repo";
 import type { ResetResponse } from "../shared/api-types";
+import { RESET_HOLDS_WARNING } from "../shared/rules";
 import { SEED_KEYS, seedUser } from "./seed.service";
 
-const WARNING =
-  "Your plans were reset. Sandbox holds that already exist in PayPal stay there until they are voided or expire.";
+const WARNING = `Your plans were reset. ${RESET_HOLDS_WARNING}`;
 
 /**
  * Deletes the caller's plans and re-inserts the two samples, in one transaction. Never touches other users, never

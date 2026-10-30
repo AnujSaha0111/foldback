@@ -1,4 +1,4 @@
-import { formatMoney, formatMoment } from "./format";
+import { daysUntil, formatMoney, formatMoment } from "./format";
 
 describe("formatMoney", () => {
   it("writes whole cents as dollars", () => {
@@ -21,5 +21,18 @@ describe("formatMoment", () => {
 
   it("moves the day with the zone", () => {
     expect(formatMoment(iso, "Asia/Kolkata")).toMatch(/^Sat 7 Nov 2026, 7:30am /);
+  });
+});
+
+describe("daysUntil", () => {
+  const now = Date.parse("2026-11-01T00:00:00.000Z");
+
+  it("rounds a part day up", () => {
+    expect(daysUntil("2026-11-08T00:00:00.000Z", now)).toBe(7);
+    expect(daysUntil("2026-11-01T01:00:00.000Z", now)).toBe(1);
+  });
+
+  it("stops at zero", () => {
+    expect(daysUntil("2026-10-01T00:00:00.000Z", now)).toBe(0);
   });
 });
