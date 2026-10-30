@@ -1,0 +1,126 @@
+/* Foldback design tokens. Source of truth for the look; the MUI theme is built from these in phase 5.
+   Rules: radius 0, no shadows, no gradients, sans only (IBM Plex Sans and Plex Mono). */
+
+:root {
+  /* Brand (fixed in both themes) */
+  --sky: #60cdff;
+  --navy: #012169;
+  --ink: #000000;
+  --paper: #ffffff;
+  --blue: #0070e0;
+  --paypal-yellow: #ffc439;
+
+  /* Semantic, light theme */
+  --bg: #ffffff;
+  --layer: #f4f4f4;
+  --layer-2: #e0e0e0;
+  --text: #161616;
+  --text-2: #525252;
+  --line: #e0e0e0;
+  --line-strong: #161616;
+  --link: #0070e0;
+  --focus: #0070e0;
+  --btn-bg: #000000;
+  --btn-fg: #ffffff;
+  --btn-hover: #393939;
+  --on-sky: #000000;
+
+  /* Status (each is always paired with its word) */
+  --st-waiting-bg: #e0e0e0;
+  --st-waiting-fg: #161616;
+  --st-held-bg: #0070e0;
+  --st-held-fg: #ffffff;
+  --st-kept-bg: #198038;
+  --st-kept-fg: #ffffff;
+  --st-released-line: #6f6f6f;
+  --st-released-fg: #161616;
+  --st-failed-bg: #da1e28;
+  --st-failed-fg: #ffffff;
+  --st-attention-bg: #f1c21b;
+  --st-attention-fg: #000000;
+  --danger-text: #da1e28;
+  --warn-bg: #fcf4d6;
+  --warn-line: #f1c21b;
+
+  /* Logo */
+  --logo-a-bg: #60cdff;
+  --logo-a-fg: #000000;
+  --logo-a-flap: #012169;
+  --logo-b-bg: #000000;
+  --logo-b-fg: #ffffff;
+  --logo-b-flap: #60cdff;
+
+  /* Type */
+  --font-sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", "Courier New", monospace;
+  --fs-display: clamp(2.5rem, 1.3rem + 5vw, 4.5rem);
+  --fs-h1: clamp(1.75rem, 1.2rem + 2.2vw, 2.75rem);
+  --fs-h2: clamp(1.375rem, 1.1rem + 1.2vw, 2rem);
+  --fs-h3: 1.25rem;
+  --fs-lead: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+  --fs-body: 1rem;
+  --fs-small: 0.875rem;
+  --fs-caption: 0.75rem;
+
+  /* Space (4 px base) */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+  --s-8: 4rem;
+  --s-9: 6rem;
+  --gutter: 1rem;
+
+  /* Shape and motion */
+  --radius: 0;
+  --t-fast: 110ms;
+  --t-base: 200ms;
+  --ease: cubic-bezier(0.2, 0, 0.38, 0.9);
+}
+
+@media (min-width: 600px) {
+  :root { --gutter: 1.5rem; }
+}
+@media (min-width: 1024px) {
+  :root { --gutter: 2rem; }
+}
+
+[data-theme="dark"] {
+  --bg: #161616;
+  --layer: #262626;
+  --layer-2: #393939;
+  --text: #f4f4f4;
+  --text-2: #c6c6c6;
+  --line: #393939;
+  --line-strong: #f4f4f4;
+  --link: #78a9ff;
+  --focus: #ffffff;
+  --btn-bg: #ffffff;
+  --btn-fg: #000000;
+  --btn-hover: #c6c6c6;
+
+  --st-waiting-bg: #393939;
+  --st-waiting-fg: #f4f4f4;
+  --st-held-bg: #0070e0;
+  --st-held-fg: #ffffff;
+  --st-kept-bg: #42be65;
+  --st-kept-fg: #000000;
+  --st-released-line: #a8a8a8;
+  --st-released-fg: #f4f4f4;
+  --st-failed-bg: #fa4d56;
+  --st-failed-fg: #000000;
+  --danger-text: #ff8389;
+  --warn-bg: #3a3200;
+  --warn-line: #f1c21b;
+
+  --logo-b-bg: #ffffff;
+  --logo-b-fg: #000000;
+  --logo-a-flap: #012169;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --t-fast: 0ms; --t-base: 0ms; }
+}

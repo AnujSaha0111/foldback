@@ -90,3 +90,13 @@ export interface ShareChangedEvent {
 }
 
 export type JoinAck = { ok: true } | { ok: false; error: "unauthenticated" | "not_found" | "bad_request" };
+
+/** GET /api/health. Public, and safe to show: it holds no secret. */
+export interface HealthSummary {
+  ok: true;
+  service: "foldback";
+  version: string;
+  paypal_env: "sandbox";
+  llm: boolean;
+  ai_calls_left: number;
+}

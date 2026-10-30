@@ -70,7 +70,7 @@ Enforced by ESLint where possible; otherwise checked in review.
 
 **Frontend runtime:** `next`, `react`, `react-dom`, `@mui/material`, `@mui/material-nextjs`, `@emotion/react`, `@emotion/styled`, `@emotion/cache`, `@mui/icons-material` (path imports only), `@reduxjs/toolkit`, `react-redux`, `socket.io-client`, `@bryntum/scheduler` (trial alias), `@bryntum/scheduler-react`.
 
-**Dev (both):** `typescript`, `tsx`, `jest`, `ts-jest`, `@types/jest`, `supertest`, `@types/supertest`, `eslint`, `typescript-eslint`, `eslint-config-next`, `@types/node`, `@types/express`, `@types/cookie-parser`, `@types/cors`, `@types/jsonwebtoken`, `@types/bcrypt`, `@types/luxon`, `@types/pg`, `@testing-library/react`, `@testing-library/jest-dom`, `jest-environment-jsdom`, `knip`, `jscpd`, `@lhci/cli`, `husky`, `lint-staged`, `prettier`.
+**Dev (both):** `typescript`, `tsx`, `jest`, `ts-jest`, `@types/jest`, `supertest`, `@types/supertest`, `eslint`, `typescript-eslint`, `eslint-config-next`, `@types/node`, `@types/express`, `@types/cookie-parser`, `@types/cors`, `@types/jsonwebtoken`, `@types/bcrypt`, `@types/luxon`, `@types/pg`, `@testing-library/react`, `@testing-library/dom` (its required peer), `@testing-library/jest-dom`, `jest-environment-jsdom`, `knip`, `jscpd`, `@lhci/cli`, `husky`, `lint-staged`, `prettier`.
 
 ## 4. Frontend performance budgets
 

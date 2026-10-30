@@ -1,0 +1,7 @@
+.next
+coverage
+node_modules
+.yarn
+next-env.d.ts
+src/types/generated
+src/theme/tokens.css
