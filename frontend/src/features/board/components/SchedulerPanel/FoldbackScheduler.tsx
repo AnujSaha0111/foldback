@@ -16,7 +16,7 @@ import type { ShareStatus } from "@/types/generated/statuses";
 import { BRYNTUM_THEME } from "./styled";
 
 /** Bars shorter than this keep their word beside them instead of clipped inside (docs/spec/scheduler.md). */
-const SHORT_BAR_MS = 8 * 3_600_000;
+const SHORT_BAR_MS = 12 * 3_600_000;
 const ROW_HEIGHT = 48;
 
 // Everything handed to Bryntum that is not data lives outside the component. The wrapper re-applies any prop whose
