@@ -17,3 +17,4 @@ docs/vendor/
 
 .vercel/
 frontend/next-env.d.ts
+frontend/AGENTS.md

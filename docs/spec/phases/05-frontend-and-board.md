@@ -30,7 +30,7 @@ frontend/  (create-next-app, App Router, TypeScript, Yarn, ESLint 9)
   src/components/<ComponentName>/     index.tsx (markup and logic), styled.ts (MUI styled() parts, tokens only), index.test.tsx; optional types.ts
   src/features/<feature>/components/<ComponentName>/   same shape for feature-owned components
   src/lib/format.ts  src/lib/status.ts
-  src/middleware.ts                   redirect to /login when no fb_session cookie on /plans*
+  src/proxy.ts                        Next 16 name for middleware: redirect to /login when no fb_session cookie on /plans*
 backend/src/services/projection.service.ts  + GET /api/contracts/:id/scheduler
 backend/test/integration/scheduler.test.ts
 frontend/src/**/*.test.ts(x)

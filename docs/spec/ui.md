@@ -20,7 +20,7 @@ Rules that hold whatever the visual design:
 | `/plans/[id]` | signed-in owner | Board screen |
 | `/pay/[shareId]` | anyone with the link | Pay page |
 
-Organizer routes redirect to `/login?next=…` on `401`. A Next.js middleware checks only that the `fb_session` cookie exists; the API is the real authority.
+Organizer routes redirect to `/login?next=…` on `401`. A Next.js proxy (`src/proxy.ts`, the Next 16 name for middleware) checks only that the `fb_session` cookie exists; the API is the real authority.
 
 App header on organizer screens: `Foldback`, the tagline `Nobody pays unless the group makes it.`, the user's name (with a `Guest · expires in N days` chip for guests), `Reset demo data`, and `Sign out`.
 

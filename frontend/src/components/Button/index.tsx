@@ -26,7 +26,14 @@ export function Button({
   ...rest
 }: ButtonProps) {
   return (
-    <StyledButton type="button" $variant={variant} $small={small} $block={block} {...rest}>
+    <StyledButton
+      type="button"
+      data-variant={variant}
+      $variant={variant}
+      $small={small}
+      $block={block}
+      {...rest}
+    >
       {children}
       {arrow ? <Arrow /> : null}
     </StyledButton>
@@ -43,7 +50,7 @@ export function ButtonLink({
   ...rest
 }: ButtonLinkProps) {
   return (
-    <StyledLink $variant={variant} $small={small} $block={block} {...rest}>
+    <StyledLink data-variant={variant} $variant={variant} $small={small} $block={block} {...rest}>
       {children}
       {arrow ? <Arrow /> : null}
     </StyledLink>

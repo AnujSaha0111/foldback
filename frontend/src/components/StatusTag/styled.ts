@@ -10,7 +10,7 @@ const fill = (name: string): CSSObject => ({
 });
 
 /** Every status is a word on a fill, or an outline for Released, so colour is never the only signal. */
-const TONES: Record<Tone, CSSObject> = {
+export const TONES: Record<Tone, CSSObject> = {
   waiting: fill("waiting"),
   held: fill("held"),
   kept: fill("kept"),

@@ -1,19 +1,25 @@
 "use client";
 
+import Link from "next/link";
 import { styled } from "@mui/material/styles";
+import type { CSSObject } from "@mui/material/styles";
 
 /**
  * The logo is two blocks, each with a folded corner, drawn in CSS so it scales with font-size and follows the theme
  * tokens. `Fold` is black on sky with the fold top right. `back` is white on black with the fold bottom right.
  */
-export const Root = styled("span")({
+const ROOT: CSSObject = {
   display: "inline-flex",
   fontSize: "1.25rem",
   fontWeight: 600,
   letterSpacing: "-0.04em",
   lineHeight: "1.6em",
+  textDecoration: "none",
   whiteSpace: "nowrap",
-});
+};
+
+export const Root = styled("span")(ROOT);
+export const RootLink = styled(Link)(ROOT);
 
 const Block = styled("span")({
   position: "relative",
