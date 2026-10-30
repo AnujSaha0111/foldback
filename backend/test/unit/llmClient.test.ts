@@ -34,7 +34,7 @@ function setup(options: {
   const { fetch, calls } = scripted(options.steps);
   const recorded: UsedAttempt[] = [];
   const deps: LlmDeps = {
-    env: testEnv({ ...KEYS, ...options.env }),
+    env: testEnv({ ...KEYS, LLM_CHAIN: CHAIN, ...options.env }),
     logger: createLogger({ level: "debug", json: true, stream: logs }),
     allow: () => Promise.resolve(options.allow?.() ?? "ok"),
     record: (attempt) => {

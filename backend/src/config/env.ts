@@ -1,7 +1,9 @@
 import { z } from "zod";
 
+// The order is measured, not guessed (docs/spec/ai.md, "Bake-off results"). Models that scored badly or could not be
+// scored are left out, because every failed attempt in a chain still costs time and counts toward the daily cap.
 const DEFAULT_LLM_CHAIN =
-  "gemini:gemini-3.8-flash,gemini:gemini-3.6-flash,gemini:gemini-3.5-flash-lite,groq:openai/gpt-oss-120b,groq:openai/gpt-oss-20b,openrouter:openrouter/free";
+  "groq:openai/gpt-oss-120b,gemini:gemini-3.1-flash-lite,gemini:gemini-3.5-flash-lite";
 
 const PROVIDERS = new Set(["gemini", "groq", "openrouter"]);
 

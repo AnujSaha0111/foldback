@@ -16,7 +16,7 @@ Flow: create an order with `intent: AUTHORIZE` → buyer approves in PayPal → 
 | `GEMINI_API_KEY` | phase 4+ | Free key from aistudio.google.com/apikey. Do not enable billing on its Google Cloud project |
 | `GROQ_API_KEY` | phase 4+ | Free Groq key (console.groq.com/keys). No card. Use a key dedicated to this project |
 | `OPENROUTER_API_KEY` | no | Free OpenRouter key for the backup provider |
-| `LLM_CHAIN` | no | Ordered `provider:model` list, default `gemini:gemini-3.8-flash,gemini:gemini-3.6-flash,gemini:gemini-3.5-flash-lite,groq:openai/gpt-oss-120b,groq:openai/gpt-oss-20b,openrouter:openrouter/free`. An `openrouter:` entry must be `openrouter/free` or end in `:free`, otherwise boot fails. Entries whose key is unset are skipped |
+| `LLM_CHAIN` | no | Ordered `provider:model` list, default `groq:openai/gpt-oss-120b,gemini:gemini-3.1-flash-lite,gemini:gemini-3.5-flash-lite`. An `openrouter:` entry must be `openrouter/free` or end in `:free`, otherwise boot fails. Entries whose key is unset are skipped |
 | `AI_ENABLED` | no | Default `true`. Kill switch for every AI route |
 | `AI_DAILY_CALLS` | no | Default `600` |
 | `AI_USER_PER_MIN` / `AI_USER_PER_DAY` | no | Default `6` / `30` |
