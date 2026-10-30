@@ -7,11 +7,15 @@ import "@bryntum/scheduler/scheduler.css";
 import "@bryntum/scheduler/svalbard-light.css";
 import type { EventModel } from "@bryntum/scheduler";
 import { BryntumScheduler } from "@bryntum/scheduler-react";
+import GlobalStyles from "@mui/material/GlobalStyles";
 import { useMemo } from "react";
+import { SHARE_STATUS_VIEW } from "@/lib/status";
 import type { SchedulerProjection } from "@/types/generated/api-types";
+import type { ShareStatus } from "@/types/generated/statuses";
+import { BRYNTUM_THEME } from "./styled";
 
 /** Bars shorter than this keep their word beside them instead of clipped inside (docs/spec/scheduler.md). */
-const SHORT_BAR_MS = 12 * 3_600_000;
+const SHORT_BAR_MS = 8 * 3_600_000;
 const ROW_HEIGHT = 48;
 
 interface FoldbackSchedulerProps {
@@ -44,53 +48,59 @@ export default function FoldbackScheduler({ projection, onSelect }: FoldbackSche
   );
 
   return (
-    <BryntumScheduler
-      resources={resources}
-      events={events}
-      timeRanges={timeRanges}
-      startDate={new Date(projection.start)}
-      endDate={new Date(projection.end)}
-      timeZone={projection.timezone}
-      viewPreset={{
-        base: "hourAndDay",
-        tickWidth: 40,
-        headers: [
-          { unit: "day", dateFormat: "ddd D" },
-          { unit: "hour", increment: 6, dateFormat: "HH:mm" },
-        ],
-      }}
-      readOnly
-      zoomOnMouseWheel={false}
-      rowHeight={ROW_HEIGHT}
-      autoHeight
-      columns={[
-        { text: "Person", field: "name", width: 160 },
-        { text: "", field: "badge", width: 90 },
-      ]}
-      eventEditFeature={false}
-      eventDragFeature={false}
-      eventResizeFeature={false}
-      eventDragCreateFeature={false}
-      timeRangesFeature={{ showHeaderElements: true }}
-      eventTooltipFeature={{
-        template: ({ eventRecord }: { eventRecord: EventModel }) => {
-          const paypalId = eventRecord.get("paypalId") as string | null;
-          return {
-            children: [
-              { tag: "strong", text: String(eventRecord.name ?? "") },
-              ...(paypalId ? [{ tag: "div", text: `PayPal ${paypalId}` }] : []),
-            ],
-          };
-        },
-      }}
-      eventRenderer={({ eventRecord, renderData }) => {
-        if (eventRecord.durationMS < SHORT_BAR_MS && typeof renderData.cls !== "string") {
-          renderData.cls.add("fb-short");
-        }
-        return String(eventRecord.name ?? "");
-      }}
-      onEventClick={({ eventRecord }) => onSelect(String(eventRecord.resourceId))}
-      onCellClick={({ record }) => onSelect(String(record.id))}
-    />
+    <>
+      <GlobalStyles styles={BRYNTUM_THEME} />
+      <BryntumScheduler
+        resources={resources}
+        events={events}
+        timeRanges={timeRanges}
+        startDate={new Date(projection.start)}
+        endDate={new Date(projection.end)}
+        timeZone={projection.timezone}
+        viewPreset={{
+          base: "hourAndDay",
+          tickWidth: 24,
+          headers: [
+            { unit: "day", dateFormat: "ddd D" },
+            { unit: "hour", increment: 6, dateFormat: "HH" },
+          ],
+        }}
+        fillTicks
+        readOnly
+        zoomOnMouseWheel={false}
+        rowHeight={ROW_HEIGHT}
+        autoHeight
+        columns={[
+          { text: "Person", field: "name", width: 160 },
+          { text: "", field: "badge", width: 96 },
+        ]}
+        eventEditFeature={false}
+        eventDragFeature={false}
+        eventResizeFeature={false}
+        eventDragCreateFeature={false}
+        timeRangesFeature={{ showHeaderElements: true }}
+        eventTooltipFeature={{
+          template: ({ eventRecord }: { eventRecord: EventModel }) => {
+            const paypalId = eventRecord.get("paypalId") as string | null;
+            return {
+              children: [
+                { tag: "strong", text: String(eventRecord.name ?? "") },
+                ...(paypalId ? [{ tag: "div", text: `PayPal ${paypalId}` }] : []),
+              ],
+            };
+          },
+        }}
+        eventRenderer={({ eventRecord, renderData }) => {
+          if (typeof renderData.cls !== "string") {
+            // The bar wears the status tag's look for this status (see styled.ts).
+            renderData.cls.add(`fb-tone-${SHARE_STATUS_VIEW[eventRecord.get("status") as ShareStatus].tone}`);
+            if (eventRecord.durationMS < SHORT_BAR_MS) renderData.cls.add("fb-short");
+          }
+          return String(eventRecord.name ?? "");
+        }}
+        onEventClick={({ eventRecord }) => onSelect(String(eventRecord.resourceId))}
+        onCellClick={({ record }) => onSelect(String(record.id))}
+      />
+    </>
   );
 }

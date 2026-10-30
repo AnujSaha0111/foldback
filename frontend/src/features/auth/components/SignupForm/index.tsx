@@ -1,14 +1,22 @@
 "use client";
 
+import { useState } from "react";
 import { useSignupMutation } from "@/api/authApi";
 import { Field } from "@/components/Field";
 import { formText } from "@/lib/formText";
 import { AuthForm } from "../AuthForm";
 
+/** An address needs a name, an @, and a domain with a dot and a real ending: the browser's own check allows "a@b". */
+const EMAIL_PATTERN = "[^@\\s]+@[^@\\s]+\\.[A-Za-z]{2,}";
+
 export function SignupForm() {
   const [signup, { isLoading, error }] = useSignupMutation();
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const mismatch = confirm !== "" && confirm !== password;
 
   const send = async (form: FormData) => {
+    if (password !== confirm) return false;
     const result = await signup({
       display_name: formText(form, "name"),
       email: formText(form, "email"),
@@ -34,6 +42,8 @@ export function SignupForm() {
         type="email"
         autoComplete="email"
         placeholder="name@example.com"
+        pattern={EMAIL_PATTERN}
+        title="An email like name@example.com"
         required
       />
       <Field
@@ -44,6 +54,20 @@ export function SignupForm() {
         help="At least 10 characters"
         minLength={10}
         maxLength={128}
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        required
+      />
+      <Field
+        label="Confirm password"
+        name="confirm"
+        type="password"
+        autoComplete="new-password"
+        help={mismatch ? "The passwords do not match." : "Type it again"}
+        aria-invalid={mismatch || undefined}
+        maxLength={128}
+        value={confirm}
+        onChange={(event) => setConfirm(event.target.value)}
         required
       />
     </AuthForm>

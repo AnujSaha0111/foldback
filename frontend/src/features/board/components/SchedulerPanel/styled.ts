@@ -1,6 +1,43 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import { TONES } from "@/components/StatusTag/styled";
+
+/**
+ * Bryntum's colours come from a scale of neutrals that its theme file fixes to light or dark. Here the scale is
+ * computed from our own background and text tokens, so the board and its popups follow the site's theme, and the
+ * theme's own file is not needed. Applied globally because tooltips are attached to the page, outside the board.
+ */
+const neutrals = Object.fromEntries(
+  Array.from({ length: 101 }, (_, n) => [
+    `--b-neutral-${n}`,
+    `color-mix(in srgb, var(--bg) ${n}%, var(--text))`,
+  ]),
+);
+
+export const BRYNTUM_THEME = {
+  "html:root:not(.b-nothing)": {
+    ...neutrals,
+    "--b-mix": "var(--bg)",
+    "--b-opposite": "var(--text)",
+    "--b-primary": "var(--blue)",
+    "--b-widget-border-radius": "var(--r-tag)",
+  },
+};
+
+/** One marker's colours: the line, its label in the header, and the words on them. */
+const marker = (color: string, ink: string) => ({
+  "--b-time-range-line-color": color,
+  "--b-time-range-line-header-background": color,
+  "--b-time-range-line-label-background": color,
+  "--b-time-range-color": ink,
+  "--b-time-range-line-label-color": ink,
+});
+
+/** Each bar wears the same fill as the status tag with that status, so a status looks the same everywhere. */
+const barTones = Object.fromEntries(
+  Object.entries(TONES).map(([tone, look]) => [`& .b-sch-event.fb-tone-${tone}`, look]),
+);
 
 export const Frame = styled("div")({
   overflow: "hidden",
@@ -8,13 +45,8 @@ export const Frame = styled("div")({
   borderRadius: "var(--r-panel)",
   background: "var(--bg)",
   boxShadow: "var(--shadow-2)",
-  // Bryntum's own class names, tied to our tokens. The marker classes and `fb-released` come from the projection.
-  "& .b-sch-event": { borderRadius: "var(--r-tag)", fontWeight: 600 },
-  "& .b-sch-event.fb-released": {
-    background: "transparent",
-    boxShadow: "inset 0 0 0 1px var(--text-3)",
-    color: "var(--text)",
-  },
+  "& .b-sch-event": { border: "1px solid transparent", borderRadius: "var(--r-tag)", fontWeight: 600 },
+  ...barTones,
   // A bar too short for its word: the word sits beside it, so the status is never clipped.
   "& .b-sch-event.fb-short": { overflow: "visible" },
   "& .b-sch-event.fb-short .b-sch-event-content": {
@@ -24,9 +56,11 @@ export const Frame = styled("div")({
     whiteSpace: "nowrap",
     color: "var(--text)",
   },
-  "& .fb-now": { "--b-timerange-color": "var(--blue)" },
-  "& .fb-deadline": { "--b-timerange-color": "var(--sun)" },
-  "& .fb-grace": { "--b-timerange-color": "var(--text)" },
+  "& .fb-now": marker("var(--blue)", "var(--st-held-fg)"),
+  "& .fb-deadline": marker("var(--sun)", "#000"),
+  "& .fb-grace": marker("var(--text)", "var(--bg)"),
+  // Now and Deadline can be hours apart. Now's label sits left of its line and Deadline's right of its own.
+  "& .b-time-ranges-header-canvas .fb-now": { translate: "-100% 0" },
 });
 
 /** Holds the board's place while the Bryntum chunk loads, so the page does not jump. */

@@ -23,6 +23,7 @@ describe("SignupForm", () => {
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Alex Chen" } });
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "alex@example.com" } });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "long enough please" } });
+    fireEvent.change(screen.getByLabelText("Confirm password"), { target: { value: "long enough please" } });
     fireEvent.submit(screen.getByRole("button", { name: "Create account" }));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/plans"));
     expect(signup).toHaveBeenCalledWith({
@@ -30,6 +31,19 @@ describe("SignupForm", () => {
       email: "alex@example.com",
       password: "long enough please",
     });
+  });
+
+  it("does not send when the two passwords differ, and says so", () => {
+    const signup = answer({ data: { user: {} } });
+    render(<SignupForm />);
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "long enough please" } });
+    fireEvent.change(screen.getByLabelText("Confirm password"), { target: { value: "long enough please!" } });
+    expect(screen.getByLabelText("Confirm password")).toHaveAccessibleDescription(
+      "The passwords do not match.",
+    );
+    fireEvent.submit(screen.getByRole("button", { name: "Create account" }));
+    expect(signup).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
   });
 
   it("shows the password rule", () => {
