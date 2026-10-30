@@ -75,7 +75,7 @@ evidence: for every field you fill, add one item whose quote is an exact substri
 Never suggest a price, a deadline, or a name that is not in the text.
 ```
 
-### Schema (zod, in `integrations/llm/extractPrompt.ts`)
+### Schema (zod, in `domain/extraction.ts`, so the pure validator and the LLM client share it)
 
 ```ts
 export const ExtractionSchema = z.object({
@@ -102,7 +102,7 @@ If structured outputs rejects a zod feature in phase 0 (for example `.int()`), u
 The validator has the final word. It runs in this order and can only add to `missing` or clear fields, never fill them:
 
 1. **Evidence:** drop every evidence item whose `quote` is not an exact substring of `rule_text`. A bad quote never fails the extraction by itself.
-2. **Money support:** a money field is supported when a surviving evidence quote contains its dollar figure (`8000` → `80`, `$80`, or `80.00`), or when it equals the other supported money field divided or multiplied exactly by `headcount`. An unsupported money field is cleared and added to `missing`. This stops invented or injected prices.
+2. **Money support:** a money field is supported when a surviving evidence quote states its dollar figure with a currency marker (`8000` → `$80`, `80.00`, `80 dollars`, `80 USD`, or `80 bucks`; a bare `80` does not count, so "4 people" cannot pass for a $4 price), or when it equals the other supported money field divided or multiplied exactly by `headcount`. Zero and negative prices are never supported. An unsupported money field is cleared and added to `missing`. This stops invented or injected prices.
 3. **Math:** if `total_cents !== headcount * share_cents`, clear both and add both to `missing`.
 4. **Headcount:** not 2, 3, or 4 → `missing`. `people.length !== headcount` → add `people`. Duplicate names → add `people`.
 5. **Currency:** not `USD` → `missing`.

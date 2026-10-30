@@ -33,7 +33,7 @@ The cabin is $320. We need 4 people at $80 each by Friday 6 November 2026, 6:00p
 ## Print-run sentence
 
 ```text
-The print run is $200. We need 4 people at $50 each by Friday 6 November 2026, 6:00pm Pacific. The people are Priya Nair, Noah Brooks, Elena Vaz, and Chris Dalton. If we are short, nobody pays.
+The print run is $200. We need 4 people at $50 each by Friday 6 November 2026, 6:00pm Pacific. The people are Priya Nair, Noah Brooks, Elena Vaz, and Chris Dalton. If we are still short, nobody pays.
 ```
 
 Expected: `Print run`, 20000 / 5000 / 4, deadline `2026-11-06T18:00:00-08:00`, no grace.

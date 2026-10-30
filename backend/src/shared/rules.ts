@@ -10,3 +10,12 @@ export const PRINT_RULE_TEXT =
   "The print run is $200. We need 4 people at $50 each by Friday 6 November 2026, 6:00pm Pacific. " +
   "The people are Priya Nair, Noah Brooks, Elena Vaz, and Chris Dalton. " +
   "If we are still short, nobody pays.";
+
+/** How many people can share a plan. The database CHECK allows the same range. */
+export const MIN_HEADCOUNT = 2;
+export const MAX_HEADCOUNT = 4;
+
+/** A PayPal authorization lives 29 days, so no deadline or grace time may be further away than that. */
+export const AUTHORIZATION_WINDOW_DAYS = 29;
+
+export const DEFAULT_TIMEZONE = "America/Los_Angeles";
