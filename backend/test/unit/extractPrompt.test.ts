@@ -60,6 +60,24 @@ describe("the reply schema", () => {
   });
 });
 
+describe("the reply schema, in the plain form providers accept", () => {
+  const schema = EXTRACTION_JSON_SCHEMA as { properties: Record<string, Record<string, unknown>> };
+
+  it("has no anyOf and no number bounds anywhere", () => {
+    const text = JSON.stringify(EXTRACTION_JSON_SCHEMA);
+    expect(text).not.toContain("anyOf");
+    expect(text).not.toContain("minimum");
+    expect(text).not.toContain("maximum");
+  });
+
+  it("writes each nullable field as a type list, and the currency enum with null", () => {
+    expect(schema.properties["title"]).toEqual({ type: ["string", "null"] });
+    expect(schema.properties["share_cents"]).toEqual({ type: ["integer", "null"] });
+    expect(schema.properties["currency"]).toEqual({ type: ["string", "null"], enum: ["USD", null] });
+    expect(schema.properties["people"]).toMatchObject({ type: "array", items: { type: "string" } });
+  });
+});
+
 describe("parseExtractionReply", () => {
   it("returns a reading for valid JSON of the right shape", () => {
     expect(parseExtractionReply(JSON.stringify(CABIN_CHAT_READING))).toEqual(CABIN_CHAT_READING);

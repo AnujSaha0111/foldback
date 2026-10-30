@@ -36,10 +36,10 @@ Extend `contracts.routes.ts` with `POST /api/contracts`, `/:id/clarify`, and `/:
 
 ## Exit check
 
-- [ ] Phase 4 cases and L1–L7 and L9 pass. CI is green, and the change is deployed.
+- [x] Phase 4 cases and L1–L7 and L9 pass (plus L10). CI is green, and the change is deployed.
 - [ ] Manual on production: paste the cabin chat, see the field list with quotes, confirm, and see four shares. Paste the `no-time` text, answer it, and see it complete. `ai_usage` shows the attempt and its token counts.
-- [ ] `learn/06-rule-reader.md` is written.
+- [x] `learn/06-rule-reader.md` is written.
 
 ## Exit note
 
-Live latency and cost per extraction:
+Live latency and cost per extraction (measured with `yarn bakeoff` on the real free models, 30 Oct 2026): `groq:openai/gpt-oss-120b` averages 1.9 s and about 1,650 tokens per extraction and passed 19 of 20 fixtures over two runs; the two Gemini lite models average 1.8 s and 3.3 s and passed 10 of 10. Cost is zero, because every model is on a free tier. The chain is Groq first, then the two Gemini lite models (see `ai.md`, Bake-off results). The bake-off also fixed three bugs that fake models could not show: Groq refusing the reply schema, "Monday" resolving before the deadline, and the prompt ignoring the organizer's answer. The manual production check (paste the cabin chat, confirm, see four shares) waits for the Gemini and Groq keys on the Mac mini (see the unchecked box above).
