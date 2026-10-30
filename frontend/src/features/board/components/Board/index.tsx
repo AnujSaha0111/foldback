@@ -9,13 +9,13 @@ import { FormError } from "@/components/FormError";
 import { Mono } from "@/components/Money/styled";
 import { StatusTag } from "@/components/StatusTag";
 import { formatMoment, formatMoney } from "@/lib/format";
-import { CONTRACT_STATUS_VIEW } from "@/lib/status";
+import { CONTRACT_STATUS_VIEW, HOLDING_SHARE_STATUSES } from "@/lib/status";
+import { useContractLive } from "@/sockets/useContractLive";
 import type { ApiContract, ApiShare } from "@/types/generated/api-types";
 import { PersonCard } from "../PersonCard";
-import { Schedule } from "../Schedule";
+import { SchedulerPanel } from "../SchedulerPanel";
 import { Back, Head, Layout, Meter, Reason, Squares, Stat, Stats, Urgent } from "./styled";
 
-const HELD = new Set(["held", "kept", "capture_unknown", "capture_failed"]);
 const HOUR_MS = 3_600_000;
 
 /** "In 2 hours", "In 3 days" or "Deadline passed", measured from the demo clock. */
@@ -32,7 +32,8 @@ const graceLine = (name: string, until: string, timeZone: string) =>
 
 /** The plan's board: the numbers that matter, people across the days, and the selected person's hold. */
 export function Board({ id }: { id: string }) {
-  const { data, error } = useGetContractQuery(id);
+  const pollingInterval = useContractLive(id);
+  const { data, error } = useGetContractQuery(id, { pollingInterval });
   const [picked, setPicked] = useState<string | null>(null);
   if (!data) return <FormError error={error} />;
   const { contract, shares } = data;
@@ -50,7 +51,7 @@ export function Board({ id }: { id: string }) {
       <Numbers contract={contract} shares={shares} timeZone={timeZone} />
       {contract.resolution_reason ? <Reason aria-live="polite">{contract.resolution_reason}</Reason> : null}
       <Layout>
-        <Schedule contract={contract} shares={shares} selectedId={selectedId} onSelect={setPicked} />
+        <SchedulerPanel contractId={id} pollingInterval={pollingInterval} onSelect={setPicked} />
         <PersonCard
           share={shares.find((share) => share.id === selectedId)}
           timeZone={timeZone}
@@ -75,7 +76,7 @@ function Numbers({
   shares: ApiShare[];
   timeZone: string;
 }) {
-  const held = shares.filter((share) => HELD.has(share.status));
+  const held = shares.filter((share) => HOLDING_SHARE_STATUSES.has(share.status));
   const total = contract.total_cents ?? shares.reduce((sum, share) => sum + share.amount_cents, 0);
   const heldCents = held.reduce((sum, share) => sum + share.amount_cents, 0);
   const extra = contract.kept_count
@@ -90,7 +91,7 @@ function Numbers({
         <div>
           <Squares aria-hidden="true">
             {shares.map((share) => (
-              <i key={share.id} data-on={HELD.has(share.status)} />
+              <i key={share.id} data-on={HOLDING_SHARE_STATUSES.has(share.status)} />
             ))}
           </Squares>
           {contract.held_count} of {contract.headcount ?? shares.length} held{extra}

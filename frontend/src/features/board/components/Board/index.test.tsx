@@ -3,6 +3,15 @@ import { useGetContractQuery } from "@/api/contractsApi";
 import { Board } from "./index";
 
 jest.mock("@/api/contractsApi");
+jest.mock("@/sockets/useContractLive", () => ({ useContractLive: () => 0 }));
+// Bryntum is a browser-only library; the panel is tested on its own. This stand-in only reports a selection.
+jest.mock("../SchedulerPanel", () => ({
+  SchedulerPanel: ({ onSelect }: { onSelect: (id: string) => void }) => (
+    <button type="button" onClick={() => onSelect("shr_a")}>
+      Pick Alex
+    </button>
+  ),
+}));
 
 const answer = (state: object) =>
   jest.mocked(useGetContractQuery).mockReturnValue(state as ReturnType<typeof useGetContractQuery>);
@@ -50,28 +59,31 @@ const data = {
 };
 
 describe("Board", () => {
-  it("shows the plan, its numbers and every person with their status word", () => {
+  it("shows the plan and its numbers", () => {
     answer({ data });
     render(<Board id="con_1" />);
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Cabin weekend");
     expect(screen.getByText("Collecting")).toBeInTheDocument();
     expect(screen.getByText("1 of 2 held")).toBeInTheDocument();
-    expect(screen.getAllByRole("row")).toHaveLength(2);
-    expect(screen.getByRole("columnheader", { name: "Fri 6" })).toBeInTheDocument();
+  });
+
+  it("asks the API again on the live hook's interval", () => {
+    answer({ data });
+    render(<Board id="con_1" />);
+    expect(useGetContractQuery).toHaveBeenCalledWith("con_1", { pollingInterval: 0 });
   });
 
   it("starts on the person the plan is waiting on, with their pay link", () => {
     answer({ data });
     render(<Board id="con_1" />);
-    expect(screen.getByRole("row", { name: /Maya Shah/ })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByText("No hold yet")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open pay link ↗" })).toHaveAttribute("href", "/pay/shr_m");
   });
 
-  it("selects a person by click or keyboard", () => {
+  it("shows the person picked on the board", () => {
     answer({ data });
     render(<Board id="con_1" />);
-    fireEvent.keyDown(screen.getByRole("row", { name: /Alex Chen/ }), { key: "Enter" });
+    fireEvent.click(screen.getByRole("button", { name: "Pick Alex" }));
     expect(screen.getByText("AUTH-1")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Copy pay link" })).not.toBeInTheDocument();
   });
