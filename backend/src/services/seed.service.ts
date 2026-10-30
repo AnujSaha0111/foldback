@@ -3,7 +3,7 @@ import type { PoolClient } from "pg";
 import { insertSeedContract } from "../repositories/contracts.repo";
 import { insertSeedShares } from "../repositories/shares.repo";
 import type { SeedShareInput } from "../repositories/shares.repo";
-import { CABIN_RULE_TEXT, PRINT_RULE_TEXT } from "../shared/rules";
+import { CABIN_RULE_TEXT, DEFAULT_TIMEZONE, PRINT_RULE_TEXT } from "../shared/rules";
 
 export const SEED_KEYS = ["cabin-hold", "print-full"] as const;
 
@@ -29,7 +29,7 @@ export async function seedUser(client: PoolClient, ownerId: string): Promise<voi
     referenceAt: REFERENCE_AT,
     confirmedAt: REFERENCE_AT,
     deadlineAt: DEADLINE_AT,
-    timezone: "America/Los_Angeles",
+    timezone: DEFAULT_TIMEZONE,
     demoNow: DEMO_NOW,
     headcount: 4,
   };

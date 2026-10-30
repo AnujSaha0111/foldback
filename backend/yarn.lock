@@ -1827,6 +1827,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/luxon@npm:^3.7.6":
+  version: 3.7.6
+  resolution: "@types/luxon@npm:3.7.6"
+  checksum: 10c0/135c55910d8f4fb615cbfaa93b173e57e3eed9731da683005acdb84dba5ece5dbbf56cc82330015ccf5247a6e84fefbb2e2ebe255c957636f604f79efacb4214
+  languageName: node
+  linkType: hard
+
 "@types/methods@npm:^1.1.4":
   version: 1.1.4
   resolution: "@types/methods@npm:1.1.4"
@@ -3643,6 +3650,7 @@ __metadata:
     "@types/express": "npm:^5.0.6"
     "@types/jest": "npm:^30.0.0"
     "@types/jsonwebtoken": "npm:^9.0.10"
+    "@types/luxon": "npm:^3.7.6"
     "@types/node": "npm:^24"
     "@types/pg": "npm:^8.23.1"
     "@types/supertest": "npm:^7.2.1"
@@ -3659,6 +3667,7 @@ __metadata:
     jsonwebtoken: "npm:^9.0.3"
     knip: "npm:^6.43.0"
     lint-staged: "npm:^17.6.0"
+    luxon: "npm:^3.7.2"
     pg: "npm:^8.23.1"
     prettier: "npm:^3.9.10"
     socket.io: "npm:^4.8.4"
@@ -5022,6 +5031,13 @@ __metadata:
   dependencies:
     yallist: "npm:^3.0.2"
   checksum: 10c0/89b2ef2ef45f543011e38737b8a8622a2f8998cddf0e5437174ef8f1f70a8b9d14a918ab3e232cb3ba343b7abddffa667f0b59075b2b80e6b4d63c3de6127482
+  languageName: node
+  linkType: hard
+
+"luxon@npm:^3.7.2":
+  version: 3.7.2
+  resolution: "luxon@npm:3.7.2"
+  checksum: 10c0/ed8f0f637826c08c343a29dd478b00628be93bba6f068417b1d8896b61cb61c6deacbe1df1e057dbd9298334044afa150f9aaabbeb3181418ac8520acfdc2ae2
   languageName: node
   linkType: hard
 
