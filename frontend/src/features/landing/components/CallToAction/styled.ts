@@ -5,9 +5,15 @@ import { Inner, onSky } from "@/components/Page/styled";
 
 export const Root = styled("section")({
   ...onSky,
-  paddingBlock: "var(--s-7)",
-  background: "var(--sky)",
-  "& h2": { maxWidth: "22ch" },
+  paddingBlock: "clamp(2.5rem, 1.5rem + 3vw, 3.75rem)",
+  background: "var(--field-sky)",
+  "& h2": {
+    maxWidth: "16ch",
+    fontSize: "clamp(2.25rem, 1.4rem + 3.4vw, 4rem)",
+    fontWeight: 600,
+    letterSpacing: "-0.035em",
+    lineHeight: 1.02,
+  },
 });
 
 export const Row = styled(Inner)({

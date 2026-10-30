@@ -1,17 +1,19 @@
 import { PhoneArt } from "./PhoneArt";
-import { Art, Root, WordA, WordB, Words } from "./styled";
+import { Caption, Outcome, Root, Stage, WordA, WordB, Words } from "./styled";
 
 export function PosterScene() {
   return (
     <Root>
-      <Art>
+      <Stage>
+        <Words>
+          <WordA>hold</WordA>
+          <span className="sr-only">, </span>
+          <WordB>don&apos;t pay</WordB>
+        </Words>
         <PhoneArt />
-      </Art>
-      <Words>
-        <WordA>hold</WordA>
-        <span className="sr-only">, </span>
-        <WordB>don&apos;t pay</WordB>
-      </Words>
+        <Caption>Each friend opens a link on their phone and approves a PayPal hold. No card form.</Caption>
+        <Outcome>Captured only if everyone is in. If not, every hold is released and nobody pays.</Outcome>
+      </Stage>
     </Root>
   );
 }

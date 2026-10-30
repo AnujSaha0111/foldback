@@ -8,7 +8,7 @@ import { useFinishAuth } from "../../useFinishAuth";
 interface GuestButtonProps {
   small?: boolean;
   block?: boolean;
-  variant?: "primary" | "secondary";
+  variant?: "sun" | "primary" | "secondary";
 }
 
 /** Creates a private guest workspace, then goes to it. */

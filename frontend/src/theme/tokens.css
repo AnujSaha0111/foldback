@@ -1,5 +1,6 @@
-/* Foldback design tokens. Source of truth for the look; the MUI theme is built from these in phase 5.
-   Rules: radius 0, no shadows, no gradients, sans only (IBM Plex Sans and Plex Mono). */
+/* Foldback design tokens. Source of truth for the look (docs/design/foldback-redesign.zip, design-system/).
+   Rules: controls are square, panels 8 px, tags 3 px. Sans only (IBM Plex Sans and Plex Mono). Orange marks the one
+   thing that matters on a view. Glass only where colour sits behind it. Motion is transform and opacity. */
 
 :root {
   /* Brand (fixed in both themes) */
@@ -9,6 +10,22 @@
   --paper: #ffffff;
   --blue: #0070e0;
   --paypal-yellow: #ffc439;
+  --warm: #fff3e6;
+
+  /* Sun: the one accent. Text on it is always black. The wide gradient slides on hover instead of swapping. */
+  --sun: #ff7a1a;
+  --sun-deep: #e8480f;
+  --sun-grad: linear-gradient(100deg, #ffb547 0%, #ff7a1a 52%, #f2501e 100%);
+  --sun-grad-wide: linear-gradient(100deg, #ffc266 0%, #ffb547 18%, #ff7a1a 48%, #f2501e 74%, #e2421a 100%);
+  --sun-glow: 0 10px 28px -10px rgba(242, 80, 30, 0.6);
+
+  /* Tints */
+  --sky-25: #f5fbff;
+  --sky-50: #eaf8ff;
+  --sky-200: #ade4ff;
+  --navy-900: #011650;
+  --blue-50: #eaf3fd;
+  --blue-600: #005fc0;
 
   /* Semantic, light theme */
   --bg: #ffffff;
@@ -16,7 +33,12 @@
   --layer-2: #e0e0e0;
   --text: #161616;
   --text-2: #525252;
+  --text-3: #6f6f6f;
+  --bg-subtle: #fafafa;
+  --layer-hover: #ebebeb;
+  --layer-selected: #eaf8ff;
   --line: #e0e0e0;
+  --line-soft: rgba(22, 22, 22, 0.07);
   --line-strong: #161616;
   --link: #0070e0;
   --focus: #0070e0;
@@ -24,6 +46,29 @@
   --btn-fg: #ffffff;
   --btn-hover: #393939;
   --on-sky: #000000;
+  --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--focus);
+
+  /* Depth: navy-tinted, layered like real light */
+  --shadow-1: 0 1px 1px rgba(1, 33, 105, 0.04), 0 1px 2px rgba(1, 33, 105, 0.06);
+  --shadow-2: 0 1px 2px rgba(1, 33, 105, 0.06), 0 8px 20px -8px rgba(1, 33, 105, 0.18);
+  --shadow-3: 0 2px 4px rgba(1, 33, 105, 0.05), 0 22px 44px -18px rgba(1, 33, 105, 0.34);
+  --shadow-4: 0 4px 10px rgba(1, 33, 105, 0.06), 0 40px 80px -28px rgba(1, 33, 105, 0.45);
+
+  /* Glass */
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-line: rgba(255, 255, 255, 0.72);
+  --glass-shine: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --glass-blur: blur(22px) saturate(180%);
+  --glass-nav: rgba(255, 255, 255, 0.86);
+
+  /* Light fields that glass sits on */
+  --field-sky:
+    radial-gradient(60% 70% at 85% 10%, rgba(255, 255, 255, 0.45) 0%, rgba(173, 228, 255, 0.25) 38%, transparent 70%),
+    radial-gradient(55% 60% at 8% 60%, rgba(255, 255, 255, 0.55) 0%, transparent 65%),
+    radial-gradient(80% 90% at 50% 120%, rgba(173, 228, 255, 0.9) 0%, transparent 70%), #60cdff;
+  --field-app:
+    radial-gradient(40% 50% at 100% 0%, rgba(96, 205, 255, 0.22) 0%, transparent 70%),
+    radial-gradient(35% 45% at 0% 100%, rgba(255, 181, 71, 0.16) 0%, transparent 70%), var(--bg);
 
   /* Status (each is always paired with its word) */
   --st-waiting-bg: #e0e0e0;
@@ -54,8 +99,8 @@
   --font-sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "IBM Plex Mono", "Courier New", monospace;
   --fs-display: clamp(2.5rem, 1.3rem + 5vw, 4.5rem);
-  --fs-h1: clamp(1.75rem, 1.2rem + 2.2vw, 2.75rem);
-  --fs-h2: clamp(1.375rem, 1.1rem + 1.2vw, 2rem);
+  --fs-h1: clamp(2rem, 1.45rem + 2.2vw, 3.25rem);
+  --fs-h2: clamp(1.5rem, 1.2rem + 1.2vw, 2.25rem);
   --fs-h3: 1.25rem;
   --fs-lead: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
   --fs-body: 1rem;
@@ -69,16 +114,32 @@
   --s-4: 1rem;
   --s-5: 1.5rem;
   --s-6: 2rem;
-  --s-7: 3rem;
-  --s-8: 4rem;
-  --s-9: 6rem;
+  --s-7: 2.5rem;
+  --s-8: 3rem;
+  --s-9: 4.5rem;
   --gutter: 1rem;
 
-  /* Shape and motion */
+  /* Shape */
   --radius: 0;
+  --r-tag: 3px;
+  --r-panel: 8px;
+  --r-panel-lg: 12px;
+
+  /* Motion. Hover highlights appear at once and fade out; reveals are slow and decelerate hard. */
   --t-fast: 110ms;
   --t-base: 200ms;
   --ease: cubic-bezier(0.2, 0, 0.38, 0.9);
+  --ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-out-quart: cubic-bezier(0.165, 0.84, 0.44, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --d-press: 80ms;
+  --d-2: 160ms;
+  --d-3: 240ms;
+  --d-4: 400ms;
+  --d-5: 700ms;
+  --d-6: 900ms;
 }
 
 @media (min-width: 600px) {
@@ -101,6 +162,23 @@
   --btn-bg: #ffffff;
   --btn-fg: #000000;
   --btn-hover: #c6c6c6;
+  --text-3: #a8a8a8;
+  --bg-subtle: #1b1b1b;
+  --layer-hover: #2f2f2f;
+  --layer-selected: rgba(96, 205, 255, 0.1);
+  --line-soft: rgba(255, 255, 255, 0.08);
+  --blue-50: rgba(0, 112, 224, 0.16);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 20px -8px rgba(0, 0, 0, 0.6);
+  --shadow-3: 0 2px 4px rgba(0, 0, 0, 0.4), 0 22px 44px -18px rgba(0, 0, 0, 0.75);
+  --shadow-4: 0 4px 10px rgba(0, 0, 0, 0.4), 0 40px 80px -28px rgba(0, 0, 0, 0.85);
+  --glass-bg: rgba(30, 30, 30, 0.62);
+  --glass-line: rgba(255, 255, 255, 0.1);
+  --glass-shine: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --glass-nav: rgba(22, 22, 22, 0.82);
+  --field-app:
+    radial-gradient(40% 50% at 100% 0%, rgba(96, 205, 255, 0.1) 0%, transparent 70%),
+    radial-gradient(35% 45% at 0% 100%, rgba(255, 122, 26, 0.08) 0%, transparent 70%), var(--bg);
 
   --st-waiting-bg: #393939;
   --st-waiting-fg: #f4f4f4;
@@ -122,5 +200,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :root { --t-fast: 0ms; --t-base: 0ms; }
+  :root { --t-fast: 0ms; --t-base: 0ms; --d-2: 0ms; --d-3: 0ms; --d-4: 0ms; --d-5: 0ms; --d-6: 0ms; }
 }

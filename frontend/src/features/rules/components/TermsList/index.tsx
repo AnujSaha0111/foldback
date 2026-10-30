@@ -10,22 +10,26 @@ import { formatMoment } from "@/lib/format";
 import type { ApiExtraction } from "@/types/generated/api-types";
 import { termsOf } from "@/types/generated/terms";
 import { quoteFor } from "../../reading";
-import { Chip, Chips, Confirm, Intro, List, Quote, Row } from "./styled";
+import { Chip, Chips, Confirm, Initial, Intro, List, Quote, Row } from "./styled";
 
 interface TermsListProps {
   contractId: string;
   extraction: ApiExtraction;
+  /** Called with the field a term was read from while the pointer is on it, and null when it leaves. */
+  onPoint?: (field: string | null) => void;
 }
 
 interface TermProps {
   label: string;
   quote: string | null;
+  onPoint: () => void;
+  onLeave: () => void;
   children: ReactNode;
 }
 
-function Term({ label, quote, children }: TermProps) {
+function Term({ label, quote, onPoint, onLeave, children }: TermProps) {
   return (
-    <Row>
+    <Row onPointerEnter={onPoint} onPointerLeave={onLeave}>
       <dt>{label}</dt>
       <dd>
         {children}
@@ -36,11 +40,19 @@ function Term({ label, quote, children }: TermProps) {
 }
 
 /** Every value with the line it came from. There is no editor: confirm posts back exactly what was read. */
-export function TermsList({ contractId, extraction }: TermsListProps) {
+export function TermsList({ contractId, extraction, onPoint }: TermsListProps) {
   const router = useRouter();
   const [confirmRule, { isLoading, error }] = useConfirmRuleMutation();
   const terms = termsOf(extraction);
   if (!terms) return null;
+
+  // Each term says which field it shows, so the transcript can light up the line it came from.
+  const term = (label: string, field: string) => ({
+    label,
+    quote: quoteFor(extraction, field),
+    onPoint: () => onPoint?.(field),
+    onLeave: () => onPoint?.(null),
+  });
 
   const confirm = async () => {
     const result = await confirmRule({ id: contractId, terms });
@@ -49,35 +61,39 @@ export function TermsList({ contractId, extraction }: TermsListProps) {
 
   return (
     <>
-      <Intro>Read from your text. Nothing is active until you confirm.</Intro>
+      <Intro>
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M2.5 8.5l3.5 3.5 7.5-8" />
+        </svg>
+        Read from your text. Nothing is active until you confirm.
+      </Intro>
       <List>
-        <Term label="Plan" quote={quoteFor(extraction, "title")}>
-          {terms.title}
-        </Term>
-        <Term label="Each person pays" quote={quoteFor(extraction, "share_cents")}>
+        <Term {...term("Plan", "title")}>{terms.title}</Term>
+        <Term {...term("Each person pays", "share_cents")}>
           <Money cents={terms.share_cents} />
         </Term>
-        <Term label="Total" quote={quoteFor(extraction, "total_cents")}>
+        <Term {...term("Total", "total_cents")}>
           <Money cents={terms.total_cents} />
         </Term>
-        <Term label="People" quote={quoteFor(extraction, "people")}>
+        <Term {...term("People", "people")}>
           <Chips>
             {terms.people.map((person) => (
-              <Chip key={person}>{person}</Chip>
+              <Chip key={person}>
+                <Initial aria-hidden="true">{person[0]}</Initial>
+                {person}
+              </Chip>
             ))}
           </Chips>
         </Term>
-        <Term label="Deadline" quote={quoteFor(extraction, "deadline_at")}>
-          {formatMoment(terms.deadline_at, terms.timezone)}
-        </Term>
-        <Term label="Grace" quote={quoteFor(extraction, "grace_until")}>
+        <Term {...term("Deadline", "deadline_at")}>{formatMoment(terms.deadline_at, terms.timezone)}</Term>
+        <Term {...term("Grace", "grace_until")}>
           {terms.grace_person_name && terms.grace_until
             ? `${terms.grace_person_name} until ${formatMoment(terms.grace_until, terms.timezone)}`
             : "No grace. Everyone has the same deadline."}
         </Term>
       </List>
       <Confirm>
-        <Button variant="blue" disabled={isLoading} onClick={() => void confirm()}>
+        <Button variant="sun" disabled={isLoading} onClick={() => void confirm()}>
           {isLoading ? "Confirming…" : "Confirm these terms"}
         </Button>
         <FormError error={error} />

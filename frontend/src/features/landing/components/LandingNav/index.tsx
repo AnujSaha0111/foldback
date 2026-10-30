@@ -23,7 +23,7 @@ export function LandingNav() {
       }))}
       actions={
         <>
-          <ButtonLink href="/login" variant="link" arrow={false}>
+          <ButtonLink href="/login" variant="link" arrow={false} style={{ color: "var(--text)" }}>
             Sign in
           </ButtonLink>
           <GuestButton small />

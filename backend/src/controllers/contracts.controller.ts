@@ -3,10 +3,12 @@ import type { Pool } from "pg";
 import { AppError } from "../http/errors";
 import { currentUser } from "../http/middleware/auth";
 import { listContracts, readContract } from "../services/contracts.service";
+import { readScheduler } from "../services/projection.service";
 
 export interface ContractsController {
   list: RequestHandler;
   read: RequestHandler;
+  scheduler: RequestHandler;
 }
 
 const CONTRACT_ID = /^con_[A-Za-z0-9_-]{22}$/;
@@ -26,6 +28,9 @@ export function createContractsController(pool: Pool): ContractsController {
     },
     read: async (req, res) => {
       res.json(await readContract(pool, currentUser(res).id, parseContractId(req)));
+    },
+    scheduler: async (req, res) => {
+      res.json(await readScheduler(pool, currentUser(res).id, parseContractId(req)));
     },
   };
 }

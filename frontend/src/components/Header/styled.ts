@@ -3,11 +3,15 @@
 import { styled } from "@mui/material/styles";
 import { Inner } from "@/components/Page/styled";
 
+/** Frosted and pinned, so the logo's sky block always has a light ground and the nav stays through every scene. */
 export const Root = styled("header")({
-  position: "relative",
+  position: "sticky",
+  top: 0,
   zIndex: 20,
-  background: "var(--bg)",
-  borderBottom: "1px solid var(--line)",
+  background: "var(--glass-nav)",
+  WebkitBackdropFilter: "var(--glass-blur)",
+  backdropFilter: "var(--glass-blur)",
+  borderBottom: "1px solid var(--line-soft)",
 });
 
 export const Bar = styled(Inner)({

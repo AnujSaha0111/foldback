@@ -12,8 +12,9 @@ export const Root = styled(ScrollScene)({
   position: "relative",
   overflow: "hidden",
   paddingBlock: "var(--s-8)",
-  background: "var(--layer)",
-  "[data-theme='dark'] &": { "--sq": "var(--link)" },
+  background: "var(--warm)",
+  "& h2": { fontSize: "var(--fs-h1)", letterSpacing: "-0.03em" },
+  "[data-theme='dark'] &": { background: "#1b1714", "--sq": "var(--link)" },
 });
 
 export const Wrap = styled(Inner)({
@@ -51,7 +52,7 @@ export const Art = styled("div")({
   "& i:nth-of-type(4)": {
     "--x": "60vw",
     "--y": "30vh",
-    border: "0.6rem solid var(--blue)",
     background: "transparent",
+    boxShadow: "inset 0 0 0 4px var(--sun), 0 0 40px -6px rgba(255, 122, 26, 0.45)",
   },
 });

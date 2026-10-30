@@ -74,7 +74,7 @@ beforeEach(() => push.mockClear());
 describe("RuleScreen", () => {
   it("starts with nothing read", () => {
     setup();
-    expect(screen.getByText("Nothing read yet")).toBeInTheDocument();
+    expect(screen.getByText("Your plan appears here")).toBeInTheDocument();
   });
 
   it("fills the box with the sample chat", () => {
@@ -147,7 +147,7 @@ describe("RuleScreen", () => {
     mockReset(1234);
     rerender(<RuleScreen />);
     expect(screen.queryByRole("button", { name: "Confirm these terms" })).not.toBeInTheDocument();
-    expect(screen.getByText("Nothing read yet")).toBeInTheDocument();
+    expect(screen.getByText("Your plan appears here")).toBeInTheDocument();
     expect(chatBox()).toHaveValue("");
   });
 

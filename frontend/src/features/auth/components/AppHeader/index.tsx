@@ -6,13 +6,15 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useGetMeQuery, useLogoutMutation } from "@/api/authApi";
 import { baseApi } from "@/api/baseApi";
+import { useCachedContract } from "@/api/contractsApi";
+import { Avatar } from "@/components/Avatar";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Header } from "@/components/Header";
 import { NavMenu } from "@/components/NavMenu";
 import { daysUntil } from "@/lib/format";
 import { useAppDispatch } from "@/store/hooks";
-import { Tagline, User } from "./styled";
+import { Crumb, Tagline, User } from "./styled";
 
 // The dialog pulls in MUI's modal code, which nobody needs until they press the button.
 const ResetDialog = dynamic(() => import("../ResetDialog").then((module) => module.ResetDialog));
@@ -32,6 +34,9 @@ export function AppHeader() {
   const { data: user, error } = useGetMeQuery(undefined, { skip: leaving });
   const [logout, { isLoading }] = useLogoutMutation();
   const signedOut = isUnauthorized(error);
+  // On a board, name the plan after "Plans". Read from the cache the board fills; this never fetches.
+  const planId = /^\/plans\/([^/]+)$/.exec(pathname)?.[1];
+  const { data: plan } = useCachedContract(planId ?? "", { skip: !planId });
 
   useEffect(() => {
     if (!signedOut) return;
@@ -65,11 +70,20 @@ export function AppHeader() {
               </Link>
             ),
           },
+          ...(plan
+            ? [
+                {
+                  key: "plan",
+                  render: () => <Crumb aria-current="page">{plan.contract.title ?? "Untitled plan"}</Crumb>,
+                },
+              ]
+            : []),
         ]}
         actions={
           <>
             {user ? (
               <User>
+                <Avatar name={user.display_name} />
                 {user.display_name}
                 {guestDays === null ? null : (
                   <Badge>

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import type { FormEvent, ReactNode } from "react";
 import type { ApiFailure } from "@/api/baseApi";
 import { Button } from "@/components/Button";
@@ -10,9 +9,8 @@ import { Fields, Switch } from "../AuthShell/styled";
 
 interface AuthFormProps {
   title: string;
-  /** The line under the title, and the link to the other form. */
-  prompt: string;
-  other: { href: string; label: string };
+  /** The line under the title. The tabs above the form link to the other one. */
+  lead: string;
   submitLabel: string;
   busyLabel: string;
   busy: boolean;
@@ -25,8 +23,7 @@ interface AuthFormProps {
 /** Everything sign in and create account share. Each one brings its fields and its request. */
 export function AuthForm({
   title,
-  prompt,
-  other,
+  lead,
   submitLabel,
   busyLabel,
   busy,
@@ -44,9 +41,7 @@ export function AuthForm({
   return (
     <>
       <h1>{title}</h1>
-      <Switch>
-        {prompt} <Link href={other.href}>{other.label}</Link>
-      </Switch>
+      <Switch>{lead}</Switch>
       <Fields onSubmit={(event) => void submit(event)}>
         {children}
         <FormError error={error} />

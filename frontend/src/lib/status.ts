@@ -27,6 +27,14 @@ export const SHARE_STATUS_VIEW: Record<ShareStatus, StatusView> = {
   expired: { label: "Missed deadline", tone: "waiting" },
 };
 
+/** Shares whose hold is in place or already acted on, so they count toward "held so far". */
+export const HOLDING_SHARE_STATUSES: ReadonlySet<ShareStatus> = new Set([
+  "held",
+  "kept",
+  "capture_unknown",
+  "capture_failed",
+]);
+
 export const CONTRACT_STATUS_VIEW: Record<ContractStatus, StatusView> = {
   extracting: { label: "Reading", tone: "waiting" },
   needs_clarification: { label: "Needs an answer", tone: "attention" },

@@ -7,7 +7,7 @@ export const Shell = styled("div")({
   display: "flex",
   flexDirection: "column",
   minHeight: "100dvh",
-  background: "var(--bg)",
+  background: "var(--field-app)",
   color: "var(--text)",
 });
 

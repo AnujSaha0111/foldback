@@ -15,9 +15,8 @@ export function LoginForm() {
 
   return (
     <AuthForm
-      title="Sign in"
-      prompt="New to Foldback?"
-      other={{ href: "/signup", label: "Create account" }}
+      title="Welcome back"
+      lead="Pick up your plans where you left them."
       submitLabel="Sign in"
       busyLabel="Signing in…"
       busy={isLoading}

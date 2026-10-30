@@ -1,0 +1,41 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import { useGetSchedulerQuery } from "@/api/schedulerApi";
+import { FormError } from "@/components/FormError";
+import { Caption, Frame, Legend, Skeleton } from "./styled";
+
+// Bryntum needs `window`, so it is never rendered on the server, and nothing else imports it: the landing, auth and
+// plans bundles stay free of it (docs/spec/scheduler.md).
+const FoldbackScheduler = dynamic(() => import("./FoldbackScheduler"), {
+  ssr: false,
+  loading: () => <Skeleton aria-busy="true" aria-label="Loading the board" />,
+});
+
+interface SchedulerPanelProps {
+  contractId: string;
+  /** 0 while the socket is live, otherwise how often to ask the API (see useContractLive). */
+  pollingInterval: number;
+  onSelect: (shareId: string) => void;
+}
+
+/** The board and its caption. The data is the server's projection; selecting a person never moves money. */
+export function SchedulerPanel({ contractId, pollingInterval, onSelect }: SchedulerPanelProps) {
+  const { data, error } = useGetSchedulerQuery(contractId, { pollingInterval });
+  if (!data)
+    return error ? <FormError error={error} /> : <Skeleton aria-busy="true" aria-label="Loading the board" />;
+
+  return (
+    <Frame>
+      <FoldbackScheduler projection={data} onSelect={onSelect} />
+      <Caption>
+        <span>Rows are people. Every bar carries its status word. Select a person to see their hold.</span>
+        <Legend aria-hidden="true">
+          <span data-kind="now">Now</span>
+          <span data-kind="deadline">Deadline</span>
+          <span data-kind="grace">Grace ends</span>
+        </Legend>
+      </Caption>
+    </Frame>
+  );
+}

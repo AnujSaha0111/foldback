@@ -7,35 +7,42 @@ const DESKTOP = "@media (min-width: 900px)";
 export const Toggle = styled("button")({
   display: "grid",
   placeItems: "center",
-  width: "3rem",
-  height: "3rem",
-  border: "1px solid var(--line-strong)",
+  width: "2.75rem",
+  height: "2.75rem",
+  marginRight: "-0.5rem",
+  border: 0,
   background: "none",
   color: "var(--text)",
   cursor: "pointer",
   [DESKTOP]: { display: "none" },
-  "& span, & span::before, & span::after": {
+  // Two lines that turn into a cross.
+  "& span, & span::before": {
     display: "block",
-    position: "relative",
-    width: "18px",
-    height: "2px",
+    width: "20px",
+    height: "1.5px",
     background: "currentColor",
     content: '""',
+    transition: "transform var(--d-4) var(--ease-out-expo)",
   },
-  "& span::before": { position: "absolute", top: "-6px" },
-  "& span::after": { position: "absolute", top: "6px" },
+  "& span": { position: "relative", transform: "translateY(-3px)" },
+  "& span::before": { position: "absolute", top: "6px" },
+  "&[aria-expanded='true'] span": { transform: "rotate(45deg)" },
+  "&[aria-expanded='true'] span::before": { transform: "translateY(-6px) rotate(-90deg)" },
 });
 
+/** On phones the menu wipes down as a frosted sheet (and closes at once); on desktop it is the inline nav. */
 export const Menu = styled("nav")({
   display: "none",
   position: "absolute",
   left: 0,
   right: 0,
   top: "100%",
-  padding: "var(--s-4) var(--gutter) var(--s-5)",
-  borderBottom: "1px solid var(--line-strong)",
-  background: "var(--bg)",
-  "&[data-open='true']": { display: "block" },
+  padding: "var(--s-3) var(--gutter) var(--s-6)",
+  borderBottom: "1px solid var(--line-soft)",
+  background: "var(--glass-nav)",
+  WebkitBackdropFilter: "var(--glass-blur)",
+  backdropFilter: "var(--glass-blur)",
+  "&[data-open='true']": { display: "block", animation: "fb-sheet var(--d-4) var(--ease-drawer) both" },
   [DESKTOP]: {
     display: "flex",
     position: "static",
@@ -45,20 +52,40 @@ export const Menu = styled("nav")({
     padding: 0,
     border: 0,
     background: "transparent",
+    backdropFilter: "none",
+    animation: "none",
   },
 });
 
 export const Links = styled("ul")({
-  "& a[aria-current='page']": { fontWeight: 500 },
-  [DESKTOP]: { display: "flex", gap: "var(--s-5)", marginLeft: "var(--s-6)" },
   "& a": {
+    position: "relative",
     display: "block",
     padding: "var(--s-3) 0",
-    borderBottom: "1px solid var(--line)",
+    borderBottom: "1px solid var(--line-soft)",
     color: "var(--text)",
+    fontSize: "1.125rem",
     textDecoration: "none",
-    "&:hover": { color: "var(--link)" },
-    [DESKTOP]: { padding: "var(--s-2) 0", border: 0 },
+    [DESKTOP]: { padding: "var(--s-2) 0", border: 0, fontSize: "0.9375rem", fontWeight: 500 },
+  },
+  // On desktop the underline sweeps in from the left and leaves to the right.
+  [DESKTOP]: {
+    display: "flex",
+    gap: "var(--s-6)",
+    marginLeft: "var(--s-6)",
+    "& a::after": {
+      content: '""',
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      height: "1.5px",
+      background: "currentColor",
+      transform: "scaleX(0)",
+      transformOrigin: "100% 50%",
+      transition: "transform var(--d-4) var(--ease-out-expo)",
+    },
+    "& a:hover::after, & a[aria-current='page']::after": { transform: "scaleX(1)", transformOrigin: "0 50%" },
   },
 });
 
@@ -66,6 +93,6 @@ export const Actions = styled("div")({
   display: "flex",
   flexDirection: "column",
   gap: "var(--s-3)",
-  marginTop: "var(--s-4)",
-  [DESKTOP]: { flexDirection: "row", alignItems: "center", marginTop: 0 },
+  marginTop: "var(--s-5)",
+  [DESKTOP]: { flexDirection: "row", alignItems: "center", gap: "var(--s-4)", marginTop: 0 },
 });

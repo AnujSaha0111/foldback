@@ -2,9 +2,10 @@
 @import "../theme/tokens.css";
 
 :root {
-  /* next/font puts the real font families in these variables (see src/app/layout.tsx). */
-  --font-sans: var(--font-plex-sans), "Helvetica Neue", Arial, sans-serif;
-  --font-mono: var(--font-plex-mono), "Courier New", monospace;
+  /* next/font sets these variables through a class (see src/app/layout.tsx). The fallback names its @font-face
+     directly: without it, a class that does not match the stylesheet makes every font on the site Times. */
+  --font-sans: var(--font-plex-sans, "IBM Plex Sans"), "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-plex-mono, "IBM Plex Mono"), "Courier New", monospace;
 }
 
 *,
@@ -24,8 +25,57 @@ html {
   }
 }
 
+::selection {
+  background: var(--sky-200);
+  color: #161616;
+}
+
+/* Scrollbars: thin, square, no arrow buttons. The thumb is a bar inset in a ruled track and turns sun on hover. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-3) var(--bg-subtle);
+}
+
+@supports selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
+
+  *::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+    background: var(--bg-subtle);
+  }
+
+  *::-webkit-scrollbar-track {
+    background: var(--bg-subtle);
+    border-left: 1px solid var(--line);
+    border-top: 1px solid var(--line);
+  }
+
+  *::-webkit-scrollbar-thumb {
+    border: 3px solid var(--bg-subtle);
+    border-radius: 0;
+    background: var(--text-3);
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--sun);
+  }
+
+  *::-webkit-scrollbar-button {
+    display: none;
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: var(--bg-subtle);
+  }
+}
+
 body {
   margin: 0;
+  overflow-x: clip;
   background: var(--bg);
   color: var(--text);
   font: 400 var(--fs-body) / 1.5 var(--font-sans);
@@ -75,7 +125,7 @@ h2 {
 
 h1 {
   font-size: var(--fs-h1);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   line-height: 1.12;
 }
 
@@ -112,6 +162,90 @@ textarea,
 select {
   font: inherit;
   color: inherit;
+}
+
+/* Shared motion. Components name these; durations and curves come from tokens.css. */
+@keyframes fb-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes fb-word {
+  from {
+    opacity: 0;
+    transform: translateY(105%);
+    filter: blur(8px);
+  }
+}
+
+@keyframes fb-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+    filter: blur(2px);
+  }
+}
+
+@keyframes fb-live {
+  from {
+    opacity: 0.9;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+
+@keyframes fb-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+@keyframes fb-squares {
+  0%,
+  70%,
+  100% {
+    opacity: 0.2;
+  }
+  35% {
+    opacity: 1;
+  }
+}
+
+@keyframes fb-sheet {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes fb-grow {
+  from {
+    opacity: 0;
+    transform: scaleX(0.04);
+  }
+}
+
+/* Registered so a folded corner can grow smoothly on hover. */
+@property --f {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 2rem;
+}
+
+@keyframes fb-drift {
+  to {
+    transform: translate3d(-6vw, 5vw, 0) scale(1.12);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

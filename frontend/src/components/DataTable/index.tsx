@@ -4,6 +4,10 @@ import { Frame, Table } from "./styled";
 interface Column<Row> {
   header: string;
   cell: (row: Row) => ReactNode;
+  /** Figures read best right-aligned. */
+  align?: "right";
+  /** The header is still announced, but not shown (for a column of arrows, say). */
+  hideHeader?: boolean;
 }
 
 interface DataTableProps<Row> {
@@ -19,8 +23,8 @@ export function DataTable<Row>({ columns, rows, rowKey }: DataTableProps<Row>) {
         <thead>
           <tr>
             {columns.map((column) => (
-              <th key={column.header} scope="col">
-                {column.header}
+              <th key={column.header} scope="col" data-align={column.align}>
+                {column.hideHeader ? <span className="sr-only">{column.header}</span> : column.header}
               </th>
             ))}
           </tr>
@@ -29,7 +33,9 @@ export function DataTable<Row>({ columns, rows, rowKey }: DataTableProps<Row>) {
           {rows.map((row) => (
             <tr key={rowKey(row)}>
               {columns.map((column) => (
-                <td key={column.header}>{column.cell(row)}</td>
+                <td key={column.header} data-align={column.align}>
+                  {column.cell(row)}
+                </td>
               ))}
             </tr>
           ))}
