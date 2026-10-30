@@ -10,6 +10,13 @@ export function describeInstant(instant: Date, zone: string): string {
   return DateTime.fromJSDate(instant, { zone }).setLocale("en-US").toFormat("EEEE d MMMM yyyy, h:mm a ZZZZ");
 }
 
+/** An instant as ISO text with the zone's offset, for example "2026-11-01T12:00:00-08:00". */
+export function isoInZone(instant: Date, zone: string): string {
+  return (
+    DateTime.fromJSDate(instant, { zone }).toISO({ suppressMilliseconds: true }) ?? instant.toISOString()
+  );
+}
+
 /**
  * Takes the wall-clock date and time the model wrote, ignores any offset it added, and reads them in the organizer's
  * zone. The server, not the model, decides whether daylight time applies. Null when the text is not a date and time,

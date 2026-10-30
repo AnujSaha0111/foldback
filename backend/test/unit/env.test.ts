@@ -19,6 +19,21 @@ describe("env fails fast (test 15)", () => {
     expect(env.CORS_ORIGINS).toEqual(["http://localhost:3000"]);
   });
 
+  it("has AI limits with defaults, and rejects zero, negative or fractional values", () => {
+    const env = testEnv();
+    expect([env.AI_GLOBAL_PER_MIN, env.AI_USER_PER_MIN, env.AI_USER_PER_DAY]).toEqual([12, 6, 30]);
+    expect([env.AI_IP_PER_MIN, env.AI_IP_PER_DAY, env.AI_DAILY_CALLS]).toEqual([10, 60, 600]);
+    for (const bad of ["0", "-1", "2.5", "many"]) {
+      expect(failure({ AI_USER_PER_MIN: bad }).variables).toEqual(["AI_USER_PER_MIN"]);
+    }
+  });
+
+  it("takes an optional IP hash salt of at least 16 characters", () => {
+    expect(testEnv().IP_HASH_SALT).toBeUndefined();
+    expect(testEnv({ IP_HASH_SALT: "a-long-enough-salt" }).IP_HASH_SALT).toBe("a-long-enough-salt");
+    expect(failure({ IP_HASH_SALT: "short" }).variables).toEqual(["IP_HASH_SALT"]);
+  });
+
   it("names a missing JWT_SECRET", () => {
     expect(failure({ JWT_SECRET: undefined }).variables).toContain("JWT_SECRET");
   });

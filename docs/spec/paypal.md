@@ -23,7 +23,7 @@ Flow: create an order with `intent: AUTHORIZE` → buyer approves in PayPal → 
 | `AI_IP_PER_MIN` / `AI_IP_PER_DAY` | no | Default `10` / `60` |
 | `AGENT_PER_CONTRACT_PER_DAY` | no | Default `25` |
 | `PAYPAL_WRITES_ENABLED` | no | Default `true`. Kill switch for checkout and authorize |
-| `IP_HASH_SALT` | yes in prod | Random string used to hash IPs in `ai_usage` |
+| `IP_HASH_SALT` | optional | Random string (16+ characters) used to hash IPs in `ai_usage`. When unset, the hash is keyed from `JWT_SECRET`, so production needs no extra secret |
 | `PORT` | no | Default `8787` |
 | `DATABASE_URL` | yes | `postgres://…`. Dev uses the Compose Postgres on 5432; tests use `TEST_DATABASE_URL` on 5433 |
 | `PAYPAL_TIMEOUT_MS` | no | Default `15000`. Abort a PayPal call after this and treat it as unknown |
