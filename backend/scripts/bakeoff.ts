@@ -147,6 +147,7 @@ const CASES: Case[] = [
 function gapMs(entry: ChainEntry): number {
   if (entry.provider === "gemini") return entry.model.includes("lite") ? 5_000 : 13_000;
   if (entry.provider === "groq") return 13_000; // 8,000 tokens a minute is the tighter limit
+  if (entry.provider === "deepseek") return 1_000;
   return 4_000;
 }
 
@@ -164,6 +165,7 @@ function envFor(chain: string): ReturnType<typeof parseEnv> {
     GEMINI_API_KEY: process.env["GEMINI_API_KEY"],
     GROQ_API_KEY: process.env["GROQ_API_KEY"],
     OPENROUTER_API_KEY: process.env["OPENROUTER_API_KEY"],
+    DEEPSEEK_API_KEY: process.env["DEEPSEEK_API_KEY"],
     ...(chain === "" ? {} : { LLM_CHAIN: chain }),
   });
 }
@@ -263,6 +265,7 @@ async function listModels(): Promise<void> {
     ],
     ["groq", "https://api.groq.com/openai/v1/models", process.env["GROQ_API_KEY"]],
     ["openrouter", "https://openrouter.ai/api/v1/models", process.env["OPENROUTER_API_KEY"]],
+    ["deepseek", "https://api.deepseek.com/models", process.env["DEEPSEEK_API_KEY"]],
   ];
   for (const [name, url, key] of sources) {
     if (!key) {

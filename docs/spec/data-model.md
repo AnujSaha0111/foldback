@@ -236,8 +236,8 @@ CREATE TABLE ai_usage (
   succeeded      boolean NOT NULL,
   cached         boolean NOT NULL DEFAULT false,
   created_at     timestamptz NOT NULL DEFAULT now(),
-  -- the database half of the free-only rule
-  CHECK (provider IN ('gemini', 'groq') OR model = 'openrouter/free' OR model LIKE '%:free')
+  -- the database half of the free-only rule for OpenRouter (migration 0002 renamed it and added 'deepseek')
+  CHECK (provider <> 'openrouter' OR model = 'openrouter/free' OR model LIKE '%:free')
 );
 CREATE INDEX ai_usage_day ON ai_usage (day);
 CREATE INDEX ai_usage_user_day ON ai_usage (user_id, day);

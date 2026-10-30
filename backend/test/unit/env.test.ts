@@ -67,6 +67,21 @@ describe("env fails fast (test 15)", () => {
     expect(failure({ LLM_CHAIN: "openrouter:anthropic/claude-3.5-sonnet" }).variables).toContain("LLM_CHAIN");
   });
 
+  it("accepts a DeepSeek entry, with the key optional", () => {
+    const env = testEnv({ LLM_CHAIN: "deepseek:deepseek-flash,groq:openai/gpt-oss-120b" });
+    expect(env.LLM_CHAIN).toContain("deepseek:deepseek-flash");
+    expect(env.DEEPSEEK_API_KEY).toBeUndefined();
+    expect(testEnv({ DEEPSEEK_API_KEY: "ds-key" }).DEEPSEEK_API_KEY).toBe("ds-key");
+  });
+
+  it("puts DeepSeek first in the default chain, then Groq, then Gemini", () => {
+    const providers = testEnv()
+      .LLM_CHAIN.split(",")
+      .map((entry) => entry.split(":")[0]);
+    expect(providers[0]).toBe("deepseek");
+    expect(providers.indexOf("groq")).toBeLessThan(providers.indexOf("gemini"));
+  });
+
   it("accepts free OpenRouter entries", () => {
     expect(
       testEnv({ LLM_CHAIN: "groq:openai/gpt-oss-120b,openrouter:meta/llama:free,openrouter:openrouter/free" })

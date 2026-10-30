@@ -103,6 +103,25 @@ describe("a successful call", () => {
     expect(calls[0]?.body).not.toHaveProperty("max_tokens");
   });
 
+  it("asks DeepSeek for plain JSON with thinking off and no reasoning effort", async () => {
+    const { deps, calls } = setup({
+      env: { LLM_CHAIN: "deepseek:deepseek-flash", DEEPSEEK_API_KEY: "ds-secret-key" },
+      steps: [{}],
+    });
+    await callChain(deps, REQUEST, parse);
+    expect(calls[0]?.url).toBe("https://api.deepseek.com/chat/completions");
+    expect(calls[0]?.headers["Authorization"]).toBe("Bearer ds-secret-key");
+    expect(calls[0]?.body).toMatchObject({
+      model: "deepseek-flash",
+      max_tokens: 2000,
+      thinking: { type: "disabled" },
+      response_format: { type: "json_object" },
+    });
+    expect(calls[0]?.body).not.toHaveProperty("reasoning_effort");
+    const system = (calls[0]?.body["messages"] as { content: string }[])[0]?.content ?? "";
+    expect(system).toContain(JSON.stringify(REQUEST.jsonSchema));
+  });
+
   it("asks OpenRouter for plain JSON and puts the schema in the prompt instead", async () => {
     const { deps, calls } = setup({ env: { LLM_CHAIN: "openrouter:openrouter/free" }, steps: [{}] });
     await callChain(deps, REQUEST, parse);

@@ -20,7 +20,7 @@ Hackathon: [Build What's Next with PayPal and AI](https://paypalaihackathon.devp
 Most hackathon entries skip these, and judges notice.
 
 - **PayPal:** sandbox Orders v2 with `intent: AUTHORIZE`, then Payments v2 authorizations (capture, void, get).
-- **AI:** free hosted models, Groq (`gpt-oss-120b`) first with Gemini Flash-Lite as fallback, read a pasted group chat into a fixed schema. An organizer agent answers questions, simulates outcomes, drafts reminders, and proposes clock moves. The model never sets amounts and never calls PayPal.
+- **AI:** free hosted models, DeepSeek (`deepseek-flash`, $2 prepaid) first, then free Groq (`gpt-oss-120b`) and Gemini Flash-Lite as fallbacks, read a pasted group chat into a fixed schema. An organizer agent answers questions, simulates outcomes, drafts reminders, and proposes clock moves. The model never sets amounts and never calls PayPal.
 - **Sponsor tool:** Bryntum Scheduler (we compete for Best Use of Bryntum).
 - **Hosting:** a team member's Mac mini runs the backend and Postgres under Docker Compose, reached through a Cloudflare Tunnel at `api.<domain>`. The frontend is on Vercel at `app.<domain>`. See `deploy.md`.
 

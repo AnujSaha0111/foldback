@@ -53,11 +53,11 @@ const NEW_CONTRACT_SQL = `INSERT INTO contracts (id, owner_id, rule_text, rule_h
 
 describe("migrations", () => {
   it("1. apply once and are idempotent", async () => {
-    expect(firstRun.applied).toEqual(["0001"]);
+    expect(firstRun.applied).toEqual(["0001", "0002"]);
     expect((await applyMigrations(owner)).applied).toEqual([]);
     const status = await migrationStatus(owner);
-    expect(status.applied.map((m) => m.version)).toEqual(["0001"]);
-    expect(status.applied[0]?.checksumOk).toBe(true);
+    expect(status.applied.map((m) => m.version)).toEqual(["0001", "0002"]);
+    expect(status.applied.every((m) => m.checksumOk)).toBe(true);
     expect(status.pending).toEqual([]);
   });
 });
@@ -530,7 +530,7 @@ describe("users, cleanup, and ai_usage", () => {
         `INSERT INTO ai_usage (route, provider, model, ip_hash, input_tokens, output_tokens, succeeded)
          VALUES ('extract', 'openrouter', 'openai/gpt-5', 'ih', 1, 1, true)`,
       ),
-      { code: CHECK_VIOLATION, constraint: "ai_usage_free_only" },
+      { code: CHECK_VIOLATION, constraint: "ai_usage_openrouter_free_only" },
     );
     const free = await app.query<{ is_utc_day: boolean }>(
       `INSERT INTO ai_usage (route, provider, model, ip_hash, input_tokens, output_tokens, succeeded)
@@ -538,6 +538,20 @@ describe("users, cleanup, and ai_usage", () => {
        RETURNING day = (now() AT TIME ZONE 'UTC')::date AS is_utc_day`,
     );
     expect(free.rows[0]?.is_utc_day).toBe(true);
+  });
+
+  it("14b. ai_usage records DeepSeek attempts, and the OpenRouter free-only rule still holds", async () => {
+    await app.query(
+      `INSERT INTO ai_usage (route, provider, model, ip_hash, input_tokens, output_tokens, succeeded)
+       VALUES ('extract', 'deepseek', 'deepseek-flash', 'ih', 1, 1, true)`,
+    );
+    await expectDbError(
+      app.query(
+        `INSERT INTO ai_usage (route, provider, model, ip_hash, input_tokens, output_tokens, succeeded)
+         VALUES ('extract', 'madeup', 'x', 'ih', 1, 1, true)`,
+      ),
+      { code: CHECK_VIOLATION, constraint: "ai_usage_provider_valid" },
+    );
   });
 
   it("N11. the app role cannot disable triggers, edit transitions, or delete the operation log", async () => {
