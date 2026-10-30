@@ -3,9 +3,9 @@ import { z } from "zod";
 // The order is measured, not guessed (docs/spec/ai.md, "Bake-off results"). Models that scored badly or could not be
 // scored are left out, because every failed attempt in a chain still costs time and counts toward the daily cap.
 const DEFAULT_LLM_CHAIN =
-  "groq:openai/gpt-oss-120b,gemini:gemini-3.1-flash-lite,gemini:gemini-3.5-flash-lite";
+  "deepseek:deepseek-flash,groq:openai/gpt-oss-120b,gemini:gemini-3.1-flash-lite,gemini:gemini-3.5-flash-lite";
 
-const PROVIDERS = new Set(["gemini", "groq", "openrouter"]);
+const PROVIDERS = new Set(["gemini", "groq", "openrouter", "deepseek"]);
 
 /** The rule that keeps the project free: an OpenRouter entry must be a free model. */
 function chainProblem(chain: string): string | null {
@@ -66,6 +66,8 @@ const schema = z.object({
   GEMINI_API_KEY: z.string().min(1).optional(),
   GROQ_API_KEY: z.string().min(1).optional(),
   OPENROUTER_API_KEY: z.string().min(1).optional(),
+  /** DeepSeek is prepaid, not free. The balance on the account is the cap. Leave unset to keep the chain free. */
+  DEEPSEEK_API_KEY: z.string().min(1).optional(),
   LLM_CHAIN: z
     .string()
     .default(DEFAULT_LLM_CHAIN)

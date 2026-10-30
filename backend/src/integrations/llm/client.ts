@@ -5,7 +5,7 @@ import type { Allowance, UsedAttempt } from "../../services/aiBudget.service";
 // The only file that makes language-model HTTP calls (docs/spec/ai.md). Plain fetch to OpenAI-compatible endpoints,
 // so there is no SDK and no extra dependency.
 
-type Provider = "gemini" | "groq" | "openrouter";
+type Provider = "gemini" | "groq" | "openrouter" | "deepseek";
 
 export interface ChainEntry {
   provider: Provider;
@@ -54,6 +54,10 @@ interface ProviderConfig {
   tokenField: "max_tokens" | "max_completion_tokens";
   /** Strict JSON-schema output. Without it the schema goes in the prompt and the reply is only asked to be JSON. */
   strictSchema: boolean;
+  /** Whether the provider takes `reasoning_effort`. DeepSeek does not, and is told to skip thinking instead. */
+  reasoningEffort: boolean;
+  /** Fields added to every request body. */
+  extraBody?: Record<string, unknown>;
 }
 
 const PROVIDERS: Record<Provider, ProviderConfig> = {
@@ -62,18 +66,30 @@ const PROVIDERS: Record<Provider, ProviderConfig> = {
     apiKey: (env) => env.GEMINI_API_KEY,
     tokenField: "max_tokens",
     strictSchema: true,
+    reasoningEffort: true,
   },
   groq: {
     baseUrl: "https://api.groq.com/openai/v1",
     apiKey: (env) => env.GROQ_API_KEY,
     tokenField: "max_completion_tokens",
     strictSchema: true,
+    reasoningEffort: true,
   },
   openrouter: {
     baseUrl: "https://openrouter.ai/api/v1",
     apiKey: (env) => env.OPENROUTER_API_KEY,
     tokenField: "max_tokens",
     strictSchema: false,
+    reasoningEffort: true,
+  },
+  // Prepaid, not free: the account balance is the hard cap on spend. JSON mode only, no strict schema.
+  deepseek: {
+    baseUrl: "https://api.deepseek.com",
+    apiKey: (env) => env.DEEPSEEK_API_KEY,
+    tokenField: "max_tokens",
+    strictSchema: false,
+    reasoningEffort: false,
+    extraBody: { thinking: { type: "disabled" } },
   },
 };
 
@@ -108,7 +124,8 @@ function buildBody(entry: ChainEntry, request: JsonRequest): Record<string, unkn
   return {
     model: entry.model,
     temperature: 0,
-    reasoning_effort: "low",
+    ...(config.reasoningEffort ? { reasoning_effort: "low" } : {}),
+    ...config.extraBody,
     [config.tokenField]: request.maxTokens,
     messages,
     response_format: strict
