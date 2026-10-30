@@ -17,6 +17,10 @@ const GENEROUS: Limits = {
   signup: { limit: 10_000, windowMs: 60_000 },
   guest: { limit: 10_000, windowMs: 60_000 },
   reset: { limit: 10_000, windowMs: 60_000 },
+  aiUserMinute: { limit: 10_000, windowMs: 60_000 },
+  aiUserDay: { limit: 10_000, windowMs: 60_000 },
+  aiIpMinute: { limit: 10_000, windowMs: 60_000 },
+  aiIpDay: { limit: 10_000, windowMs: 60_000 },
 };
 
 export interface BuildOptions {

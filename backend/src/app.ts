@@ -12,7 +12,7 @@ import { createHealthController } from "./controllers/health.controller";
 import { requireUser } from "./http/middleware/auth";
 import { errorHandler, notFoundHandler } from "./http/middleware/errorHandler";
 import { originCheck } from "./http/middleware/originCheck";
-import { createLimiters, DEFAULT_LIMITS } from "./http/middleware/rateLimit";
+import { createLimiters, limitsFromEnv } from "./http/middleware/rateLimit";
 import type { Limits } from "./http/middleware/rateLimit";
 import { requestId } from "./http/middleware/requestId";
 import { requestLogger } from "./http/middleware/requestLogger";
@@ -31,7 +31,7 @@ export interface AppDeps {
 }
 
 /** Builds the Express app without listening, so tests can mount it directly. */
-export function createApp({ env, pool, logger, limits = DEFAULT_LIMITS }: AppDeps): Express {
+export function createApp({ env, pool, logger, limits = limitsFromEnv(env) }: AppDeps): Express {
   const app = express();
   app.disable("x-powered-by");
   app.set("trust proxy", env.TRUST_PROXY);

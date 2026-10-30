@@ -82,6 +82,7 @@ Every variable is parsed by `config/env.ts` (zod). Boot fails on a missing or in
 | `METRICS_TOKEN` | random | Bearer token for `/metrics` |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | unset | Set it to turn on tracing |
 | `SIGNUPS_ENABLED`, `AI_ENABLED`, `AI_DAILY_CALLS` | `true`, `true`, `600` | Kill switches and caps |
+| `AI_GLOBAL_PER_MIN`, `AI_USER_PER_MIN`, `AI_USER_PER_DAY`, `AI_IP_PER_MIN`, `AI_IP_PER_DAY` (optional) | `12`, `6`, `30`, `10`, `60` | AI limits from `ai.md`. Leave unset to use these defaults. `compose.yml` must list a variable before setting it in `.env` has any effect |
 | `GIT_SHA` | baked into the image by CI | Shown in `/api/health`. Compose does not override it |
 
 Templates: `backend/.env.example` (dev) and `deploy/env.production.example` (prod), with every name and no values. The real production file is `~foldback/foldback/.env`, mode 600, on the Mac only. Database passwords are hex (`openssl rand -hex 24`) so they are safe inside URLs.

@@ -53,6 +53,14 @@ const schema = z.object({
   PAYPAL_ENV: z.literal("sandbox", "must be exactly sandbox. Foldback never runs against live PayPal"),
   AI_ENABLED: flag,
   AI_DAILY_CALLS: z.coerce.number().int().positive().default(600),
+  /** AI attempts per minute across everyone, kept under the smallest free provider limit (docs/spec/ai.md). */
+  AI_GLOBAL_PER_MIN: z.coerce.number().int().positive().default(12),
+  AI_USER_PER_MIN: z.coerce.number().int().positive().default(6),
+  AI_USER_PER_DAY: z.coerce.number().int().positive().default(30),
+  AI_IP_PER_MIN: z.coerce.number().int().positive().default(10),
+  AI_IP_PER_DAY: z.coerce.number().int().positive().default(60),
+  /** Keys the hash of a visitor's IP in ai_usage. Falls back to JWT_SECRET, so no new secret is needed. */
+  IP_HASH_SALT: z.string().min(16).optional(),
   GEMINI_API_KEY: z.string().min(1).optional(),
   GROQ_API_KEY: z.string().min(1).optional(),
   OPENROUTER_API_KEY: z.string().min(1).optional(),
