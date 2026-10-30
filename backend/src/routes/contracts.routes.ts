@@ -17,6 +17,7 @@ export function contractsRoutes(
   router.use(requireUser);
   router.get("/", controller.list);
   router.get("/:id", controller.read);
+  router.get("/:id/scheduler", controller.scheduler);
   // The rule reader calls a model, so these two sit behind the AI limits as well as the per-user plan limit.
   router.post("/", limiters.createContract, ...limiters.ai, validateBody(createRuleSchema), rules.create);
   router.post("/:id/clarify", ...limiters.ai, validateBody(clarifySchema), rules.clarify);

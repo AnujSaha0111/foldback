@@ -79,6 +79,45 @@ export interface ContractRead {
   events: ApiEvent[];
 }
 
+/** Colors the board gives a bar. The word on the bar, never the color, says the status. */
+export type SchedulerColor = "gray" | "blue" | "green" | "red";
+
+export interface SchedulerResource {
+  id: string;
+  name: string;
+  badge: "Sample" | "Sandbox";
+}
+
+export interface SchedulerEvent {
+  id: string;
+  resourceId: string;
+  name: string;
+  status: ShareStatus;
+  startDate: string;
+  endDate: string;
+  eventColor: SchedulerColor;
+  cls: string | null;
+  moneySource: MoneySource;
+  paypalId: string | null;
+}
+
+export interface SchedulerTimeRange {
+  id: "deadline" | "grace" | "now";
+  name: string;
+  startDate: string;
+  cls: string;
+}
+
+/** GET /api/contracts/:id/scheduler. The board draws exactly this and works out nothing itself. */
+export interface SchedulerProjection {
+  timezone: string;
+  start: string;
+  end: string;
+  resources: SchedulerResource[];
+  events: SchedulerEvent[];
+  timeRanges: SchedulerTimeRange[];
+}
+
 /** Socket.IO messages. They carry ids only; the REST read model is the single source of truth. */
 export interface ContractChangedEvent {
   contractId: string;
