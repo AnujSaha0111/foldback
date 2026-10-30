@@ -49,6 +49,7 @@ export const Menu = styled("nav")({
 });
 
 export const Links = styled("ul")({
+  "& a[aria-current='page']": { fontWeight: 500 },
   [DESKTOP]: { display: "flex", gap: "var(--s-5)", marginLeft: "var(--s-6)" },
   "& a": {
     display: "block",

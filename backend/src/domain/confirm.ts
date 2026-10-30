@@ -1,48 +1,8 @@
 import { DateTime } from "luxon";
-import type { Extraction } from "./extraction";
+import type { ConfirmTerms } from "../shared/api-types";
 
 /** The terms of a plan, exactly as the Rule screen shows them and as confirm echoes them back. */
-export interface Terms {
-  title: string;
-  currency: string;
-  total_cents: number;
-  share_cents: number;
-  headcount: number;
-  deadline_at: string;
-  timezone: string;
-  grace_person_name: string | null;
-  grace_until: string | null;
-  people: string[];
-}
-
-/** The terms of a stored reading, or null when anything required is missing. A confirmed plan is never partial. */
-export function termsOf(reading: Extraction): Terms | null {
-  const { title, currency, total_cents, share_cents, headcount, deadline_at, timezone } = reading;
-  if (
-    title === null ||
-    currency === null ||
-    total_cents === null ||
-    share_cents === null ||
-    headcount === null ||
-    deadline_at === null ||
-    timezone === null ||
-    reading.missing.length > 0
-  ) {
-    return null;
-  }
-  return {
-    title,
-    currency,
-    total_cents,
-    share_cents,
-    headcount,
-    deadline_at,
-    timezone,
-    grace_person_name: reading.grace_person_name,
-    grace_until: reading.grace_until,
-    people: reading.people,
-  };
-}
+export type Terms = ConfirmTerms;
 
 /** Field by field, with no tolerance. There is no editor on the confirm step, so any difference is a tampered request. */
 export function sameTerms(stored: Terms, echoed: Terms): boolean {

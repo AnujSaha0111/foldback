@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { ApiExtraction } from "../shared/api-types";
 
 /** What the model returns, and what is stored in contracts.extraction. Every value is checked again by validateExtraction. */
 export const ExtractionSchema = z.object({
@@ -15,7 +16,7 @@ export const ExtractionSchema = z.object({
   missing: z.array(z.string()),
   clarification_question: z.string().nullable(),
   evidence: z.array(z.object({ field: z.string(), quote: z.string() })),
-});
+}) satisfies z.ZodType<ApiExtraction>;
 
 export type Extraction = z.infer<typeof ExtractionSchema>;
 

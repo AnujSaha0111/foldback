@@ -1,22 +1,41 @@
 "use client";
 
 import { useId } from "react";
-import type { InputHTMLAttributes } from "react";
-import { Help, Input, Label, Root } from "./styled";
+import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
+import { Area, Help, Input, Label, Root } from "./styled";
 
-interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "id"> {
+interface LabelProps {
   label: string;
-  help?: string;
+  help?: ReactNode;
 }
 
-/** A label above a filled box. Every input has a visible label, and the helper is tied to it for screen readers. */
-export function Field({ label, help, ...input }: FieldProps) {
+type FieldProps = LabelProps & Omit<InputHTMLAttributes<HTMLInputElement>, "id">;
+type TextAreaFieldProps = LabelProps & Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "id">;
+
+/** Every control has a visible label, and its helper is tied to it for screen readers. */
+function useFieldIds(help: ReactNode) {
   const id = useId();
   const helpId = `${id}-help`;
+  return { id, helpId, describedBy: help ? helpId : undefined };
+}
+
+export function Field({ label, help, ...input }: FieldProps) {
+  const { id, helpId, describedBy } = useFieldIds(help);
   return (
     <Root>
       <Label htmlFor={id}>{label}</Label>
-      <Input id={id} aria-describedby={help ? helpId : undefined} {...input} />
+      <Input id={id} aria-describedby={describedBy} {...input} />
+      {help ? <Help id={helpId}>{help}</Help> : null}
+    </Root>
+  );
+}
+
+export function TextAreaField({ label, help, ...area }: TextAreaFieldProps) {
+  const { id, helpId, describedBy } = useFieldIds(help);
+  return (
+    <Root>
+      <Label htmlFor={id}>{label}</Label>
+      <Area id={id} aria-describedby={describedBy} {...area} />
       {help ? <Help id={helpId}>{help}</Help> : null}
     </Root>
   );

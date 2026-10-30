@@ -25,3 +25,10 @@ export function formatMoment(iso: string, timeZone: string, short = false): stri
   const date = `${get("weekday")} ${get("day")} ${get("month")}${short ? "" : ` ${get("year")}`}`;
   return `${date}, ${get("hour")}:${get("minute")}${get("dayPeriod").toLowerCase()} ${get("timeZoneName")}`;
 }
+
+const DAY_MS = 86_400_000;
+
+/** Whole days left, rounded up, for the guest chip: "expires in 7 days". Never below zero. */
+export function daysUntil(iso: string, nowMs: number): number {
+  return Math.max(0, Math.ceil((new Date(iso).getTime() - nowMs) / DAY_MS));
+}

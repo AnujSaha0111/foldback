@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import { Mono } from "@/components/Money/styled";
 
 export const Root = styled("div")({
   marginTop: "var(--s-7)",
@@ -31,11 +32,7 @@ export const Row = styled("div")({
   "@media (min-width: 768px)": { gridTemplateColumns: "minmax(0, 1fr) 7rem 6rem" },
 });
 
-export const Amount = styled("span")({
-  fontFamily: "var(--font-mono)",
-  fontVariantNumeric: "tabular-nums",
-  textAlign: "right",
-});
+export const Amount = styled(Mono)({ textAlign: "right" });
 
 export const Sum = styled("div")({
   display: "flex",
