@@ -2,9 +2,10 @@
 @import "../theme/tokens.css";
 
 :root {
-  /* next/font puts the real font families in these variables (see src/app/layout.tsx). */
-  --font-sans: var(--font-plex-sans), "Helvetica Neue", Arial, sans-serif;
-  --font-mono: var(--font-plex-mono), "Courier New", monospace;
+  /* next/font sets these variables through a class (see src/app/layout.tsx). The fallback names its @font-face
+     directly: without it, a class that does not match the stylesheet makes every font on the site Times. */
+  --font-sans: var(--font-plex-sans, "IBM Plex Sans"), "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-plex-mono, "IBM Plex Mono"), "Courier New", monospace;
 }
 
 *,
