@@ -29,3 +29,18 @@ export async function listRecent(db: Db, contractId: string, limit: number): Pro
     shareId: r.share_id,
   }));
 }
+
+export interface NewEvent {
+  contractId: string;
+  type: string;
+  detail: string;
+  shareId?: string;
+}
+
+/** Appends one line to a contract's history. `detail` is at most 500 characters (the table refuses more). */
+export async function insertEvent(db: Db, event: NewEvent): Promise<void> {
+  await db.query(
+    "INSERT INTO events (contract_id, share_id, type, detail, occurred_at) VALUES ($1, $2, $3, $4, now())",
+    [event.contractId, event.shareId ?? null, event.type, event.detail],
+  );
+}

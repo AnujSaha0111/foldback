@@ -38,6 +38,8 @@ describe("zones and windows", () => {
   it("accepts IANA names only", () => {
     expect(isValidZone("America/Los_Angeles")).toBe(true);
     expect(isValidZone("Europe/London")).toBe(true);
+    expect(isValidZone("UTC")).toBe(true);
+    expect(isValidZone("EST5EDT")).toBe(false);
     expect(isValidZone("Pacific time")).toBe(false);
     expect(isValidZone("")).toBe(false);
   });

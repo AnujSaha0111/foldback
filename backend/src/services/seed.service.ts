@@ -3,12 +3,12 @@ import type { PoolClient } from "pg";
 import { insertSeedContract } from "../repositories/contracts.repo";
 import { insertSeedShares } from "../repositories/shares.repo";
 import type { SeedShareInput } from "../repositories/shares.repo";
-import { CABIN_RULE_TEXT, DEFAULT_TIMEZONE, PRINT_RULE_TEXT } from "../shared/rules";
+import { CABIN_RULE_TEXT, DEFAULT_TIMEZONE, FIXTURE_REFERENCE_AT, PRINT_RULE_TEXT } from "../shared/rules";
 
 export const SEED_KEYS = ["cabin-hold", "print-full"] as const;
 
 const SAMPLE_LABEL = "Sample — no PayPal hold";
-const REFERENCE_AT = "2026-11-01T12:00:00-08:00";
+const REFERENCE_AT = FIXTURE_REFERENCE_AT;
 const DEADLINE_AT = "2026-11-06T18:00:00-08:00";
 const DEMO_NOW = "2026-11-06T16:00:00-08:00";
 

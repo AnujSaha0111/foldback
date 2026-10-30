@@ -4,6 +4,8 @@ import type { LlmDeps } from "../../src/integrations/llm/client";
 import { createLogger } from "../../src/observability/logger";
 import type { Allowance, UsedAttempt } from "../../src/services/aiBudget.service";
 import { testEnv } from "../helpers/env";
+import { scripted } from "../helpers/llmStub";
+import type { Step } from "../helpers/llmStub";
 
 const REQUEST = {
   messages: [
@@ -20,47 +22,6 @@ const KEYS = {
   GROQ_API_KEY: "groq-secret-key",
   OPENROUTER_API_KEY: "or-secret-key",
 };
-const GOOD = '{"ok":true}';
-
-interface Call {
-  url: string;
-  headers: Record<string, string>;
-  body: Record<string, unknown>;
-}
-
-type Step = { status?: number; content?: string; finish?: string; fail?: "timeout" | "network" };
-
-function reply(step: Step): Response {
-  if (step.status && step.status >= 400) {
-    return new Response('{"error":"nope"}', {
-      status: step.status,
-      headers: { "x-ratelimit-remaining-requests": "7" },
-    });
-  }
-  const body = {
-    choices: [{ finish_reason: step.finish ?? "stop", message: { content: step.content ?? GOOD } }],
-    usage: { prompt_tokens: 120, completion_tokens: 30 },
-  };
-  return new Response(JSON.stringify(body), { status: 200 });
-}
-
-/** A fetch that returns the next scripted step each time it is called, and records what it was sent. */
-function scripted(steps: Step[]): { fetch: typeof fetch; calls: Call[] } {
-  const calls: Call[] = [];
-  const queue = [...steps];
-  const fake = ((url: string, init: RequestInit) => {
-    calls.push({
-      url,
-      headers: init.headers as Record<string, string>,
-      body: JSON.parse(init.body as string) as Record<string, unknown>,
-    });
-    const step = queue.shift() ?? { status: 500 };
-    if (step.fail === "timeout") return Promise.reject(new DOMException("timed out", "TimeoutError"));
-    if (step.fail === "network") return Promise.reject(new TypeError("fetch failed"));
-    return Promise.resolve(reply(step));
-  }) as unknown as typeof fetch;
-  return { fetch: fake, calls };
-}
 
 function setup(options: {
   env?: Record<string, string | undefined>;
@@ -255,6 +216,27 @@ describe("keys and budget", () => {
     });
     expect(await callChain(deps, REQUEST, parse)).toEqual({ ok: false, reason: "daily" });
     expect(calls).toHaveLength(1);
+  });
+
+  it("gives up on the whole chain when its total time is used up, even with models left", async () => {
+    const { deps, calls } = setup({ steps: [{ status: 429 }, {}] });
+    expect(await callChain({ ...deps, totalTimeoutMs: 0 }, REQUEST, parse)).toEqual({
+      ok: false,
+      reason: "unavailable",
+    });
+    expect(calls).toHaveLength(0);
+
+    const slow = setup({ steps: [{ status: 429 }, {}] });
+    const inner = slow.deps.fetch ?? fetch;
+    slow.deps.fetch = async (...args: Parameters<typeof fetch>) => {
+      await new Promise((resolve) => setTimeout(resolve, 40));
+      return inner(...args);
+    };
+    expect(await callChain({ ...slow.deps, totalTimeoutMs: 20 }, REQUEST, parse)).toEqual({
+      ok: false,
+      reason: "unavailable",
+    });
+    expect(slow.calls).toHaveLength(1);
   });
 
   it("still returns a good reply when recording the attempt fails", async () => {

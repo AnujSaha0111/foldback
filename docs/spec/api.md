@@ -165,7 +165,7 @@ Incomplete or inconsistent → status `needs_clarification`, response 422:
 
 Complete → status `awaiting_confirmation`, response 200 `{ "contract_id", "extraction" }`. No shares yet.
 
-`LLM` missing key → 500 `internal` with message `GROQ_API_KEY is not set`. Do not silently skip extraction.
+No provider key in `LLM_CHAIN` → 500 `internal` with the message "No language model key is configured.". Do not silently skip extraction. If every model fails, the plan goes to `needs_clarification` with the question "I could not read a complete rule. Restate the price, the people, and the deadline." and `extraction: null`. A cap stops the call before any plan is created: `503 ai_budget_exhausted` (kill switch or daily cap) or `429 rate_limited` with `Retry-After: 60` (per-minute cap). A user with 30 plans of their own gets `429 rate_limited`, and a demo with 200 plans gets `429 demo_full`.
 
 ## Clarify
 
@@ -196,7 +196,7 @@ Appends `\n\nOrganizer: {answer}` to `rule_text`, writes `clarification_answered
 }
 ```
 
-Every field must equal `extraction_json`. Any difference → `422 confirm_mismatch`, and the status stays `awaiting_confirmation`. There is no field editor.
+Every field must equal `extraction_json`. Any difference → `422 confirm_mismatch`, and the status stays `awaiting_confirmation`. There is no field editor. Other states: `needs_clarification` → `422 needs_clarification`, `extracting` → `409 resolve_in_progress`, anything already confirmed → `409 contract_closed`. Two simultaneous confirms make one set of shares: the second gets `409 contract_closed`.
 
 On success: insert one share per person (`waiting`, `money_source = sandbox`, `amount_cents = share_cents`), set `demo_now` to two hours before `deadline_at`, status `active`, `confirmed_at`, event `rule_confirmed`. Response: `ContractRead`.
 

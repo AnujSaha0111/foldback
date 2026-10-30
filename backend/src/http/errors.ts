@@ -38,13 +38,22 @@ export class AppError extends Error {
   readonly code: ErrorCode;
   readonly details: unknown;
   readonly headers: Record<string, string>;
+  /** Extra top-level fields for the error JSON, for the few errors whose body carries data (needs_clarification). */
+  readonly body: Record<string, unknown>;
 
-  constructor(code: ErrorCode, message: string, details?: unknown, headers: Record<string, string> = {}) {
+  constructor(
+    code: ErrorCode,
+    message: string,
+    details?: unknown,
+    headers: Record<string, string> = {},
+    body: Record<string, unknown> = {},
+  ) {
     super(message);
     this.name = "AppError";
     this.code = code;
     this.status = ERROR_STATUS[code];
     this.details = details;
     this.headers = headers;
+    this.body = body;
   }
 }

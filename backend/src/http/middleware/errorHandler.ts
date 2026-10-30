@@ -44,6 +44,7 @@ export function errorHandler(logger: Logger): ErrorRequestHandler {
       request_id: res.locals["requestId"] as string | undefined,
     };
     if (appError.details !== undefined) body["details"] = appError.details;
+    Object.assign(body, appError.body);
     res.status(appError.status).json(body);
   };
 }

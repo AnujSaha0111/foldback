@@ -185,3 +185,202 @@ export async function ownsContract(db: Db, ownerId: string, contractId: string):
   ]);
   return result.rowCount === 1;
 }
+
+/** A contract still before its confirm step, locked for the caller. The rule text and clock are what extraction needs. */
+export interface DraftContract {
+  id: string;
+  status: ContractStatus;
+  ruleText: string;
+  referenceAt: Date;
+  clarifyRounds: number;
+  clarificationQuestion: string | null;
+  extraction: unknown;
+}
+
+interface RawDraftRow {
+  id: string;
+  status: ContractStatus;
+  rule_text: string;
+  reference_at: Date;
+  clarify_rounds: number;
+  clarification_question: string | null;
+  extraction: unknown;
+}
+
+/** Starts a plan: a sandbox contract in `extracting`, with nothing decided. Returns its id. */
+export async function insertDraft(
+  db: Db,
+  input: { ownerId: string; ruleText: string; ruleHash: string; referenceAt: Date },
+): Promise<string> {
+  const id = newId("con");
+  await db.query(
+    `INSERT INTO contracts (id, owner_id, rule_text, rule_hash, reference_at, status, money_source)
+     VALUES ($1, $2, $3, $4, $5, 'extracting', 'sandbox')`,
+    [id, input.ownerId, input.ruleText, input.ruleHash, input.referenceAt],
+  );
+  return id;
+}
+
+const DRAFT_SELECT = `SELECT id, status, rule_text, reference_at, clarify_rounds, clarification_question, extraction
+  FROM contracts WHERE id = $1 AND owner_id = $2`;
+
+/** Locks one of the owner's contracts for the rest of the transaction. Someone else's and a missing one are both null. */
+export async function lockDraft(
+  client: PoolClient,
+  ownerId: string,
+  contractId: string,
+): Promise<DraftContract | null> {
+  const result = await client.query<RawDraftRow>(`${DRAFT_SELECT} FOR UPDATE`, [contractId, ownerId]);
+  return toDraft(result.rows[0]);
+}
+
+/** The same read without the lock, for checks made before a transaction starts. */
+export async function findOwnedDraft(
+  db: Db,
+  ownerId: string,
+  contractId: string,
+): Promise<DraftContract | null> {
+  const result = await db.query<RawDraftRow>(DRAFT_SELECT, [contractId, ownerId]);
+  return toDraft(result.rows[0]);
+}
+
+function toDraft(row: RawDraftRow | undefined): DraftContract | null {
+  if (!row) return null;
+  return {
+    id: row.id,
+    status: row.status,
+    ruleText: row.rule_text,
+    referenceAt: row.reference_at,
+    clarifyRounds: row.clarify_rounds,
+    clarificationQuestion: row.clarification_question,
+    extraction: row.extraction,
+  };
+}
+
+/** Plans the owner created themselves, not the two samples. With no owner, every user's plans: the whole-demo cap. */
+export async function countOwnPlans(db: Db, ownerId: string | null): Promise<number> {
+  const result = await db.query<{ count: string }>(
+    "SELECT count(*)::text AS count FROM contracts WHERE seed_key IS NULL AND ($1::text IS NULL OR owner_id = $1)",
+    [ownerId],
+  );
+  return Number(result.rows[0]?.count ?? 0);
+}
+
+/** The newest stored reading of exactly this text and paste time, from anyone, no older than `hours`. */
+export async function findCachedExtraction(db: Db, ruleHash: string, hours: number): Promise<unknown> {
+  const result = await db.query<{ extraction: unknown }>(
+    `SELECT extraction FROM contracts
+      WHERE rule_hash = $1 AND extraction IS NOT NULL AND created_at > now() - make_interval(hours => $2)
+      ORDER BY created_at DESC LIMIT 1`,
+    [ruleHash, hours],
+  );
+  return result.rows[0]?.extraction ?? null;
+}
+
+/** The organizer answered a question: the answer joins the text and the plan goes back to being read. */
+export async function startClarification(
+  client: PoolClient,
+  contractId: string,
+  input: { ruleText: string; ruleHash: string },
+): Promise<void> {
+  await client.query(
+    `UPDATE contracts SET rule_text = $2, rule_hash = $3, status = 'extracting', clarify_rounds = clarify_rounds + 1
+      WHERE id = $1`,
+    [contractId, input.ruleText, input.ruleHash],
+  );
+}
+
+export interface Reading {
+  status: "needs_clarification" | "awaiting_confirmation";
+  extraction: unknown;
+  question: string | null;
+}
+
+/** Stores what the rule reader made of the text. Returns the new version, or null if the plan is gone or moved on. */
+export async function saveReading(db: Db, contractId: string, reading: Reading): Promise<number | null> {
+  const stored = reading.extraction === null ? null : JSON.stringify(reading.extraction);
+  const result = await db.query<{ version: number }>(
+    `UPDATE contracts SET status = $2, extraction = $3::jsonb, clarification_question = $4
+      WHERE id = $1 AND status = 'extracting' RETURNING version`,
+    [contractId, reading.status, stored, reading.question],
+  );
+  return result.rows[0]?.version ?? null;
+}
+
+/** The model could not be called (the budget stopped it): back to asking, with the previous question kept. */
+export async function returnToClarification(db: Db, contractId: string): Promise<void> {
+  await db.query(
+    "UPDATE contracts SET status = 'needs_clarification' WHERE id = $1 AND status = 'extracting'",
+    [contractId],
+  );
+}
+
+/**
+ * Plans stuck in `extracting` because the server stopped mid-read. One that was already asking goes back to asking;
+ * a brand-new one is removed. Returns how many were repaired or removed.
+ */
+export async function repairStaleDrafts(db: Db, minutes: number): Promise<number> {
+  const asking = await db.query(
+    `UPDATE contracts SET status = 'needs_clarification'
+      WHERE status = 'extracting' AND clarify_rounds > 0 AND updated_at < now() - make_interval(mins => $1)`,
+    [minutes],
+  );
+  const fresh = await db.query(
+    `DELETE FROM contracts
+      WHERE status = 'extracting' AND clarify_rounds = 0 AND updated_at < now() - make_interval(mins => $1)`,
+    [minutes],
+  );
+  return (asking.rowCount ?? 0) + (fresh.rowCount ?? 0);
+}
+
+/** A plan that never got a reading. */
+export async function deleteDraft(db: Db, contractId: string): Promise<void> {
+  await db.query("DELETE FROM contracts WHERE id = $1 AND status = 'extracting'", [contractId]);
+}
+
+export interface ConfirmedTerms {
+  title: string;
+  currency: string;
+  totalCents: number;
+  shareCents: number;
+  headcount: number;
+  deadlineAt: string;
+  timezone: string;
+  graceName: string | null;
+  graceUntil: string | null;
+}
+
+/** Writes the confirmed terms into the contract, still unconfirmed, so the share inserts can be checked against them. */
+export async function applyTerms(
+  client: PoolClient,
+  contractId: string,
+  terms: ConfirmedTerms,
+): Promise<void> {
+  await client.query(
+    `UPDATE contracts SET title = $2, currency = $3, total_cents = $4, share_cents = $5, headcount = $6,
+            deadline_at = $7, timezone = $8, grace_person_name = $9, grace_until = $10
+      WHERE id = $1`,
+    [
+      contractId,
+      terms.title,
+      terms.currency,
+      terms.totalCents,
+      terms.shareCents,
+      terms.headcount,
+      terms.deadlineAt,
+      terms.timezone,
+      terms.graceName,
+      terms.graceUntil,
+    ],
+  );
+}
+
+/** The last step of confirm. At commit the database checks that the shares match the terms exactly. Returns the version. */
+export async function activate(client: PoolClient, contractId: string, demoNow: string): Promise<number> {
+  const result = await client.query<{ version: number }>(
+    `UPDATE contracts SET status = 'active', confirmed_at = now(), demo_now = $2, clarification_question = NULL
+      WHERE id = $1 RETURNING version`,
+    [contractId, demoNow],
+  );
+  return result.rows[0]?.version ?? 0;
+}

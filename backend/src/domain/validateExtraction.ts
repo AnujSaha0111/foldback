@@ -3,7 +3,13 @@ import { EXTRACTION_FIELDS, PLAIN_FIELD_NAME, REQUIRED_FIELDS } from "./extracti
 import type { Extraction, ExtractionField } from "./extraction";
 import { textStatesAmount } from "./money";
 import { authorizationWindowEnd, isValidZone, resolveLocalTime, toOffsetIso } from "./time";
-import { MAX_HEADCOUNT, MIN_HEADCOUNT } from "../shared/rules";
+import {
+  MAX_HEADCOUNT,
+  MAX_NAME_CHARS,
+  MAX_SHARE_CENTS,
+  MAX_TITLE_CHARS,
+  MIN_HEADCOUNT,
+} from "../shared/rules";
 
 export interface ValidationContext {
   ruleText: string;
@@ -31,6 +37,7 @@ export function validateExtraction(raw: Extraction, context: ValidationContext):
   };
   const missing: Missing = new Set(EXTRACTION_FIELDS.filter((field) => raw.missing.includes(field)));
 
+  checkTitle(out, missing);
   checkHeadcountAndPeople(out, missing);
   checkMoney(out, missing);
   const times = checkTimes(out, missing, context.referenceAt);
@@ -62,17 +69,28 @@ function clear(out: Extraction, missing: Missing, ...fields: Exclude<ExtractionF
   }
 }
 
+/** The limits the database enforces, so a stored plan can never be refused later at confirm. */
+function checkTitle(out: Extraction, missing: Missing): void {
+  if (out.title !== null && out.title.length > MAX_TITLE_CHARS) clear(out, missing, "title");
+}
+
 function checkHeadcountAndPeople(out: Extraction, missing: Missing): void {
   if (out.headcount !== null && (out.headcount < MIN_HEADCOUNT || out.headcount > MAX_HEADCOUNT)) {
     clear(out, missing, "headcount");
   }
   const names = new Set(out.people.map((name) => name.toLowerCase()));
   const duplicated = names.size !== out.people.length;
-  if (duplicated || (out.headcount !== null && out.people.length !== out.headcount)) missing.add("people");
+  const tooLong = out.people.some((name) => name.length > MAX_NAME_CHARS);
+  if (duplicated || tooLong || (out.headcount !== null && out.people.length !== out.headcount)) {
+    missing.add("people");
+  }
 }
 
 /** A price is kept when the quoted text states it, or when it follows exactly from the other price the text states. */
 function checkMoney(out: Extraction, missing: Missing): void {
+  if (out.share_cents !== null && out.share_cents > MAX_SHARE_CENTS) {
+    clear(out, missing, "share_cents", "total_cents");
+  }
   const quotes = out.evidence.map((item) => item.quote);
   const totalStated = statesAmount(quotes, out.total_cents);
   const shareStated = statesAmount(quotes, out.share_cents);
@@ -142,8 +160,11 @@ function checkGrace(out: Extraction, missing: Missing, times: ResolvedTimes): vo
   const name = out.grace_person_name?.trim() ?? "";
   if (name !== "" && out.grace_until === null) missing.add("grace_until");
   if (name === "" && out.grace_until !== null) missing.add("grace_person_name");
-  if (name !== "" && !out.people.some((person) => person.toLowerCase() === name.toLowerCase())) {
-    missing.add("grace_person_name");
+  if (name !== "") {
+    // The share row stores the name exactly as written in `people`, so the grace name takes that spelling.
+    const listed = out.people.find((person) => person.toLowerCase() === name.toLowerCase());
+    if (listed === undefined) missing.add("grace_person_name");
+    else out.grace_person_name = listed;
   }
   if (graceOutOfRange(times)) missing.add("grace_until");
 }

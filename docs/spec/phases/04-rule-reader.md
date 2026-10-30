@@ -18,7 +18,7 @@ A pasted chat becomes either one clarifying question, which the organizer can an
 ```text
 backend/src/integrations/llm/{client,extractPrompt}.ts
 backend/src/domain/{extraction,validateExtraction,money,time}.ts   pure, unit-tested (extraction.ts holds the zod schema)
-backend/src/services/{extract,confirm,aiBudget}.service.ts
+backend/src/services/{extract,confirm,aiBudget}.service.ts   (extract also reads clarify answers)
 backend/src/repositories/aiUsage.repo.ts
 backend/src/controllers/rules.controller.ts                 (create, clarify, confirm)
 backend/test/unit/validateExtraction.test.ts

@@ -1,8 +1,11 @@
 import { DateTime, IANAZone } from "luxon";
 import { AUTHORIZATION_WINDOW_DAYS } from "../shared/rules";
 
+/** The same shape the contracts table accepts for `timezone`, so a zone that passes here can always be stored. */
+const STORABLE_ZONE = /^[A-Za-z_]+(\/[A-Za-z0-9_+-]+)+$/;
+
 export function isValidZone(zone: string): boolean {
-  return IANAZone.isValidZone(zone);
+  return (zone === "UTC" || STORABLE_ZONE.test(zone)) && IANAZone.isValidZone(zone);
 }
 
 /** The reference time as the model sees it, for example "Sunday 1 November 2026, 12:00 PM PST". */

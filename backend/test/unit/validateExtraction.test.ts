@@ -307,7 +307,9 @@ describe("grace", () => {
   });
 
   it("accepts a person who is in the list, matching case-insensitively, and no one else", () => {
-    expect(check(reading({ grace_person_name: "maya shah" }), CABIN_CHAT).complete).toBe(true);
+    const spelled = check(reading({ grace_person_name: "maya shah" }), CABIN_CHAT);
+    expect(spelled.complete).toBe(true);
+    expect(spelled.extraction.grace_person_name).toBe("Maya Shah");
     const stranger = check(reading({ grace_person_name: "Noah Brooks" }), CABIN_CHAT);
     expect(stranger.extraction.missing).toEqual(["grace_person_name"]);
   });
@@ -338,5 +340,59 @@ describe("grace", () => {
     ]) {
       expect(check(reading({ grace_until }), CABIN_CHAT).extraction.missing).toContain("grace_until");
     }
+  });
+});
+
+describe("limits the database enforces", () => {
+  it("clears a title longer than 60 characters", () => {
+    const { extraction } = check(reading({ title: "x".repeat(61) }), CABIN_CHAT);
+    expect(extraction.title).toBeNull();
+    expect(extraction.missing).toContain("title");
+    expect(check(reading({ title: "x".repeat(60) }), CABIN_CHAT).complete).toBe(true);
+  });
+
+  it("asks again when a name is longer than 80 characters", () => {
+    const people = ["Alex Chen", "Sam Ortiz", "Jordan Lee", "M".repeat(81)];
+    const { extraction } = check(reading({ ...NO_GRACE, people }), CABIN_CHAT);
+    expect(extraction.missing).toEqual(["people"]);
+  });
+
+  it("clears a share above $10,000, and accepts exactly $10,000", () => {
+    const text = "Pay $10,001 each, or $10,000 each.";
+    const over = check(
+      reading({
+        ...NO_GRACE,
+        share_cents: 1_000_100,
+        total_cents: 4_000_400,
+        evidence: [{ field: "share_cents", quote: "$10,001 each" }],
+      }),
+      text,
+    );
+    expect(over.extraction).toMatchObject({ share_cents: null, total_cents: null });
+    const exact = check(
+      reading({
+        ...NO_GRACE,
+        share_cents: 1_000_000,
+        total_cents: 4_000_000,
+        evidence: [{ field: "share_cents", quote: "$10,000 each" }],
+      }),
+      text,
+    );
+    expect(exact.extraction).toMatchObject({ share_cents: 1_000_000, total_cents: 4_000_000 });
+  });
+
+  it("refuses a time zone the contracts table could not store", () => {
+    for (const timezone of ["EST5EDT", "Pacific", "America"]) {
+      expect(check(reading({ timezone }), CABIN_CHAT).extraction.timezone).toBeNull();
+    }
+    expect(
+      check(
+        reading({ timezone: "UTC", deadline_at: "2026-11-06T18:00:00", grace_until: "2026-11-09T18:00:00" }),
+        CABIN_CHAT,
+      ).complete,
+    ).toBe(true);
+    expect(
+      check(reading({ timezone: "America/Argentina/Buenos_Aires" }), CABIN_CHAT).extraction.timezone,
+    ).toBe("America/Argentina/Buenos_Aires");
   });
 });
