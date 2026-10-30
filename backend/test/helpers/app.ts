@@ -5,6 +5,7 @@ import { createApp } from "../../src/app";
 import { DEFAULT_LIMITS } from "../../src/http/middleware/rateLimit";
 import type { Limits } from "../../src/http/middleware/rateLimit";
 import { createLogger } from "../../src/observability/logger";
+import type { Notifier } from "../../src/realtime/notify";
 import type { Pools } from "./db";
 import { testEnv } from "./env";
 
@@ -21,7 +22,20 @@ const GENEROUS: Limits = {
   aiUserDay: { limit: 10_000, windowMs: 60_000 },
   aiIpMinute: { limit: 10_000, windowMs: 60_000 },
   aiIpDay: { limit: 10_000, windowMs: 60_000 },
+  createContract: { limit: 10_000, windowMs: 60_000 },
 };
+
+/** A notifier that remembers what it was told, so tests can check that events fire after a commit and only then. */
+export function recordingNotifier(): Notifier & { contractEvents: [string, number][] } {
+  const contractEvents: [string, number][] = [];
+  return {
+    contractEvents,
+    contractChanged: (contractId, version) => {
+      contractEvents.push([contractId, version]);
+    },
+    shareChanged: () => undefined,
+  };
+}
 
 export interface BuildOptions {
   env?: Record<string, string | undefined>;
@@ -29,6 +43,11 @@ export interface BuildOptions {
   limits?: Partial<Limits>;
   /** Use the real default limits instead of the generous test ones. */
   realLimits?: boolean;
+  /** Model calls go here instead of the network. */
+  llmFetch?: typeof fetch;
+  notifier?: Notifier;
+  /** "Now" for pasted text. */
+  now?: () => Date;
 }
 
 export function buildApp(pools: Pools, options: BuildOptions = {}): Express {
@@ -39,6 +58,9 @@ export function buildApp(pools: Pools, options: BuildOptions = {}): Express {
     pool: pools.app,
     logger,
     limits: { ...base, ...options.limits },
+    notifier: options.notifier ?? recordingNotifier(),
+    ...(options.llmFetch ? { llmFetch: options.llmFetch } : {}),
+    ...(options.now ? { now: options.now } : {}),
   });
 }
 

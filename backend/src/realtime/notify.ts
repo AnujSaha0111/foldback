@@ -10,6 +10,23 @@ export interface Notifier {
   shareChanged(shareId: string, contractId: string): void;
 }
 
+/**
+ * A notifier that can be handed to the services before the socket server exists. The HTTP app is built first and the
+ * socket server needs the HTTP server, so the two meet here: events before `bind` have nobody to tell, and are dropped.
+ */
+export function createDeferredNotifier(): { notifier: Notifier; bind(io: Server): void } {
+  let real: Notifier | null = null;
+  return {
+    notifier: {
+      contractChanged: (contractId, version) => real?.contractChanged(contractId, version),
+      shareChanged: (shareId, contractId) => real?.shareChanged(shareId, contractId),
+    },
+    bind: (io) => {
+      real = createNotifier(io);
+    },
+  };
+}
+
 export function createNotifier(io: Server): Notifier {
   return {
     contractChanged: (contractId, version) => {

@@ -19,3 +19,33 @@ export const MAX_HEADCOUNT = 4;
 export const AUTHORIZATION_WINDOW_DAYS = 29;
 
 export const DEFAULT_TIMEZONE = "America/Los_Angeles";
+
+/** The group chat from docs/spec/demo.md: the primary demo input and the "Use the sample cabin chat" text. */
+export const CABIN_CHAT_TEXT = [
+  "[Sun 1 Nov, 11:42] Alex Chen: ok the cabin is $320 for the weekend, owner wants the money by friday",
+  "[Sun 1 Nov, 11:43] Sam Ortiz: so $80 each if it's the four of us",
+  "[Sun 1 Nov, 11:43] Jordan Lee: I'm in",
+  "[Sun 1 Nov, 11:45] Maya Shah: I'm in but I don't get paid until monday",
+  "[Sun 1 Nov, 11:46] Alex Chen: Maya you can have until monday 6pm. everyone else by friday 6pm pacific. if we don't have all 4 the trip is off and nobody pays",
+  "[Sun 1 Nov, 11:47] Sam Ortiz: works for me",
+].join("\n");
+
+/** The moment the demo texts above were "pasted", so their weekday words resolve to the dates in the video. */
+export const FIXTURE_REFERENCE_AT = "2026-11-01T12:00:00-08:00";
+export const FIXTURE_TEXTS: readonly string[] = [CABIN_CHAT_TEXT, CABIN_RULE_TEXT, PRINT_RULE_TEXT];
+
+/** Input limits (docs/spec/ai.md) and the ceilings the database enforces. */
+export const MAX_RULE_TEXT_CHARS = 6000;
+export const MAX_CLARIFY_ANSWER_CHARS = 500;
+export const MAX_CLARIFY_ROUNDS = 3;
+export const MAX_SHARE_CENTS = 1_000_000;
+export const MAX_TITLE_CHARS = 60;
+export const MAX_NAME_CHARS = 80;
+
+/** One user may own this many plans of their own, and the demo holds this many in total (architecture.md). */
+export const MAX_CONTRACTS_PER_USER = 30;
+export const MAX_DEMO_CONTRACTS = 200;
+
+export const CLARIFY_FALLBACK_QUESTION =
+  "I could not read a complete rule. Restate the price, the people, and the deadline.";
+export const CLARIFY_LIMIT_MESSAGE = "Start a new rule with all the details in one message.";

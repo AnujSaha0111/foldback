@@ -102,3 +102,18 @@ export async function insertSeedShares(db: Db, contractId: string, shares: SeedS
   );
   /* eslint-enable no-restricted-syntax */
 }
+
+/** One `waiting` sandbox share per person, in the order written. The database checks each against the contract's terms. */
+export async function insertWaitingShares(
+  client: PoolClient,
+  contractId: string,
+  input: { people: string[]; amountCents: number; graceName: string | null },
+): Promise<void> {
+  for (const [index, name] of input.people.entries()) {
+    await client.query(
+      `INSERT INTO shares (id, contract_id, money_source, position, display_name, is_grace_subject, status, amount_cents)
+       VALUES ($1, $2, 'sandbox', $3, $4, $5, 'waiting', $6)`,
+      [newId("shr"), contractId, index + 1, name, name === input.graceName, input.amountCents],
+    );
+  }
+}

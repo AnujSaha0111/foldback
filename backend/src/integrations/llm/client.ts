@@ -33,6 +33,8 @@ export interface LlmDeps {
   /** Called after every attempt, successful or not. */
   record(attempt: UsedAttempt): Promise<void>;
   fetch?: typeof fetch;
+  /** Gives up on the whole chain after this long. Defaults to TOTAL_TIMEOUT_MS. */
+  totalTimeoutMs?: number;
 }
 
 export type LlmResult<T> =
@@ -41,6 +43,9 @@ export type LlmResult<T> =
 
 /** A single attempt that is given up on after this long, so one slow provider cannot hold a request. */
 const ATTEMPT_TIMEOUT_MS = 20_000;
+
+/** The whole chain, all attempts together. Kept under the 100 seconds after which the Cloudflare tunnel drops a request. */
+const TOTAL_TIMEOUT_MS = 60_000;
 
 interface ProviderConfig {
   baseUrl: string;
@@ -79,6 +84,11 @@ export function parseChain(chain: string): ChainEntry[] {
     const at = entry.indexOf(":");
     return { provider: entry.slice(0, at) as Provider, model: entry.slice(at + 1) };
   });
+}
+
+/** True when the chain has at least one provider with a key, so a call can be attempted at all. */
+export function hasUsableModel(env: Env): boolean {
+  return parseChain(env.LLM_CHAIN).some((entry) => PROVIDERS[entry.provider].apiKey(env) !== undefined);
 }
 
 function buildBody(entry: ChainEntry, request: JsonRequest): Record<string, unknown> {
@@ -135,6 +145,7 @@ async function attempt<T>(
   apiKey: string,
   request: JsonRequest,
   parse: (content: string) => T | null,
+  timeoutMs: number,
 ): Promise<AttemptOutcome<T>> {
   const started = Date.now();
   const used: UsedAttempt = { ...entry, inputTokens: 0, outputTokens: 0, succeeded: false };
@@ -144,7 +155,7 @@ async function attempt<T>(
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify(buildBody(entry, request)),
-      signal: AbortSignal.timeout(ATTEMPT_TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
     });
     const remaining = response.headers.get("x-ratelimit-remaining-requests");
     if (!response.ok) {
@@ -178,13 +189,23 @@ export async function callChain<T>(
   request: JsonRequest,
   parse: (content: string) => T | null,
 ): Promise<LlmResult<T>> {
+  const endsAt = Date.now() + (deps.totalTimeoutMs ?? TOTAL_TIMEOUT_MS);
   for (const entry of parseChain(deps.env.LLM_CHAIN)) {
     const apiKey = PROVIDERS[entry.provider].apiKey(deps.env);
     if (apiKey === undefined) continue;
+    const timeLeft = endsAt - Date.now();
+    if (timeLeft <= 0) break;
     const allowance = await deps.allow();
     if (allowance !== "ok") return { ok: false, reason: allowance };
 
-    const outcome = await attempt(deps, entry, apiKey, request, parse);
+    const outcome = await attempt(
+      deps,
+      entry,
+      apiKey,
+      request,
+      parse,
+      Math.min(ATTEMPT_TIMEOUT_MS, timeLeft),
+    );
     try {
       await deps.record(outcome.used);
     } catch (error) {

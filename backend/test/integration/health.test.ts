@@ -2,6 +2,7 @@ import { PassThrough } from "node:stream";
 import { Pool } from "pg";
 import request from "supertest";
 import { createApp } from "../../src/app";
+import { recordingNotifier } from "../helpers/app";
 import { createLogger } from "../../src/observability/logger";
 import { createPools, prepareDatabase } from "../helpers/db";
 import type { Pools } from "../helpers/db";
@@ -26,14 +27,18 @@ describe("health (test 16)", () => {
       connectionString: "postgres://x:x@127.0.0.1:1/none",
       connectionTimeoutMillis: 300,
     });
-    const res = await request(createApp({ env: testEnv(), pool: dead, logger })).get("/health/live");
+    const res = await request(
+      createApp({ env: testEnv(), pool: dead, logger, notifier: recordingNotifier() }),
+    ).get("/health/live");
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ status: "ok" });
     await dead.end();
   });
 
   it("ready is 200 when the database answers and migrations are current", async () => {
-    const res = await request(createApp({ env: testEnv(), pool: pools.app, logger })).get("/health/ready");
+    const res = await request(
+      createApp({ env: testEnv(), pool: pools.app, logger, notifier: recordingNotifier() }),
+    ).get("/health/ready");
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ status: "ok" });
   });
@@ -43,7 +48,9 @@ describe("health (test 16)", () => {
       connectionString: "postgres://x:x@127.0.0.1:1/none",
       connectionTimeoutMillis: 300,
     });
-    const res = await request(createApp({ env: testEnv(), pool: dead, logger })).get("/health/ready");
+    const res = await request(
+      createApp({ env: testEnv(), pool: dead, logger, notifier: recordingNotifier() }),
+    ).get("/health/ready");
     expect(res.status).toBe(503);
     expect(res.body).toEqual({ status: "unavailable" });
     await dead.end();
@@ -51,7 +58,9 @@ describe("health (test 16)", () => {
 
   it("/api/health reports the version, sandbox, and the AI calls left", async () => {
     const env = testEnv({ GIT_SHA: "abc1234", AI_DAILY_CALLS: "600", GROQ_API_KEY: "gsk_test" });
-    const res = await request(createApp({ env, pool: pools.app, logger })).get("/api/health");
+    const res = await request(createApp({ env, pool: pools.app, logger, notifier: recordingNotifier() })).get(
+      "/api/health",
+    );
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       ok: true,
@@ -65,16 +74,24 @@ describe("health (test 16)", () => {
 
   it("llm is false when AI_ENABLED=false or no key is set", async () => {
     const off = await request(
-      createApp({ env: testEnv({ AI_ENABLED: "false", GROQ_API_KEY: "k" }), pool: pools.app, logger }),
+      createApp({
+        env: testEnv({ AI_ENABLED: "false", GROQ_API_KEY: "k" }),
+        pool: pools.app,
+        logger,
+        notifier: recordingNotifier(),
+      }),
     ).get("/api/health");
-    const noKey = await request(createApp({ env: testEnv(), pool: pools.app, logger })).get("/api/health");
+    const noKey = await request(
+      createApp({ env: testEnv(), pool: pools.app, logger, notifier: recordingNotifier() }),
+    ).get("/api/health");
     expect((off.body as { llm: boolean }).llm).toBe(false);
     expect((noKey.body as { llm: boolean }).llm).toBe(false);
   });
 });
 
 describe("request handling", () => {
-  const app = (): ReturnType<typeof createApp> => createApp({ env: testEnv(), pool: pools.app, logger });
+  const app = (): ReturnType<typeof createApp> =>
+    createApp({ env: testEnv(), pool: pools.app, logger, notifier: recordingNotifier() });
 
   it("echoes a sane X-Request-Id and replaces a bad one", async () => {
     const kept = await request(app()).get("/health/live").set("X-Request-Id", "proxy-id-12345");
