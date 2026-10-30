@@ -3,11 +3,11 @@
 import { styled } from "@mui/material/styles";
 import type { CSSObject } from "@mui/material/styles";
 
-export const Root = styled("div")({ "& + &": { marginTop: "var(--s-5)" } });
+export const Root = styled("div")({ "& + &": { marginTop: "var(--s-3)" } });
 
 export const Label = styled("label")({
   display: "block",
-  marginBottom: "var(--s-2)",
+  marginBottom: "var(--s-1)",
   fontSize: "var(--fs-small)",
   fontWeight: 500,
   color: "var(--text)",
@@ -34,8 +34,8 @@ export const Control = styled("div")({
 const FILLED: CSSObject = {
   display: "block",
   width: "100%",
-  minHeight: "3rem",
-  padding: "var(--s-3) var(--s-4)",
+  minHeight: "2.75rem",
+  padding: "0.625rem var(--s-4)",
   border: 0,
   borderBottom: "1px solid var(--text-3)",
   background: "var(--layer)",

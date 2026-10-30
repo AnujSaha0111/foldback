@@ -63,7 +63,7 @@ export function SignupForm() {
         name="confirm"
         type="password"
         autoComplete="new-password"
-        help={mismatch ? "The passwords do not match." : "Type it again"}
+        help={mismatch ? "The passwords do not match." : undefined}
         aria-invalid={mismatch || undefined}
         maxLength={128}
         value={confirm}

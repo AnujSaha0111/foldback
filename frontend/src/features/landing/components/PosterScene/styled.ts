@@ -54,13 +54,18 @@ const Word = styled("span")({
 export const WordA = styled(Word)({
   top: "14%",
   color: "var(--paper)",
-  transform: "translateX(calc(-95% + var(--q) * 55%))",
+  // Half the phone's width plus a gap. "hold" slides in from the left and comes to rest just left of the phone,
+  // never behind it: white on the phone's light screen would vanish.
+  "--half": "9.75rem",
+  transform: "translateX(calc(-100% - var(--half) - (1 - var(--q)) * 45vw))",
+  "@media (max-width: 599px)": { "--half": "8.5rem" },
 });
 
 export const WordB = styled(Word)({
   // The gradient is clipped to the text box. This padding gives the tails of "p" and "y" room inside it, and
   // the matching `bottom` keeps the word where it was.
   paddingBottom: "0.22em",
+  paddingRight: "0.1em",
   bottom: "calc(10% - 0.22em)",
   zIndex: 2,
   backgroundImage: "var(--sun-grad)",

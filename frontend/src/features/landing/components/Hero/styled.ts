@@ -8,6 +8,8 @@ export const Root = styled("section")({
   position: "relative",
   isolation: "isolate",
   overflow: "hidden",
+  // Fills the first screen under the header, so the next (dark) section never shows at the foot.
+  minHeight: "calc(100svh - 5rem)",
   background: "var(--field-sky)",
   color: "var(--on-sky)",
 });
@@ -58,8 +60,11 @@ export const Word = styled("span")({
   display: "inline-block",
   overflow: "hidden",
   verticalAlign: "top",
+  // Room inside the mask for the tail of "y" and the right edge of "s", which the tight tracking pushes outside it.
   paddingBottom: "0.08em",
+  paddingRight: "0.06em",
   marginBottom: "-0.08em",
+  marginRight: "-0.06em",
   "& > span": {
     display: "inline-block",
     animation: "fb-word 1000ms var(--ease-out-expo) both",
@@ -95,7 +100,7 @@ export const Actions = styled("div")({
 
 export const Note = styled("p")({
   maxWidth: "36rem",
-  marginTop: "var(--s-3)",
+  marginTop: "var(--s-4)",
   fontSize: "var(--fs-small)",
   color: "rgba(0, 0, 0, 0.72)",
   ...enter(2),
@@ -107,7 +112,7 @@ export const Trust = styled("ul")({
   display: "flex",
   flexWrap: "wrap",
   gap: "var(--s-2) var(--s-5)",
-  marginTop: "var(--s-3)",
+  marginTop: "var(--s-5)",
   fontSize: "0.8125rem",
   color: "rgba(0, 0, 0, 0.78)",
   ...enter(3),

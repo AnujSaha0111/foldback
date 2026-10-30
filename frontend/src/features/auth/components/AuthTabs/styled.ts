@@ -5,7 +5,7 @@ import { styled } from "@mui/material/styles";
 export const Root = styled("nav")({
   display: "flex",
   gap: "var(--s-6)",
-  marginBottom: "var(--s-7)",
+  marginBottom: "var(--s-4)",
   borderBottom: "1px solid var(--line)",
   "& a": {
     position: "relative",
