@@ -3,9 +3,8 @@
 import { styled } from "@mui/material/styles";
 
 export const Root = styled("footer")({
-  borderTop: "1px solid var(--line)",
-  background: "var(--layer)",
-  color: "var(--text-2)",
+  background: "var(--navy)",
+  color: "var(--paper)",
   fontSize: "var(--fs-small)",
 });
 
@@ -13,8 +12,8 @@ export const Row = styled("div")({
   display: "flex",
   flexWrap: "wrap",
   alignItems: "center",
-  justifyContent: "space-between",
-  gap: "var(--s-4)",
-  minHeight: "4rem",
-  paddingBlock: "var(--s-3)",
+  gap: "var(--s-4) var(--s-5)",
+  paddingBlock: "var(--s-5)",
 });
+
+export const Note = styled("span")({ flex: "1 1 12rem" });

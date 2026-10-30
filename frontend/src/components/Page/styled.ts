@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import type { CSSObject } from "@mui/material/styles";
 
 export const Shell = styled("div")({
   display: "flex",
@@ -12,10 +13,36 @@ export const Shell = styled("div")({
 
 export const Main = styled("main")({ flex: 1 });
 
+export const Skip = styled("a")({
+  position: "absolute",
+  left: "var(--s-2)",
+  top: "-4rem",
+  zIndex: 50,
+  padding: "var(--s-3) var(--s-4)",
+  background: "var(--btn-bg)",
+  color: "var(--btn-fg)",
+  "&:focus": { top: "var(--s-2)" },
+});
+
 /** Content column. Sections that want a full-width colour band wrap their own `Inner` in a band. */
 export const Inner = styled("div")({
   width: "100%",
-  maxWidth: "82rem",
+  maxWidth: "80rem",
   marginInline: "auto",
   paddingInline: "var(--gutter)",
 });
+
+/**
+ * Black controls on a sky band, in both themes. Sky stays sky in dark mode, so the tokens are set back to their light
+ * values inside it, and the buttons need no special case.
+ */
+export const onSky: CSSObject = {
+  color: "var(--on-sky)",
+  "--text": "var(--ink)",
+  "--bg": "var(--paper)",
+  "--link": "var(--ink)",
+  "--btn-bg": "var(--ink)",
+  "--btn-fg": "var(--paper)",
+  "--btn-hover": "#393939",
+  "& [data-variant='link']": { paddingInline: "var(--s-2)", textDecoration: "underline" },
+};

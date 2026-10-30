@@ -21,8 +21,7 @@ const mono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: { default: "Foldback", template: "%s · Foldback" },
-  description:
-    "Nobody pays unless the group makes it. Each friend's share is a PayPal hold, kept only if everyone shows.",
+  description: "Group payments as PayPal holds. Captured if everyone joins by the deadline, released if not.",
 };
 
 export const viewport: Viewport = {

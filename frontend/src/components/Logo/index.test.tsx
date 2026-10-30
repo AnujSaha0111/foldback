@@ -14,8 +14,8 @@ describe("Logo", () => {
     expect(logo.querySelectorAll('[aria-hidden="true"]')).toHaveLength(2);
   });
 
-  it("can be sized", () => {
-    render(<Logo fontSize="3rem" />);
-    expect(screen.getByRole("img", { name: "Foldback" })).toHaveStyle({ fontSize: "3rem" });
+  it("is a link home when given a href", () => {
+    render(<Logo href="/" />);
+    expect(screen.getByRole("link", { name: "Foldback home" })).toHaveAttribute("href", "/");
   });
 });

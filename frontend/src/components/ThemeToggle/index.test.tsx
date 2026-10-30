@@ -4,28 +4,27 @@ import { makeStore } from "@/store";
 import { selectThemeMode } from "@/store/themeSlice";
 import { ThemeToggle } from "./index";
 
+function mount() {
+  const store = makeStore();
+  render(
+    <Provider store={store}>
+      <ThemeToggle />
+    </Provider>,
+  );
+  return store;
+}
+
 describe("ThemeToggle", () => {
-  it("is a labelled switch that starts off, because light is the default", () => {
-    render(
-      <Provider store={makeStore()}>
-        <ThemeToggle />
-      </Provider>,
-    );
-    expect(screen.getByRole("switch", { name: "Dark theme" })).toHaveAttribute("aria-checked", "false");
+  it("offers the dark theme first, because light is the default", () => {
+    mount();
+    expect(screen.getByRole("button", { name: "Dark theme" })).toBeInTheDocument();
   });
 
-  it("flips the theme in the store when pressed", () => {
-    const store = makeStore();
-    render(
-      <Provider store={store}>
-        <ThemeToggle />
-      </Provider>,
-    );
-    const toggle = screen.getByRole("switch", { name: "Dark theme" });
-    fireEvent.click(toggle);
+  it("flips the theme in the store and renames itself", () => {
+    const store = mount();
+    fireEvent.click(screen.getByRole("button", { name: "Dark theme" }));
     expect(selectThemeMode(store.getState())).toBe("dark");
-    expect(toggle).toHaveAttribute("aria-checked", "true");
-    fireEvent.click(toggle);
+    fireEvent.click(screen.getByRole("button", { name: "Light theme" }));
     expect(selectThemeMode(store.getState())).toBe("light");
   });
 });
