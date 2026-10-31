@@ -22,7 +22,7 @@ Rules that hold whatever the visual design:
 
 Organizer routes redirect to `/login?next=…` on `401`. A Next.js proxy (`src/proxy.ts`, the Next 16 name for middleware) checks only that the `fb_session` cookie exists; the API is the real authority.
 
-App header on organizer screens: `Foldback`, the tagline `Nobody pays unless the group makes it.`, the user's name (with a `Guest · expires in N days` chip for guests), `Reset demo data`, and `Sign out`.
+App header on organizer screens: `Foldback`, the tagline `Nobody pays unless the group makes it.`, the user's name (with a `Guest, expires in N days` chip for guests), `Reset demo data`, and `Sign out`.
 
 ## 0. Landing, sign-in, sign-up
 
@@ -158,6 +158,10 @@ Approved in phase 2, redesigned on 30 October 2026 to add warmth and depth. The 
 **Direction.** IBM Carbon's structure (hairline rules, flat layers, filled inputs with a bottom rule, status as words) with PayPal's color and tone (sky blue, black, plain trust copy). No template and no copied code: built from scratch, inspired by ibm.com, IBM Quantum and paypal.com. Reference screenshots are not committed (third-party material).
 
 **Rules.** Buttons, inputs and other controls are square. Panels have an 8 px radius and tags 3 px. The logo and the folded blocks stay sharp, because the fold is the brand. Panels are frosted glass (`.glass`), which needs colour behind it, so it sits on the sky hero or on the soft light behind the working screens, and it falls back to solid where blur is missing or `prefers-reduced-transparency` is set. One soft shadow, on floating panels only. One gradient, the orange one. No purple, emoji, serif, eyebrow labels, rounded icon boxes, or rows of identical feature cards. Real copy first. Plex Sans and Plex Mono only (the Plex Serif family is never loaded).
+
+**Header and hero.** The header is a frosted bar floating over the page, 12 px from the top, on every page that has one. The landing hero runs up under it. Hero text sits on the left; the holds panel sits on the right with the two main buttons and the guest note in its foot.
+
+**Phone scene.** Wide screens: "hold" left of the phone, the two lines beside it. Under 900 px there is no room beside it, so "hold" sits centered above the phone, "don't pay" below it, and the two lines sit side by side at the foot, keeping their white and sun colours.
 
 **Spacing.** Keep padding and gaps small: big values look generated. Most gaps use `--s-3` to `--s-5`; `--s-7` to `--s-9` are for rare, large separations, and section padding stays at or under about 4.5 rem. The landing hero fills the first screen under the header and shows its buttons and trust line without scrolling, and sign-in and create account show all their content in the first screen at 100% zoom (only the footer, with the theme toggle, may sit below the fold). Check every new screen at 1280 × 720.
 

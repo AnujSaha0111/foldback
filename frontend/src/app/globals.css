@@ -16,6 +16,7 @@
 }
 
 html {
+  overflow-x: clip;
   -webkit-text-size-adjust: 100%;
   /* The sticky header must not cover a link's target or a focused control. */
   scroll-padding-top: 5rem;
@@ -29,7 +30,7 @@ html {
 
 ::selection {
   background: var(--sky-200);
-  color: #161616;
+  color: var(--selection-text);
 }
 
 /* Scrollbars: thin, square, no arrow buttons. The thumb is a bar inset in a ruled track and turns sun on hover. */

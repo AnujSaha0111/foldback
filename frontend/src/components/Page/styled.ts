@@ -44,5 +44,10 @@ export const onSky: CSSObject = {
   "--btn-bg": "var(--ink)",
   "--btn-fg": "var(--paper)",
   "--btn-hover": "#393939",
+  "--text-2": "#525252",
+  "--text-3": "#6f6f6f",
+  "--line": "#e0e0e0",
+  "--glass-bg": "rgba(255, 255, 255, 0.62)",
+  "--glass-line": "rgba(255, 255, 255, 0.72)",
   "& [data-variant='link']": { paddingInline: "var(--s-2)", textDecoration: "underline" },
 };

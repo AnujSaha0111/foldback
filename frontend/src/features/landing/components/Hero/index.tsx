@@ -35,18 +35,6 @@ export function Hero() {
             Everyone authorizes a PayPal hold for their share. If the headcount is met by the deadline,
             Foldback captures every hold. If not, it releases them all.
           </Lead>
-          <Actions>
-            <GuestButton variant="sun" />
-            <ButtonLink href="/login" variant="secondary" arrow={false}>
-              Sign in
-            </ButtonLink>
-          </Actions>
-          <Note>
-            {GUEST_NOTE} New here? <Link href="/signup">Create account</Link>
-          </Note>
-        </Copy>
-        <Aside>
-          <LiveHolds />
           <Trust aria-label="How your money is treated">
             {TRUST.map((item) => (
               <li key={item.text}>
@@ -57,6 +45,19 @@ export function Hero() {
               </li>
             ))}
           </Trust>
+        </Copy>
+        <Aside>
+          <LiveHolds>
+            <Actions>
+              <GuestButton variant="sun" />
+              <ButtonLink href="/login" variant="secondary" arrow={false}>
+                Sign in
+              </ButtonLink>
+            </Actions>
+            <Note>
+              {GUEST_NOTE} New here? <Link href="/signup">Create account</Link>
+            </Note>
+          </LiveHolds>
         </Aside>
       </Grid>
     </Root>

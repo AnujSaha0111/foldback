@@ -10,6 +10,8 @@ import { ScrollScene } from "@/components/ScrollScene";
  * peeks in (p 0.08) and is done a little before the stage unpins (p 0.58). Without JS or under reduced motion `--p`
  * stays at its default and the scene rests in its composed, held state.
  */
+const NARROW = "@media (max-width: 899px)";
+
 export const Root = styled(ScrollScene)({
   "--p": 0.75,
   "--q": "clamp(0, calc((var(--p) - 0.08) / 0.5), 1)",
@@ -32,6 +34,7 @@ export const Stage = styled("div")({
   placeItems: "center",
   // Keeps the phone above the caption line instead of centered over it.
   paddingBottom: "9svh",
+  [NARROW]: { paddingBottom: "4svh" },
 });
 
 export const Words = styled("h2")({
@@ -58,7 +61,11 @@ export const WordA = styled(Word)({
   // never behind it: white on the phone's light screen would vanish.
   "--half": "calc(9.125 * min(1rem, 1.8svh) + 1rem)",
   transform: "translateX(calc(-100% - var(--half) - (1 - var(--q)) * 45vw))",
-  "@media (max-width: 599px)": { "--half": "calc(9.125 * min(0.86rem, 1.8svh) + 0.75rem)" },
+  // No room beside the phone: "hold" rests centered above it, under the header.
+  [NARROW]: {
+    top: "calc(var(--header-h) + var(--s-1))",
+    transform: "translateX(calc(-50% - (1 - var(--q)) * 45vw))",
+  },
 });
 
 export const WordB = styled(Word)({
@@ -73,10 +80,19 @@ export const WordB = styled(Word)({
   backgroundClip: "text",
   color: "transparent",
   transform: "translateX(calc(-5% - var(--q) * 55%))",
+  // Clears the two lines at the foot, and rests centered.
+  [NARROW]: {
+    bottom: "calc(7.5rem - 0.22em)",
+    transform: "translateX(calc(-50% + (1 - var(--q)) * 45%))",
+  },
 });
 
-/** A line beside the phone, mid-height between the two big words. It fades and rises in as the phone turns. */
+/**
+ * A line beside the phone, mid-height between the two big words. It fades and rises in as the phone turns. Narrow
+ * screens have no room beside the phone, so the two lines sit side by side at the foot, still left and right.
+ */
 const Side = styled("p")({
+  "--edge": "clamp(1rem, 4vw, 5rem)",
   position: "absolute",
   top: "44%",
   zIndex: 3,
@@ -85,33 +101,22 @@ const Side = styled("p")({
   lineHeight: 1.4,
   opacity: "calc(var(--q) * 1.6 - 0.4)",
   transform: "translateY(calc((1 - var(--q)) * 16px))",
-  // Narrow screens have no room beside the phone: the line moves to the foot on a dark chip, and the other is dropped.
-  "@media (max-width: 899px)": { display: "none" },
+  [NARROW]: {
+    top: "auto",
+    bottom: "var(--s-3)",
+    maxWidth: "calc(50% - var(--edge) - var(--s-2))",
+    fontSize: "var(--fs-small)",
+  },
 });
 
 export const Caption = styled(Side)({
-  left: "clamp(1rem, 4vw, 5rem)",
+  left: "var(--edge)",
   color: "rgba(255, 255, 255, 0.86)",
-  "@media (max-width: 899px)": {
-    display: "block",
-    top: "auto",
-    bottom: "3%",
-    left: "50%",
-    width: "max-content",
-    maxWidth: "min(36rem, calc(100% - 2 * var(--gutter)))",
-    padding: "0.5rem 1rem",
-    transform: "translateX(-50%)",
-    textAlign: "center",
-    fontSize: "var(--fs-small)",
-    color: "#fff",
-    background: "rgba(2, 17, 66, 0.82)",
-    backdropFilter: "blur(10px)",
-  },
 });
 
 /** The other side, in the sun colour: what happens to the holds. */
 export const Outcome = styled(Side)({
-  right: "clamp(1rem, 4vw, 5rem)",
+  right: "var(--edge)",
   textAlign: "right",
   color: "var(--sun)",
 });

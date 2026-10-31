@@ -31,18 +31,18 @@ export const Toggle = styled("button")({
   "&[aria-expanded='true'] span::before": { transform: "translateY(-6px) rotate(-90deg)" },
 });
 
-/** On phones the menu wipes down as a frosted sheet (and closes at once); on desktop it is the inline nav. */
+/** On phones the menu wipes down as a solid panel (and closes at once); on desktop it is the inline nav. */
 export const Menu = styled("nav")({
   display: "none",
   position: "absolute",
   left: 0,
   right: 0,
-  top: "100%",
-  padding: "var(--s-3) var(--gutter) var(--s-6)",
-  borderBottom: "1px solid var(--line-soft)",
-  background: "var(--glass-nav)",
-  WebkitBackdropFilter: "var(--glass-blur)",
-  backdropFilter: "var(--glass-blur)",
+  top: "calc(100% + var(--s-2))",
+  padding: "var(--s-3) var(--s-4) var(--s-5)",
+  border: "1px solid var(--line-soft)",
+  borderRadius: "var(--r-panel)",
+  boxShadow: "var(--shadow-2)",
+  background: "var(--bg)",
   "&[data-open='true']": { display: "block", animation: "fb-sheet var(--d-4) var(--ease-drawer) both" },
   [DESKTOP]: {
     display: "flex",
@@ -52,8 +52,8 @@ export const Menu = styled("nav")({
     justifyContent: "space-between",
     padding: 0,
     border: 0,
+    boxShadow: "none",
     background: "transparent",
-    backdropFilter: "none",
     animation: "none",
   },
 });
@@ -73,7 +73,7 @@ export const Links = styled("ul")({
   [DESKTOP]: {
     display: "flex",
     gap: "var(--s-6)",
-    marginLeft: "var(--s-6)",
+    marginInline: "auto",
     "& a::after": {
       content: '""',
       position: "absolute",

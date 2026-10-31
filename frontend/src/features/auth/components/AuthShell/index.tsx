@@ -58,7 +58,7 @@ export function AuthShell({ children }: AuthShellProps) {
                 <i />
                 <i />
               </span>
-              3 of 4 held · $240.00 of $320.00
+              3 of 4 held, $240.00 of $320.00
             </CardSum>
           </Card>
         </Panel>

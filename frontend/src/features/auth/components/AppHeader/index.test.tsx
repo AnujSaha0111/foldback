@@ -46,13 +46,13 @@ describe("AppHeader", () => {
   it("shows how long a guest has left", () => {
     const expires_at = new Date(Date.now() + 6.5 * 86_400_000).toISOString();
     mount({ data: { display_name: "Guest 1", expires_at } });
-    expect(screen.getByText("Guest · expires in 7 days")).toBeInTheDocument();
+    expect(screen.getByText("Guest, expires in 7 days")).toBeInTheDocument();
   });
 
   it("says day for the last day", () => {
     const expires_at = new Date(Date.now() + 3_600_000).toISOString();
     mount({ data: { display_name: "Guest 1", expires_at } });
-    expect(screen.getByText("Guest · expires in 1 day")).toBeInTheDocument();
+    expect(screen.getByText("Guest, expires in 1 day")).toBeInTheDocument();
   });
 
   it("sends a stale session to sign in and remembers the page", () => {

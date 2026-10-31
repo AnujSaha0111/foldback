@@ -9,9 +9,12 @@ export const Root = styled("section")({
   position: "relative",
   isolation: "isolate",
   overflow: "hidden",
-  // Reaches the foot of the first screen, so the next (dark) section never shows there. The header is never shorter
-  // than 3.5 rem, so this is never too short.
-  minHeight: "calc(100svh - 3.5rem)",
+  display: "grid",
+  alignItems: "center",
+  // Runs up under the floating header, so the sky fills the gap around it, and reaches the foot of the first screen,
+  // so the next (dark) section never shows there.
+  marginTop: "calc(var(--header-h) * -1)",
+  minHeight: "100svh",
   background: "var(--field-sky)",
   color: "var(--on-sky)",
 });
@@ -37,23 +40,18 @@ export const Grid = styled(Inner)({
   display: "grid",
   gridTemplateColumns: "minmax(0, 1fr)",
   gap: "var(--s-7)",
-  alignItems: "start",
-  // Tight on top so the whole first screen, buttons and trust line included, fits at 100% zoom.
-  paddingBlock: "clamp(1.25rem, 0.5rem + 2.2vw, 2.25rem) clamp(2rem, 1rem + 3vw, 3.5rem)",
+  alignItems: "center",
+  // Clears the header, tight enough that the whole first screen, buttons included, fits at 100% zoom.
+  paddingBlock: "calc(var(--header-h) + var(--s-4)) var(--s-6)",
   "@media (min-width: 1024px)": { gridTemplateColumns: "minmax(0, 1.08fr) minmax(0, 1fr)" },
 });
 
 export const Copy = styled("div")(onSky);
 
-/** The panel and the trust line under it, so the line reads as the panel's caption. */
-export const Aside = styled("div")({
-  ...onSky,
-  // Centered in the right column, level with the middle of the copy beside it.
-  "@media (min-width: 1024px)": { alignSelf: "center" },
-});
+export const Aside = styled("div")(onSky);
 
 export const Title = styled("h1")({
-  maxWidth: "11ch",
+  maxWidth: "13ch",
   fontSize: "clamp(2.5rem, 1.4rem + 4vw, 4.5rem)",
   fontWeight: 600,
   letterSpacing: "-0.038em",
@@ -97,31 +95,27 @@ export const Actions = styled("div")({
   flexWrap: "wrap",
   alignItems: "center",
   gap: "var(--s-3)",
-  marginTop: "var(--s-5)",
-  ...enter(1),
   "& > div": { display: "contents" },
   "& button, & a": { minHeight: "3.25rem", paddingInline: "var(--s-6)", fontSize: "1rem" },
-  "@media (max-width: 599px)": { "& button, & a": { flex: "1 1 100%" } },
+  "& button": { flex: 1 },
 });
 
 export const Note = styled("p")({
-  maxWidth: "36rem",
-  marginTop: "1.25rem",
-  fontSize: "var(--fs-small)",
-  color: "rgba(0, 0, 0, 0.72)",
-  ...enter(2),
-  "& a": { color: "#000", fontWeight: 500, textDecorationColor: "rgba(0, 0, 0, 0.35)" },
-  [HOVER]: { "& a:hover": { textDecorationColor: "#000" } },
+  marginTop: "var(--s-3)",
+  fontSize: "var(--fs-caption)",
+  color: "var(--text-2)",
+  "& a": { color: "var(--text)", fontWeight: 500, textDecorationColor: "var(--line)" },
+  [HOVER]: { "& a:hover": { textDecorationColor: "var(--text)" } },
 });
 
 export const Trust = styled("ul")({
-  display: "flex",
-  flexWrap: "wrap",
-  gap: "var(--s-2) var(--s-5)",
+  display: "grid",
+  gap: "var(--s-2)",
   marginTop: "var(--s-5)",
-  fontSize: "0.8125rem",
+  fontSize: "var(--fs-small)",
+  fontWeight: 500,
   color: "rgba(0, 0, 0, 0.78)",
-  ...enter(3),
-  "& li": { display: "inline-flex", alignItems: "center", gap: "var(--s-2)" },
-  "& svg": { width: "15px", height: "15px", fill: "none", stroke: "currentColor", strokeWidth: 1.8 },
+  ...enter(1),
+  "& li": { display: "flex", alignItems: "center", gap: "var(--s-2)" },
+  "& svg": { width: "16px", height: "16px", fill: "none", stroke: "currentColor", strokeWidth: 1.8 },
 });

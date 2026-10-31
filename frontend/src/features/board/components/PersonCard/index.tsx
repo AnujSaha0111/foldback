@@ -82,7 +82,7 @@ function Details({ share, timeZone, graceUntil }: DetailsProps) {
             {copied ? "Copied" : "Copy pay link"}
           </Button>
           <ButtonLink href={share.pay_path} variant="secondary" small arrow={false}>
-            Open pay link ↗
+            Open pay link
           </ButtonLink>
         </Actions>
       ) : null}

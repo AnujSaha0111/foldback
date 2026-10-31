@@ -5,7 +5,7 @@ import { SAMPLE } from "../../sample";
 import { Muted, Section, Split } from "../../styled";
 import { Bar, Grid, HeadCell, Marker, Name, Root, Stage, Track } from "./styled";
 
-// Three columns: Fri 6, Sat 7 – Sun 8, Mon 9. The deadline is 6pm Friday, Maya's grace 6pm Monday.
+// Three columns: Fri 6, Sat 7 to Sun 8, Mon 9. The deadline is 6pm Friday, Maya's grace 6pm Monday.
 const DEADLINE = 0.25;
 const GRACE = 0.91;
 const pct = (fraction: number) => `${(fraction * 100).toFixed(2)}%`;
@@ -31,7 +31,7 @@ export function BoardPeek() {
               <Grid>
                 <HeadCell>Person</HeadCell>
                 <HeadCell>Fri 6</HeadCell>
-                <HeadCell>Sat 7 – Sun 8</HeadCell>
+                <HeadCell>Sat 7 to Sun 8</HeadCell>
                 <HeadCell>Mon 9</HeadCell>
                 {SAMPLE.people.map((person, index) => {
                   const view = SHARE_STATUS_VIEW[person.holds ? "held" : "waiting"];

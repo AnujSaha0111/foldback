@@ -33,7 +33,8 @@ const Phone = styled("div")({
   },
   "&::before": { left: "-0.125em", top: "22%", height: "8%", boxShadow: "0 3.375em 0 #55555a" },
   "&::after": { right: "-0.125em", top: "27%", height: "13%" },
-  "@media (max-width: 599px)": { fontSize: "min(0.86rem, 1.8svh)" },
+  // Narrow screens stack "hold" above and two lines of text below, so the phone gets less of the height.
+  "@media (max-width: 899px)": { fontSize: "min(1rem, 1.5svh)" },
 });
 
 const Bezel = styled("div")({

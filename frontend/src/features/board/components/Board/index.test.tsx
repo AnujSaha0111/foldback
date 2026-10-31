@@ -77,7 +77,7 @@ describe("Board", () => {
     answer({ data });
     render(<Board id="con_1" />);
     expect(screen.getByText("No hold yet")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open pay link ↗" })).toHaveAttribute("href", "/pay/shr_m");
+    expect(screen.getByRole("link", { name: "Open pay link" })).toHaveAttribute("href", "/pay/shr_m");
   });
 
   it("shows the person picked on the board", () => {

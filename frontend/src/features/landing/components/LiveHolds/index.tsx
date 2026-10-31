@@ -1,22 +1,27 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Avatar } from "@/components/Avatar";
 import { StatusTag } from "@/components/StatusTag";
 import { formatMoment, formatMoney } from "@/lib/format";
 import { CONTRACT_STATUS_VIEW, SHARE_STATUS_VIEW } from "@/lib/status";
 import { SAMPLE } from "../../sample";
 import { useLean } from "./useLean";
-import { Amount, Caption, Head, Meter, Root, Row, Small, Squares, Sum, ToGo, Wrap } from "./styled";
+import { Amount, Caption, Foot, Head, Meter, Root, Row, Small, Squares, Sum, ToGo, Wrap } from "./styled";
 
 const FIRST_HOLD_MS = 900;
 const BETWEEN_HOLDS_MS = 700;
 const PAYERS = SAMPLE.people.filter((person) => person.holds).length;
 const TOTAL = SAMPLE.shareCents * SAMPLE.people.length;
 
+interface LiveHoldsProps {
+  /** The real actions, at the foot of the panel, outside the labelled example. */
+  children: ReactNode;
+}
+
 /** The hero panel: holds arrive one by one on load. Under reduced motion they are all in from the start. */
-export function LiveHolds() {
+export function LiveHolds({ children }: LiveHoldsProps) {
   const [held, setHeld] = useState(0);
   // Bumped by Replay, which plays the arrivals again from nobody held.
   const [run, setRun] = useState(0);
@@ -41,49 +46,46 @@ export function LiveHolds() {
 
   return (
     <Wrap>
-      <Root
-        ref={ref}
-        role="group"
-        aria-label={`Example: ${SAMPLE.title} plan`}
-        onPointerMove={lean}
-        onPointerLeave={settle}
-      >
-        <Head>
-          <strong>
-            {SAMPLE.title}
-            <StatusTag view={CONTRACT_STATUS_VIEW.active} live />
-          </strong>
-          <Small>Deadline {formatMoment(SAMPLE.deadline, SAMPLE.timeZone, true)}</Small>
-        </Head>
-        {SAMPLE.people.map((person, index) => (
-          <Row key={person.name}>
-            <Avatar name={person.name} />
+      <Root ref={ref} onPointerMove={lean} onPointerLeave={settle}>
+        <div role="group" aria-label={`Example: ${SAMPLE.title} plan`}>
+          <Head>
+            <strong>
+              {SAMPLE.title}
+              <StatusTag view={CONTRACT_STATUS_VIEW.active} live />
+            </strong>
+            <Small>Deadline {formatMoment(SAMPLE.deadline, SAMPLE.timeZone, true)}</Small>
+          </Head>
+          {SAMPLE.people.map((person, index) => (
+            <Row key={person.name}>
+              <Avatar name={person.name} />
+              <span>
+                {person.name} {person.note ? <Small>{person.note}</Small> : null}
+              </span>
+              <span>
+                <StatusTag view={SHARE_STATUS_VIEW[index < held ? "held" : "waiting"]} />
+              </span>
+              <Amount>{formatMoney(SAMPLE.shareCents)}</Amount>
+            </Row>
+          ))}
+          <Sum>
             <span>
-              {person.name} {person.note ? <Small>{person.note}</Small> : null}
+              <Squares aria-hidden="true">
+                {SAMPLE.people.map((person, index) => (
+                  <i key={person.name} data-on={index < held} />
+                ))}
+              </Squares>
+              {held} of {SAMPLE.people.length} held
             </span>
-            <span>
-              <StatusTag view={SHARE_STATUS_VIEW[index < held ? "held" : "waiting"]} />
-            </span>
-            <Amount>{formatMoney(SAMPLE.shareCents)}</Amount>
-          </Row>
-        ))}
-        <Sum>
-          <span>
-            <Squares aria-hidden="true">
-              {SAMPLE.people.map((person, index) => (
-                <i key={person.name} data-on={index < held} />
-              ))}
-            </Squares>
-            {held} of {SAMPLE.people.length} held
-          </span>
-          {held === PAYERS ? <ToGo>{open} to go</ToGo> : null}
-          <Amount>
-            {formatMoney(held * SAMPLE.shareCents)} of {formatMoney(TOTAL)}
-          </Amount>
-          <Meter aria-hidden="true" style={{ "--v": held / SAMPLE.people.length } as CSSProperties}>
-            <i />
-          </Meter>
-        </Sum>
+            {held === PAYERS ? <ToGo>{open} to go</ToGo> : null}
+            <Amount>
+              {formatMoney(held * SAMPLE.shareCents)} of {formatMoney(TOTAL)}
+            </Amount>
+            <Meter aria-hidden="true" style={{ "--v": held / SAMPLE.people.length } as CSSProperties}>
+              <i />
+            </Meter>
+          </Sum>
+        </div>
+        <Foot>{children}</Foot>
       </Root>
       <Caption>
         <span>Sample plan. Holds arrive as friends approve on their phones.</span>
