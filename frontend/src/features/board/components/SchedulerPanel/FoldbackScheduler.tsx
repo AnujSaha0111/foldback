@@ -109,6 +109,8 @@ export default function FoldbackScheduler({ projection, onSelect }: FoldbackSche
         viewPreset={VIEW_PRESET}
         fillTicks
         readOnly
+        // Without this Bryntum fetches Font Awesome from a CDN at runtime. The board shows no icons.
+        detectCSSCompatibilityIssues={false}
         zoomOnMouseWheel={false}
         rowHeight={ROW_HEIGHT}
         autoHeight
