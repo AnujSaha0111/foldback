@@ -31,5 +31,13 @@ export const SHARE_STATUSES = [
 ] as const;
 export type ShareStatus = (typeof SHARE_STATUSES)[number];
 
+/** Shares whose hold is in place or already acted on, so they count toward "held so far". */
+export const HOLDING_SHARE_STATUSES: readonly ShareStatus[] = [
+  "held",
+  "kept",
+  "capture_unknown",
+  "capture_failed",
+];
+
 export type Direction = "keep" | "release";
 export type MoneySource = "sample" | "sandbox";

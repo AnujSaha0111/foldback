@@ -64,13 +64,13 @@ export const Frame = styled("div")({
 });
 
 /** Holds the board's place while the Bryntum chunk loads, so the page does not jump. */
-export const Skeleton = styled("div")({
+export const Placeholder = styled("div")({
+  display: "grid",
+  placeItems: "center",
   height: "20rem",
   border: "1px solid var(--line)",
   borderRadius: "var(--r-panel)",
-  background:
-    "linear-gradient(90deg, var(--layer-hover) 0%, var(--bg-subtle) 50%, var(--layer-hover) 100%) 0 0 / 200% 100%",
-  animation: "fb-shimmer 1.6s linear infinite",
+  background: "var(--bg)",
 });
 
 export const Caption = styled("div")({

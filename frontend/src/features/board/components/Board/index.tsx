@@ -11,9 +11,10 @@ import { Loading } from "@/components/Spinner";
 import { Squares } from "@/components/Squares";
 import { StatusTag } from "@/components/StatusTag";
 import { formatMoment, formatMoney } from "@/lib/format";
-import { CONTRACT_STATUS_VIEW, HOLDING_SHARE_STATUSES } from "@/lib/status";
+import { CONTRACT_STATUS_VIEW } from "@/lib/status";
 import { useContractLive } from "@/sockets/useContractLive";
 import type { ApiContract, ApiShare } from "@/types/generated/api-types";
+import { HOLDING_SHARE_STATUSES } from "@/types/generated/statuses";
 import { PersonCard } from "../PersonCard";
 import { SchedulerPanel } from "../SchedulerPanel";
 import { Back, Head, Layout, Meter, Reason, Stat, Stats, Urgent } from "./styled";
@@ -80,7 +81,7 @@ function Numbers({
   shares: ApiShare[];
   timeZone: string;
 }) {
-  const held = shares.filter((share) => HOLDING_SHARE_STATUSES.has(share.status));
+  const held = shares.filter((share) => HOLDING_SHARE_STATUSES.includes(share.status));
   const total = contract.total_cents ?? shares.reduce((sum, share) => sum + share.amount_cents, 0);
   const heldCents = held.reduce((sum, share) => sum + share.amount_cents, 0);
   const extra = contract.kept_count

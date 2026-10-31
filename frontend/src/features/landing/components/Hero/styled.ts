@@ -73,14 +73,14 @@ export const Word = styled("span")({
   marginRight: "-0.06em",
   "& > span": {
     display: "inline-block",
-    animation: "fb-word 1000ms var(--ease-out-expo) both",
-    animationDelay: "calc(120ms + var(--i) * 55ms)",
+    animation: "fb-word 1800ms var(--ease-out-expo) both",
+    animationDelay: "calc(150ms + var(--i) * 120ms)",
   },
 });
 
 const enter = (step: number) => ({
   animation: "fb-rise var(--d-5) var(--ease-out-quart) both",
-  animationDelay: `${420 + step * 70}ms`,
+  animationDelay: `${900 + step * 120}ms`,
 });
 
 export const Lead = styled("p")({

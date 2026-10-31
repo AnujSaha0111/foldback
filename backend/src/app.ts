@@ -10,6 +10,7 @@ import { createContractsController } from "./controllers/contracts.controller";
 import { createRulesController } from "./controllers/rules.controller";
 import { createDemoController } from "./controllers/demo.controller";
 import { createHealthController } from "./controllers/health.controller";
+import { createSharesController } from "./controllers/shares.controller";
 import { requireUser } from "./http/middleware/auth";
 import { errorHandler, notFoundHandler } from "./http/middleware/errorHandler";
 import { originCheck } from "./http/middleware/originCheck";
@@ -21,6 +22,7 @@ import type { Logger } from "./observability/logger";
 import type { Notifier } from "./realtime/notify";
 import { authRoutes } from "./routes/auth.routes";
 import { contractsRoutes } from "./routes/contracts.routes";
+import { sharesRoutes } from "./routes/shares.routes";
 import { demoRoutes } from "./routes/demo.routes";
 import { healthRoutes } from "./routes/health.routes";
 import { createAiBudget } from "./services/aiBudget.service";
@@ -84,6 +86,8 @@ export function createApp({
       guard,
     ),
   );
+
+  app.use("/api/shares", sharesRoutes(createSharesController(pool)));
 
   app.use(notFoundHandler);
   app.use(errorHandler(logger));

@@ -15,10 +15,10 @@ const answer = (state: object) =>
   jest.mocked(useGetSchedulerQuery).mockReturnValue(state as ReturnType<typeof useGetSchedulerQuery>);
 
 describe("SchedulerPanel", () => {
-  it("holds the board's place while the data loads", () => {
+  it("shows the spinner in the board's place while the data loads", () => {
     answer({});
     render(<SchedulerPanel contractId="con_1" pollingInterval={0} onSelect={jest.fn()} />);
-    expect(screen.getByLabelText("Loading the board")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Loading the board…");
   });
 
   it("hands the server's projection to the board, polling as told", async () => {

@@ -3,14 +3,18 @@
 import dynamic from "next/dynamic";
 import { useGetSchedulerQuery } from "@/api/schedulerApi";
 import { FormError } from "@/components/FormError";
-import { Caption, Frame, Legend, Skeleton } from "./styled";
+import { Loading } from "@/components/Spinner";
+import { Caption, Frame, Legend, Placeholder } from "./styled";
+
+const LoadingBoard = () => (
+  <Placeholder>
+    <Loading label="Loading the board…" />
+  </Placeholder>
+);
 
 // Bryntum needs `window`, so it is never rendered on the server, and nothing else imports it: the landing, auth and
 // plans bundles stay free of it (docs/spec/scheduler.md).
-const FoldbackScheduler = dynamic(() => import("./FoldbackScheduler"), {
-  ssr: false,
-  loading: () => <Skeleton aria-busy="true" aria-label="Loading the board" />,
-});
+const FoldbackScheduler = dynamic(() => import("./FoldbackScheduler"), { ssr: false, loading: LoadingBoard });
 
 interface SchedulerPanelProps {
   contractId: string;
@@ -22,8 +26,7 @@ interface SchedulerPanelProps {
 /** The board and its caption. The data is the server's projection; selecting a person never moves money. */
 export function SchedulerPanel({ contractId, pollingInterval, onSelect }: SchedulerPanelProps) {
   const { data, error } = useGetSchedulerQuery(contractId, { pollingInterval });
-  if (!data)
-    return error ? <FormError error={error} /> : <Skeleton aria-busy="true" aria-label="Loading the board" />;
+  if (!data) return error ? <FormError error={error} /> : <LoadingBoard />;
 
   return (
     <Frame>
