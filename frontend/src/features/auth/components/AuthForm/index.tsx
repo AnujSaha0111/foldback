@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransition } from "react";
 import type { FormEvent, ReactNode } from "react";
 import type { ApiFailure } from "@/api/baseApi";
 import { Button } from "@/components/Button";
@@ -32,10 +33,12 @@ export function AuthForm({
   children,
 }: AuthFormProps) {
   const finish = useFinishAuth();
+  const [leaving, leave] = useTransition();
+  const working = busy || leaving;
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (await send(new FormData(event.currentTarget))) finish();
+    if (await send(new FormData(event.currentTarget))) leave(finish);
   };
 
   return (
@@ -45,8 +48,8 @@ export function AuthForm({
       <Fields onSubmit={(event) => void submit(event)}>
         {children}
         <FormError error={error} />
-        <Button type="submit" block disabled={busy}>
-          {busy ? busyLabel : submitLabel}
+        <Button type="submit" block loading={working}>
+          {working ? busyLabel : submitLabel}
         </Button>
       </Fields>
     </>

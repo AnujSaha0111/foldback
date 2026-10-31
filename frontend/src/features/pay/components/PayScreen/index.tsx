@@ -7,6 +7,7 @@ import { Button } from "@/components/Button";
 import { FormError } from "@/components/FormError";
 import { Header } from "@/components/Header";
 import { Page } from "@/components/Page";
+import { Loading } from "@/components/Spinner";
 import { Squares } from "@/components/Squares";
 import { StatusTag } from "@/components/StatusTag";
 import { formatMoney } from "@/lib/format";
@@ -32,7 +33,7 @@ export function PayScreen({ shareId }: { shareId: string }) {
       {data ? (
         <Share share={data} />
       ) : (
-        <Column>{error ? <FormError error={error} /> : <p role="status">Loading your share…</p>}</Column>
+        <Column>{error ? <FormError error={error} /> : <Loading label="Loading your share…" />}</Column>
       )}
     </Page>
   );

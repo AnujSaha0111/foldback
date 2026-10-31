@@ -48,7 +48,7 @@ export function ResetDialog({ onClose }: ResetDialogProps) {
         <Button variant="secondary" small arrow={false} onClick={close}>
           Keep my plans
         </Button>
-        <Button small arrow={false} disabled={isLoading} onClick={() => void reset()}>
+        <Button small arrow={false} loading={isLoading} onClick={() => void reset()}>
           {isLoading ? "Resetting…" : "Reset"}
         </Button>
       </DialogActions>

@@ -6,6 +6,7 @@ import { Badge } from "@/components/Badge";
 import { DataTable } from "@/components/DataTable";
 import { FormError } from "@/components/FormError";
 import { Mono } from "@/components/Money/styled";
+import { Loading } from "@/components/Spinner";
 import { StatusTag } from "@/components/StatusTag";
 import { formatMoment, formatMoney } from "@/lib/format";
 import { CONTRACT_STATUS_VIEW } from "@/lib/status";
@@ -88,6 +89,7 @@ export function PlansList() {
       </Head>
       <FormError error={error} />
       {plans ? <DataTable columns={columns} rows={plans} rowKey={(plan) => plan.id} /> : null}
+      {plans || error ? null : <Loading label="Loading your plans…" />}
     </Root>
   );
 }

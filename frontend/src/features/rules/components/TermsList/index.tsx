@@ -93,7 +93,7 @@ export function TermsList({ contractId, extraction, onPoint }: TermsListProps) {
         </Term>
       </List>
       <Confirm>
-        <Button variant="sun" disabled={isLoading} onClick={() => void confirm()}>
+        <Button variant="sun" loading={isLoading} onClick={() => void confirm()}>
           {isLoading ? "Confirming…" : "Confirm these terms"}
         </Button>
         <FormError error={error} />

@@ -7,6 +7,7 @@ import { Badge } from "@/components/Badge";
 import { ButtonLink } from "@/components/Button";
 import { FormError } from "@/components/FormError";
 import { Mono } from "@/components/Money/styled";
+import { Loading } from "@/components/Spinner";
 import { Squares } from "@/components/Squares";
 import { StatusTag } from "@/components/StatusTag";
 import { formatMoment, formatMoney } from "@/lib/format";
@@ -36,7 +37,7 @@ export function Board({ id }: { id: string }) {
   const pollingInterval = useContractLive(id);
   const { data, error } = useGetContractQuery(id, { pollingInterval });
   const [picked, setPicked] = useState<string | null>(null);
-  if (!data) return error ? <FormError error={error} /> : <p role="status">Loading the plan…</p>;
+  if (!data) return error ? <FormError error={error} /> : <Loading label="Loading the plan…" />;
   const { contract, shares } = data;
   // Until someone is chosen, show the one the plan is waiting on.
   const selectedId = picked ?? (shares.find((share) => share.status === "waiting") ?? shares[0])?.id ?? null;

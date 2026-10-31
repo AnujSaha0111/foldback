@@ -95,7 +95,7 @@ export function AppHeader() {
             <Button variant="secondary" small arrow={false} onClick={() => setResetting(true)}>
               Reset demo data
             </Button>
-            <Button variant="link" arrow={false} disabled={isLoading} onClick={() => void signOut()}>
+            <Button variant="link" arrow={false} loading={isLoading} onClick={() => void signOut()}>
               Sign out
             </Button>
           </>

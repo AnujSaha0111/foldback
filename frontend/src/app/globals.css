@@ -249,6 +249,29 @@ select {
   initial-value: 2rem;
 }
 
+/* A quarter turn, a beat, a quarter turn: it reads as squares moving round, not as a blur. */
+@keyframes fb-revolve {
+  0%,
+  10% {
+    transform: rotate(0deg);
+  }
+  25%,
+  35% {
+    transform: rotate(90deg);
+  }
+  50%,
+  60% {
+    transform: rotate(180deg);
+  }
+  75%,
+  85% {
+    transform: rotate(270deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 @keyframes fb-drift {
   to {
     transform: translate3d(-6vw, 5vw, 0) scale(1.12);
@@ -260,6 +283,7 @@ select {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }

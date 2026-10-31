@@ -5,8 +5,11 @@ import { styled } from "@mui/material/styles";
 import type { CSSObject } from "@mui/material/styles";
 import { HOVER, HOVER_FINE } from "@/theme/media";
 
-/** `sun` is the one action that matters on a view. Use it once per screen. */
-export type ButtonVariant = "sun" | "primary" | "blue" | "secondary" | "link";
+/**
+ * `sun` is the one action that matters on a view. Use it once per screen. `ink` is the same action where it should
+ * stay quiet until asked: black at rest, the sun button under the pointer.
+ */
+export type ButtonVariant = "sun" | "ink" | "primary" | "blue" | "secondary" | "link";
 
 export interface LookProps {
   $variant: ButtonVariant;
@@ -52,6 +55,25 @@ const BASE: CSSObject = {
   [HOVER_FINE]: { "&:hover > span[aria-hidden='true']:last-child": { transform: "translateX(3px)" } },
 };
 
+const SUN_GLOW =
+  "inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 0 rgba(0, 0, 0, 0.08), var(--sun-glow)";
+
+/** A sheen crosses the button once per hover. */
+const SHEEN: CSSObject = {
+  content: '""',
+  position: "absolute",
+  inset: 0,
+  zIndex: -1,
+  pointerEvents: "none",
+  background: "linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%)",
+  transform: "translateX(-100%)",
+};
+
+const SHEEN_HOVER: CSSObject = {
+  transform: "translateX(100%)",
+  transition: "transform 900ms var(--ease-out-quart)",
+};
+
 const VARIANTS: Record<ButtonVariant, CSSObject> = {
   sun: {
     overflow: "hidden",
@@ -61,26 +83,35 @@ const VARIANTS: Record<ButtonVariant, CSSObject> = {
     backgroundSize: "220% 100%",
     backgroundPosition: "0% 50%",
     boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 0 rgba(0, 0, 0, 0.08)",
-    // A sheen crosses the button once per hover.
-    "&::after": {
+    "&::after": SHEEN,
+    [HOVER]: {
+      "&:hover": { backgroundPosition: "60% 50%", boxShadow: SUN_GLOW },
+      "&:hover::after": SHEEN_HOVER,
+    },
+  },
+  // The orange sits on a layer of its own and fades in, because a gradient cannot transition from a flat colour.
+  ink: {
+    overflow: "hidden",
+    background: "var(--btn-bg)",
+    color: "var(--btn-fg)",
+    fontWeight: 600,
+    "&::before": {
       content: '""',
       position: "absolute",
       inset: 0,
       zIndex: -1,
       pointerEvents: "none",
-      background: "linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%)",
-      transform: "translateX(-100%)",
+      backgroundImage: "var(--sun-grad-wide)",
+      backgroundSize: "220% 100%",
+      backgroundPosition: "60% 50%",
+      opacity: 0,
+      transition: "opacity var(--d-2) var(--ease-out-quad)",
     },
+    "&::after": SHEEN,
     [HOVER]: {
-      "&:hover": {
-        backgroundPosition: "60% 50%",
-        boxShadow:
-          "inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 0 rgba(0, 0, 0, 0.08), var(--sun-glow)",
-      },
-      "&:hover::after": {
-        transform: "translateX(100%)",
-        transition: "transform 900ms var(--ease-out-quart)",
-      },
+      "&:hover:not([disabled])": { color: "#000", boxShadow: SUN_GLOW },
+      "&:hover:not([disabled])::before": { opacity: 1 },
+      "&:hover:not([disabled])::after": SHEEN_HOVER,
     },
   },
   primary: {
@@ -133,6 +164,8 @@ function look({ $variant, $small, $block }: LookProps): CSSObject {
       : {}),
     ...($block ? { width: "100%" } : {}),
     "&[disabled], &[aria-disabled='true']": DISABLED,
+    // Busy is not unavailable: it stays at full strength so the spinner reads as progress.
+    "&[aria-busy='true']": { opacity: 1, cursor: "progress" },
   };
 }
 
