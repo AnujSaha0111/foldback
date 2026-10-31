@@ -78,6 +78,28 @@ export interface ContractRead {
   events: ApiEvent[];
 }
 
+/** GET /api/shares/:shareId. Only what the payer needs: no PayPal ids, and nobody else's status beyond the count. */
+export interface PublicShare {
+  share_id: string;
+  contract_id: string;
+  display_name: string;
+  title: string;
+  amount_cents: number;
+  currency: string;
+  headcount: number;
+  held_count: number;
+  deadline_at: string;
+  grace_until: string | null;
+  is_grace_subject: boolean;
+  timezone: string;
+  demo_now: string;
+  status: ShareStatus;
+  contract_status: ContractStatus;
+  money_source: MoneySource;
+  payable: boolean;
+  other_names: string[];
+}
+
 /** Colors the board gives a bar. The word on the bar, never the color, says the status. */
 export type SchedulerColor = "gray" | "blue" | "green" | "red";
 

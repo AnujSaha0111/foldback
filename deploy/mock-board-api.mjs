@@ -100,6 +100,29 @@ const projection = {
   ],
 };
 
+const OPEN = ["waiting", "checkout_open", "declined"];
+
+const publicShare = (status) => ({
+  share_id: `shr_${status}`,
+  contract_id: "con_mock",
+  display_name: "Maya Shah",
+  title: "Cabin weekend",
+  amount_cents: 8000,
+  currency: "USD",
+  headcount: 4,
+  held_count: status === "kept" || status === "held" ? 4 : 3,
+  deadline_at: contract.deadline_at,
+  grace_until: contract.grace_until,
+  is_grace_subject: true,
+  timezone: contract.timezone,
+  demo_now: contract.demo_now,
+  status: status === "sample" ? "waiting" : status,
+  contract_status: "active",
+  money_source: status === "sample" ? "sample" : "sandbox",
+  payable: OPEN.includes(status),
+  other_names: ["Alex Chen", "Sam Ortiz", "Jordan Lee"],
+});
+
 const user = {
   id: "usr_1",
   kind: "guest",
@@ -118,14 +141,15 @@ createServer((req, res) => {
   const url = req.url ?? "";
   if (url.startsWith("/api/auth/me")) return res.end(JSON.stringify({ user }));
   if (url.endsWith("/scheduler")) return res.end(JSON.stringify(projection));
+  // /api/shares/waiting, /api/shares/held, ...: the id picks the status, for looking at the Pay page.
+  if (url.startsWith("/api/shares/"))
+    return res.end(JSON.stringify(publicShare(url.split("/").pop())));
   if (url.startsWith("/api/contracts/con_mock"))
     return res.end(JSON.stringify({ contract, shares, events: [] }));
-  res
-    .writeHead(404)
-    .end(
-      JSON.stringify({
-        error: "not_found",
-        message: "The mock has no such route.",
-      }),
-    );
+  res.writeHead(404).end(
+    JSON.stringify({
+      error: "not_found",
+      message: "The mock has no such route.",
+    }),
+  );
 }).listen(8787, () => console.log("mock board API on 8787"));

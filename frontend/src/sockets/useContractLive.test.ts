@@ -1,5 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
-import { FALLBACK_POLL_MS, useContractLive } from "./useContractLive";
+import { useContractLive } from "./useContractLive";
+import { FALLBACK_POLL_MS } from "./useRoom";
 
 const dispatch = jest.fn();
 jest.mock("@/store/hooks", () => ({ useAppDispatch: () => dispatch }));
