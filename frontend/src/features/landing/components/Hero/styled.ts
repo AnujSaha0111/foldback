@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import { HOVER } from "@/theme/media";
 import { Inner, onSky } from "@/components/Page/styled";
 
 /** Sky with soft white light drifting behind the glass panel. No orange here: the sun is kept for the action. */
@@ -110,7 +111,7 @@ export const Note = styled("p")({
   color: "rgba(0, 0, 0, 0.72)",
   ...enter(2),
   "& a": { color: "#000", fontWeight: 500, textDecorationColor: "rgba(0, 0, 0, 0.35)" },
-  "& a:hover": { textDecorationColor: "#000" },
+  [HOVER]: { "& a:hover": { textDecorationColor: "#000" } },
 });
 
 export const Trust = styled("ul")({

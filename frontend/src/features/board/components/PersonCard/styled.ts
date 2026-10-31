@@ -16,8 +16,22 @@ export const Head = styled("div")({
   alignItems: "center",
   padding: "0.875rem 1.125rem",
   borderBottom: "1px solid var(--line-soft)",
+  gap: "var(--s-3)",
   "& h2": { fontSize: "0.9375rem", fontWeight: 600, letterSpacing: "-0.01em" },
-  "& span": { fontSize: "var(--fs-caption)", color: "var(--text-3)" },
+});
+
+/** Pick a person from here as well as on the board: the native list works with a keyboard and on a phone. */
+export const Picker = styled("select")({
+  minHeight: "2.25rem",
+  maxWidth: "60%",
+  padding: "0 var(--s-2)",
+  border: "1px solid var(--line)",
+  borderRadius: 0,
+  background: "var(--bg)",
+  color: "var(--text)",
+  fontSize: "var(--fs-small)",
+  fontWeight: 500,
+  cursor: "pointer",
 });
 
 /** Re-enters with a short blur-rise each time a different person is selected (keyed by the share). */

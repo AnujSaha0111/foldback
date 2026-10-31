@@ -10,22 +10,37 @@ import { StatusTag } from "@/components/StatusTag";
 import { formatMoment } from "@/lib/format";
 import { SHARE_STATUS_VIEW } from "@/lib/status";
 import type { ApiShare } from "@/types/generated/api-types";
-import { Actions, Amount, Body, Empty, Facts, Head, Name, Root, Top } from "./styled";
+import { Actions, Amount, Body, Empty, Facts, Head, Name, Picker, Root, Top } from "./styled";
 
 interface PersonCardProps {
   share: ApiShare | undefined;
+  /** Everyone on the plan, for the picker. */
+  shares: ApiShare[];
+  onSelect: (shareId: string) => void;
   timeZone: string;
   /** The plan's grace end, shown for the person who has it. */
   graceUntil: string | null;
 }
 
+type DetailsProps = Pick<PersonCardProps, "timeZone" | "graceUntil"> & { share: ApiShare };
+
 /** The selected share: who, how much, its status, and the PayPal facts behind it. */
-export function PersonCard({ share, timeZone, graceUntil }: PersonCardProps) {
+export function PersonCard({ share, shares, onSelect, timeZone, graceUntil }: PersonCardProps) {
   return (
     <Root aria-labelledby="person-title" aria-live="polite">
       <Head>
         <h2 id="person-title">Person</h2>
-        <span>Selected on the board</span>
+        <Picker
+          aria-labelledby="person-title"
+          value={share?.id ?? ""}
+          onChange={(event) => onSelect(event.target.value)}
+        >
+          {shares.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.display_name}
+            </option>
+          ))}
+        </Picker>
       </Head>
       {share ? (
         <Details key={share.id} share={share} timeZone={timeZone} graceUntil={graceUntil} />
@@ -36,7 +51,7 @@ export function PersonCard({ share, timeZone, graceUntil }: PersonCardProps) {
   );
 }
 
-function Details({ share, timeZone, graceUntil }: PersonCardProps & { share: ApiShare }) {
+function Details({ share, timeZone, graceUntil }: DetailsProps) {
   const [copied, setCopied] = useState(false);
   const sandbox = share.money_source !== "sample";
   const copy = async () => {
@@ -76,7 +91,7 @@ function Details({ share, timeZone, graceUntil }: PersonCardProps & { share: Api
 }
 
 /** The PayPal facts behind a share: its hold, when that expires, grace, capture and its pay link. */
-function HoldFacts({ share, timeZone, graceUntil }: PersonCardProps & { share: ApiShare }) {
+function HoldFacts({ share, timeZone, graceUntil }: DetailsProps) {
   return (
     <Facts>
       <dt>Authorization</dt>

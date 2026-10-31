@@ -140,6 +140,8 @@ createServer((req, res) => {
   res.setHeader("content-type", "application/json");
   const url = req.url ?? "";
   if (url.startsWith("/api/auth/me")) return res.end(JSON.stringify({ user }));
+  if (url === "/api/contracts")
+    return res.end(JSON.stringify({ contracts: [contract] }));
   if (url.endsWith("/scheduler")) return res.end(JSON.stringify(projection));
   // /api/shares/waiting, /api/shares/held, ...: the id picks the status, for looking at the Pay page.
   if (url.startsWith("/api/shares/"))

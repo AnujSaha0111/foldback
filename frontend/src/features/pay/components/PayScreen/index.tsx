@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useGetShareQuery } from "@/api/sharesApi";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
@@ -31,9 +32,7 @@ export function PayScreen({ shareId }: { shareId: string }) {
       {data ? (
         <Share share={data} />
       ) : (
-        <Column>
-          <FormError error={error} />
-        </Column>
+        <Column>{error ? <FormError error={error} /> : <p role="status">Loading your share…</p>}</Column>
       )}
     </Page>
   );
@@ -42,6 +41,7 @@ export function PayScreen({ shareId }: { shareId: string }) {
 function Share({ share }: { share: PublicShare }) {
   const view = payView(share);
   const others = withOthers(share.other_names);
+  const [firstStatus] = useState(share.status);
   const Sentence = view.final ? Lead : Message;
   return (
     <>
@@ -74,7 +74,11 @@ function Share({ share }: { share: PublicShare }) {
             {others ? <Others>{others}</Others> : null}
           </Panel>
           <Act aria-live="polite">
-            {view.message ? <Sentence>{view.message}</Sentence> : null}
+            {view.message ? (
+              <Sentence key={view.message} data-rise={share.status === firstStatus ? undefined : true}>
+                {view.message}
+              </Sentence>
+            ) : null}
             {view.action ? (
               <>
                 {/* phase 6: calls checkout, then goes to approve_url */}

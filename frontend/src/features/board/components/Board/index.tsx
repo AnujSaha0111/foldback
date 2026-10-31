@@ -36,7 +36,7 @@ export function Board({ id }: { id: string }) {
   const pollingInterval = useContractLive(id);
   const { data, error } = useGetContractQuery(id, { pollingInterval });
   const [picked, setPicked] = useState<string | null>(null);
-  if (!data) return <FormError error={error} />;
+  if (!data) return error ? <FormError error={error} /> : <p role="status">Loading the plan…</p>;
   const { contract, shares } = data;
   // Until someone is chosen, show the one the plan is waiting on.
   const selectedId = picked ?? (shares.find((share) => share.status === "waiting") ?? shares[0])?.id ?? null;
@@ -55,6 +55,8 @@ export function Board({ id }: { id: string }) {
         <SchedulerPanel contractId={id} pollingInterval={pollingInterval} onSelect={setPicked} />
         <PersonCard
           share={shares.find((share) => share.id === selectedId)}
+          shares={shares}
+          onSelect={setPicked}
           timeZone={timeZone}
           graceUntil={contract.grace_until}
         />

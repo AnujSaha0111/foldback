@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import { HOVER } from "@/theme/media";
 import { ScrollScene } from "@/components/ScrollScene";
 
 const WIDE = "@media (min-width: 600px)";
@@ -41,7 +42,7 @@ const Block = styled("div")({
   [WIDE]: { minHeight: "22rem" },
   "& p": { maxWidth: "22rem", minHeight: "3em" },
   transition: "--f var(--d-4) var(--ease-out-expo)",
-  "&:hover": { "--f": "clamp(2.25rem, 6vw, 4.5rem)" },
+  [HOVER]: { "&:hover": { "--f": "clamp(2.25rem, 6vw, 4.5rem)" } },
   "&::after": {
     content: '""',
     position: "absolute",

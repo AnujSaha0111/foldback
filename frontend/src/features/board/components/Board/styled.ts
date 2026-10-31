@@ -78,5 +78,5 @@ export const Urgent = styled("small")({
   marginTop: "2px",
   fontSize: "0.75rem",
   fontWeight: 500,
-  color: "var(--sun-deep)",
+  color: "var(--sun-text)",
 });

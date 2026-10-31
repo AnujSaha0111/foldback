@@ -17,6 +17,8 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* The sticky header must not cover a link's target or a focused control. */
+  scroll-padding-top: 5rem;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -121,6 +123,11 @@ ol {
 h1,
 h2 {
   font-weight: 300;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
 }
 
 h1 {

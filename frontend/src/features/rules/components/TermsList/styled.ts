@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import { HOVER } from "@/theme/media";
 
 export const Intro = styled("p")({
   display: "flex",
@@ -30,7 +31,7 @@ export const Row = styled("div")({
   borderBottom: "1px solid var(--line-soft)",
   transition: "background-color 150ms var(--ease-out-quad)",
   animation: "fb-rise var(--d-3) var(--ease-out-expo) both",
-  "&:hover": { background: "var(--layer-selected)", transitionDuration: "0ms" },
+  [HOVER]: { "&:hover": { background: "var(--layer-selected)", transitionDuration: "0ms" } },
   ...Object.fromEntries(
     [1, 2, 3, 4, 5, 6].map((n) => [`&:nth-of-type(${n})`, { animationDelay: `${(n - 1) * 60}ms` }]),
   ),

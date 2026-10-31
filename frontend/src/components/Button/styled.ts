@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { styled } from "@mui/material/styles";
 import type { CSSObject } from "@mui/material/styles";
+import { HOVER, HOVER_FINE } from "@/theme/media";
 
 /** `sun` is the one action that matters on a view. Use it once per screen. */
 export type ButtonVariant = "sun" | "primary" | "blue" | "secondary" | "link";
@@ -43,12 +44,12 @@ const BASE: CSSObject = {
   ].join(", "),
   // Press: a small, quick give, then a soft spring back.
   "&:active:not([disabled]):not([aria-disabled='true'])": {
-    transform: "scale(0.97)",
+    transform: "scale(0.96)",
     transitionDuration: "var(--d-press)",
   },
   "&:focus-visible": { outline: "none", boxShadow: "var(--focus-ring)" },
   [ARROW]: { display: "inline-block", transition: "transform var(--d-3) var(--ease-out-expo)" },
-  "&:hover > span[aria-hidden='true']:last-child": { transform: "translateX(3px)" },
+  [HOVER_FINE]: { "&:hover > span[aria-hidden='true']:last-child": { transform: "translateX(3px)" } },
 };
 
 const VARIANTS: Record<ButtonVariant, CSSObject> = {
@@ -60,11 +61,6 @@ const VARIANTS: Record<ButtonVariant, CSSObject> = {
     backgroundSize: "220% 100%",
     backgroundPosition: "0% 50%",
     boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 0 rgba(0, 0, 0, 0.08)",
-    "&:hover": {
-      backgroundPosition: "60% 50%",
-      boxShadow:
-        "inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 0 rgba(0, 0, 0, 0.08), var(--sun-glow)",
-    },
     // A sheen crosses the button once per hover.
     "&::after": {
       content: '""',
@@ -75,22 +71,38 @@ const VARIANTS: Record<ButtonVariant, CSSObject> = {
       background: "linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%)",
       transform: "translateX(-100%)",
     },
-    "&:hover::after": { transform: "translateX(100%)", transition: "transform 900ms var(--ease-out-quart)" },
+    [HOVER]: {
+      "&:hover": {
+        backgroundPosition: "60% 50%",
+        boxShadow:
+          "inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 0 rgba(0, 0, 0, 0.08), var(--sun-glow)",
+      },
+      "&:hover::after": {
+        transform: "translateX(100%)",
+        transition: "transform 900ms var(--ease-out-quart)",
+      },
+    },
   },
   primary: {
     background: "var(--btn-bg)",
     color: "var(--btn-fg)",
-    "&:hover": { background: "var(--btn-hover)" },
+    [HOVER]: { "&:hover": { background: "var(--btn-hover)" } },
   },
-  blue: { background: "var(--blue)", color: "#fff", "&:hover": { background: "var(--blue-600)" } },
+  blue: {
+    background: "var(--blue)",
+    color: "#fff",
+    [HOVER]: { "&:hover": { background: "var(--blue-600)" } },
+  },
   // The border thickens on hover instead of inverting, which is calmer next to the one sun button.
   secondary: {
     background: "transparent",
     color: "var(--text)",
     borderColor: "var(--text)",
-    "&:hover": {
-      boxShadow: "inset 0 0 0 1px var(--text)",
-      background: "color-mix(in srgb, var(--text) 4%, transparent)",
+    [HOVER]: {
+      "&:hover": {
+        boxShadow: "inset 0 0 0 1px var(--text)",
+        background: "color-mix(in srgb, var(--text) 4%, transparent)",
+      },
     },
   },
   link: {
@@ -100,7 +112,7 @@ const VARIANTS: Record<ButtonVariant, CSSObject> = {
     minHeight: "2.5rem",
     gap: "var(--s-3)",
     transition: "background-size var(--d-3) var(--ease-out-quart), color var(--d-2) var(--ease-out-quad)",
-    "&:hover": { backgroundSize: "100% 1px" },
+    [HOVER]: { "&:hover": { backgroundSize: "100% 1px" } },
     "&:active:not([disabled])": { transform: "none" },
   },
 };

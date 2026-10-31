@@ -63,6 +63,7 @@ describe("list (test 20)", () => {
       released_count: 0,
       share_cents: 8000,
       deadline_at: "2026-11-07T02:00:00.000Z",
+      timezone: "America/Los_Angeles",
       demo_now: "2026-11-07T00:00:00.000Z",
       resolution_reason: null,
     });

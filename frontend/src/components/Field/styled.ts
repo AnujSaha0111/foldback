@@ -2,6 +2,7 @@
 
 import { styled } from "@mui/material/styles";
 import type { CSSObject } from "@mui/material/styles";
+import { HOVER } from "@/theme/media";
 
 export const Root = styled("div")({ "& + &": { marginTop: "var(--s-3)" } });
 
@@ -42,7 +43,7 @@ const FILLED: CSSObject = {
   color: "var(--text)",
   transition: "background-color var(--d-2) var(--ease-out-quad)",
   "&::placeholder": { color: "var(--text-3)" },
-  "&:hover": { background: "var(--layer-hover)" },
+  [HOVER]: { "&:hover": { background: "var(--layer-hover)" } },
   "&:focus": { background: "var(--bg)", boxShadow: "inset 0 0 0 1px var(--line)" },
   "&:focus-visible": { outline: "none" },
 };
@@ -63,7 +64,7 @@ export const Reveal = styled("button")({
   fontSize: "var(--fs-small)",
   fontWeight: 500,
   cursor: "pointer",
-  "&:hover": { color: "var(--text)" },
+  [HOVER]: { "&:hover": { color: "var(--text)" } },
 });
 
 export const Area = styled("textarea")({ ...FILLED, minHeight: "9rem", lineHeight: 1.6, resize: "vertical" });

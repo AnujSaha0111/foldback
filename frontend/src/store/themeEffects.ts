@@ -7,13 +7,23 @@ import type { ThemeMode } from "./themeSlice";
  * The one place the theme leaves the store: the `data-theme` attribute that the CSS reads, and the saved choice.
  * It runs only when an action changes the theme, so the default "light" can never overwrite a saved "dark" on load.
  */
+function applyTheme(mode: ThemeMode): void {
+  // Without this, every colour transition on the page fires at once and the switch smears.
+  const still = document.createElement("style");
+  still.textContent = "*,*::before,*::after{transition:none !important}";
+  document.head.append(still);
+  document.documentElement.setAttribute("data-theme", mode);
+  void document.body.offsetHeight;
+  requestAnimationFrame(() => still.remove());
+}
+
 export const themeListener = createListenerMiddleware<{ theme: { mode: ThemeMode } }>();
 
 themeListener.startListening({
   matcher: isAnyOf(setTheme, toggleTheme),
   effect: (_action, api) => {
     const mode = selectThemeMode(api.getState());
-    document.documentElement.setAttribute("data-theme", mode);
+    applyTheme(mode);
     try {
       localStorage.setItem(THEME_STORAGE_KEY, mode);
     } catch {
