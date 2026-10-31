@@ -106,13 +106,15 @@ Content, from `GET /api/shares/:shareId`. The page joins the `share:{id}` socket
 - `{display_name}, your share for {title}`
 - The amount, large: `$80.00`
 - The condition in one sentence: `This is a hold, not a charge. It's only taken if all 4 people pay by Fri 6 Nov, 6:00pm PT. Otherwise it's released and you pay nothing.` For the grace subject: `…you have until Mon 9 Nov, 6:00pm PT.`
-- Progress: `3 of 4 held` and the other names
+- Progress: `3 of 4 held` and the other names, with no one else's status (the API does not send it)
 - Status-dependent action:
   - payable `waiting` or `declined`: button `Hold my share with PayPal`. Calls checkout, then navigates to `approve_url` (full page).
   - `checkout_open`: button `Continue in PayPal` (same call; the server returns the stored link).
   - `held`: `Your $80.00 is held. You'll only be charged if everyone pays.`
   - `kept`: `Everyone paid. Your share was captured.`
   - `released`: `The group didn't make it, so your hold was released. You were not charged.`
+  - `capture_failed`: `PayPal refused this capture, so nothing was taken for your share.`
+  - any `*_unknown` status: `PayPal did not return a clear result. Your share stays reserved while we check.`
   - `expired` or not payable: `The deadline passed before this share was held. Nothing was charged.`
   - `sample`: `This is a sample plan. No PayPal payment is possible.`
 

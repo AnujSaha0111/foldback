@@ -7,6 +7,7 @@ import { Badge } from "@/components/Badge";
 import { ButtonLink } from "@/components/Button";
 import { FormError } from "@/components/FormError";
 import { Mono } from "@/components/Money/styled";
+import { Squares } from "@/components/Squares";
 import { StatusTag } from "@/components/StatusTag";
 import { formatMoment, formatMoney } from "@/lib/format";
 import { CONTRACT_STATUS_VIEW, HOLDING_SHARE_STATUSES } from "@/lib/status";
@@ -14,7 +15,7 @@ import { useContractLive } from "@/sockets/useContractLive";
 import type { ApiContract, ApiShare } from "@/types/generated/api-types";
 import { PersonCard } from "../PersonCard";
 import { SchedulerPanel } from "../SchedulerPanel";
-import { Back, Head, Layout, Meter, Reason, Squares, Stat, Stats, Urgent } from "./styled";
+import { Back, Head, Layout, Meter, Reason, Stat, Stats, Urgent } from "./styled";
 
 const HOUR_MS = 3_600_000;
 
@@ -89,11 +90,7 @@ function Numbers({
       <Stat>
         <span>Holds</span>
         <div>
-          <Squares aria-hidden="true">
-            {shares.map((share) => (
-              <i key={share.id} data-on={HOLDING_SHARE_STATUSES.has(share.status)} />
-            ))}
-          </Squares>
+          <Squares total={shares.length} on={held.length} />
           {contract.held_count} of {contract.headcount ?? shares.length} held{extra}
         </div>
       </Stat>
