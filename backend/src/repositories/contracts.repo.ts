@@ -177,6 +177,16 @@ export async function findOwned(db: Db, ownerId: string, contractId: string): Pr
   return row ? toContract(row) : null;
 }
 
+/** The contract a pay link belongs to. Public on purpose: the unguessable share id is the permission. */
+export async function findByShare(db: Db, shareId: string): Promise<ContractRow | null> {
+  const result = await db.query<RawContractRow>(
+    `${CONTRACT_SELECT} WHERE c.id = (SELECT contract_id FROM shares WHERE id = $1) GROUP BY c.id`,
+    [shareId],
+  );
+  const row = result.rows[0];
+  return row ? toContract(row) : null;
+}
+
 /** Cheap ownership check for the socket room join. */
 export async function ownsContract(db: Db, ownerId: string, contractId: string): Promise<boolean> {
   const result = await db.query("SELECT 1 FROM contracts WHERE id = $1 AND owner_id = $2", [
