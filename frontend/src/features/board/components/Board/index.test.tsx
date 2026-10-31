@@ -88,6 +88,19 @@ describe("Board", () => {
     expect(screen.queryByRole("button", { name: "Copy pay link" })).not.toBeInTheDocument();
   });
 
+  it("lets a keyboard user pick a person from the card", () => {
+    answer({ data });
+    render(<Board id="con_1" />);
+    fireEvent.change(screen.getByRole("combobox", { name: "Person" }), { target: { value: "shr_a" } });
+    expect(screen.getByText("AUTH-1")).toBeInTheDocument();
+  });
+
+  it("says it is loading until the plan arrives", () => {
+    answer({});
+    render(<Board id="con_1" />);
+    expect(screen.getByRole("status")).toHaveTextContent("Loading the plan…");
+  });
+
   it("shows the API's sentence when the plan cannot be loaded", () => {
     answer({ error: { status: 404, data: { error: "x", message: "Plan not found." } } });
     render(<Board id="con_1" />);

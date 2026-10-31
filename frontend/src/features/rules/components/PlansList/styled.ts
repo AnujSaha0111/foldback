@@ -1,11 +1,12 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import { HOVER } from "@/theme/media";
 
 export const Root = styled("section")({
   marginTop: "var(--s-8)",
   // The arrow slides in on the row under the pointer.
-  "& tbody tr:hover [data-go]": { opacity: 1, transform: "none" },
+  [HOVER]: { "& tbody tr:hover [data-go]": { opacity: 1, transform: "none" } },
 });
 
 /** One square per person: blue when held, an orange outline for each still open. */

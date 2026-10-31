@@ -13,8 +13,8 @@ import type { ContractSummary } from "@/types/generated/api-types";
 import type { ContractStatus } from "@/types/generated/statuses";
 import { Go, Head, Holds, Root, Sub } from "./styled";
 
-// The list has no plan time zone, so a deadline is shown in the viewer's own zone, with its name.
-const viewerZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
+// Older API responses have no plan time zone: the viewer's own zone, named, is still correct.
+const zoneOf = (plan: ContractSummary) => plan.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 const columns = [
   {
@@ -22,7 +22,7 @@ const columns = [
     cell: (plan: ContractSummary) => (
       <>
         <Link href={`/plans/${plan.id}`}>{plan.title ?? "Untitled plan"}</Link>
-        {plan.deadline_at ? <Sub>Deadline {formatMoment(plan.deadline_at, viewerZone(), true)}</Sub> : null}
+        {plan.deadline_at ? <Sub>Deadline {formatMoment(plan.deadline_at, zoneOf(plan), true)}</Sub> : null}
       </>
     ),
   },

@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import { HOVER } from "@/theme/media";
 
 const DESKTOP = "@media (min-width: 900px)";
 
@@ -85,7 +86,8 @@ export const Links = styled("ul")({
       transformOrigin: "100% 50%",
       transition: "transform var(--d-4) var(--ease-out-expo)",
     },
-    "& a:hover::after, & a[aria-current='page']::after": { transform: "scaleX(1)", transformOrigin: "0 50%" },
+    "& a[aria-current='page']::after": { transform: "scaleX(1)", transformOrigin: "0 50%" },
+    [HOVER]: { "& a:hover::after": { transform: "scaleX(1)", transformOrigin: "0 50%" } },
   },
 });
 

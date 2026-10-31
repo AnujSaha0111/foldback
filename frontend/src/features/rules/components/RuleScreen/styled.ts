@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import { HOVER } from "@/theme/media";
 
 export const Head = styled("div")({
   display: "flex",
@@ -67,7 +68,7 @@ export const Tools = styled("div")({
 });
 
 export const SampleLink = styled("button")({
-  padding: 0,
+  padding: "1px 0",
   border: 0,
   background: "linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat",
   color: "var(--link)",
@@ -76,7 +77,7 @@ export const SampleLink = styled("button")({
   fontWeight: 500,
   cursor: "pointer",
   transition: "background-size var(--d-3) var(--ease-out-quart)",
-  "&:hover": { backgroundSize: "100% 1px" },
+  [HOVER]: { "&:hover": { backgroundSize: "100% 1px" } },
 });
 
 export const Count = styled("span")({

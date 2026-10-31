@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import { HOVER } from "@/theme/media";
 
 const WIDE = "@media (min-width: 768px)";
 
@@ -49,6 +50,6 @@ export const DarkPanel = styled("div")({
   "& li::before": { content: '"✓"', color: "var(--sky)" },
   [WIDE]: {
     transform: "translateY(-8px) scale(1.02)",
-    "&:hover": { transform: "translateY(-12px) scale(1.02)", boxShadow: "var(--shadow-4)" },
+    [HOVER]: { "&:hover": { transform: "translateY(-12px) scale(1.02)", boxShadow: "var(--shadow-4)" } },
   },
 });

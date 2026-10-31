@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import { HOVER } from "@/theme/media";
 
 /** Sits on the sun footer in both themes, so it is black on orange rather than theme colours. */
 export const Toggle = styled("button")({
@@ -12,6 +13,6 @@ export const Toggle = styled("button")({
   fontWeight: 500,
   cursor: "pointer",
   transition: "background-color var(--d-2) var(--ease-out-quad), transform var(--d-3) var(--ease-out-expo)",
-  "&:hover": { background: "rgba(255, 255, 255, 0.3)", boxShadow: "inset 0 0 0 1px #000" },
-  "&:active": { transform: "scale(0.97)", transitionDuration: "var(--d-press)" },
+  [HOVER]: { "&:hover": { background: "rgba(255, 255, 255, 0.3)", boxShadow: "inset 0 0 0 1px #000" } },
+  "&:active": { transform: "scale(0.96)", transitionDuration: "var(--d-press)" },
 });

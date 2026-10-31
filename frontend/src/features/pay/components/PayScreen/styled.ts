@@ -73,7 +73,10 @@ export const Others = styled("p")({
   color: "var(--text-2)",
 });
 
-export const Act = styled("div")({ marginTop: "var(--s-4)" });
+export const Act = styled("div")({
+  marginTop: "var(--s-4)",
+  "& [data-rise]": { animation: "fb-rise var(--d-4) var(--ease-out-expo) both" },
+});
 
 export const Message = styled("p")({ fontSize: "var(--fs-lead)", lineHeight: 1.35 });
 

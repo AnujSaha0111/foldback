@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import { HOVER } from "@/theme/media";
 
 export const Root = styled("nav")({
   display: "flex",
@@ -18,7 +19,8 @@ export const Root = styled("nav")({
     textDecoration: "none",
     transition: "color var(--d-2) var(--ease-out-quad)",
   },
-  "& a:hover, & a[aria-current='page']": { color: "var(--text)" },
+  "& a[aria-current='page']": { color: "var(--text)" },
+  [HOVER]: { "& a:hover": { color: "var(--text)" } },
   "& a::after": {
     content: '""',
     position: "absolute",

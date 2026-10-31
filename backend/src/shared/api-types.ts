@@ -34,6 +34,7 @@ export interface ContractSummary {
   released_count: number;
   share_cents: number | null;
   deadline_at: string | null;
+  timezone: string | null;
   demo_now: string | null;
   resolution_reason: string | null;
 }
@@ -42,7 +43,6 @@ export interface ApiContract extends ContractSummary {
   direction: Direction | null;
   currency: string | null;
   total_cents: number | null;
-  timezone: string | null;
   grace_person_name: string | null;
   grace_until: string | null;
   clarification_question: string | null;

@@ -65,6 +65,12 @@ describe("PayScreen", () => {
     expect(screen.getByText("This is a sample plan. No PayPal payment is possible.")).toBeInTheDocument();
   });
 
+  it("says it is loading until the share arrives", () => {
+    answer({});
+    render(<PayScreen shareId="shr_1" />);
+    expect(screen.getByRole("status")).toHaveTextContent("Loading your share…");
+  });
+
   it("shows the API's sentence for a bad link", () => {
     answer({ error: { status: 404, data: { error: "not_found", message: "That link does not exist." } } });
     render(<PayScreen shareId="shr_1" />);

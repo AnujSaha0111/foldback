@@ -135,7 +135,7 @@ Events never carry state, so the REST read model is the only source of truth. A 
 
 ## List and read
 
-`GET /api/contracts` → `{ "contracts": [ ContractSummary ] }`, oldest first. Summary fields: `id`, `seed_key`, `title`, `status`, `money_source`, `headcount`, `held_count`, `kept_count`, `released_count`, `share_cents`, `deadline_at`, `demo_now`, `resolution_reason`.
+`GET /api/contracts` → `{ "contracts": [ ContractSummary ] }`, oldest first. Summary fields: `id`, `seed_key`, `title`, `status`, `money_source`, `headcount`, `held_count`, `kept_count`, `released_count`, `share_cents`, `deadline_at`, `timezone`, `demo_now`, `resolution_reason`.
 
 `GET /api/contracts/:id` → `ContractRead`.
 

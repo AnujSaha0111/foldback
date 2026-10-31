@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import { HOVER } from "@/theme/media";
 import { Mono } from "@/components/Money/styled";
 
 /** Frosted glass over the sky. It leans toward the cursor (JS writes --rx/--ry) and a soft light follows it. */
@@ -32,7 +33,7 @@ export const Root = styled("div")({
     opacity: 0,
     transition: "opacity 500ms var(--ease-out-quad)",
   },
-  "&:hover::before": { opacity: 1, transitionDuration: "200ms" },
+  [HOVER]: { "&:hover::before": { opacity: 1, transitionDuration: "200ms" } },
   "& > *": { position: "relative" },
 });
 
@@ -46,7 +47,7 @@ export const Caption = styled("div")({
   fontSize: "var(--fs-caption)",
   color: "rgba(0, 0, 0, 0.66)",
   "& button": {
-    padding: 0,
+    padding: "3px 0",
     border: 0,
     background: "none",
     color: "#000",
@@ -57,7 +58,7 @@ export const Caption = styled("div")({
     textUnderlineOffset: "3px",
     cursor: "pointer",
   },
-  "& button:hover": { textDecorationColor: "#000" },
+  [HOVER]: { "& button:hover": { textDecorationColor: "#000" } },
 });
 
 export const Head = styled("div")({
@@ -89,7 +90,7 @@ export const Row = styled("div")({
   fontSize: "0.9375rem",
   transition: "background-color 150ms var(--ease-out-quad)",
   "&:first-of-type": { borderTop: 0 },
-  "&:hover": { background: "rgba(255, 255, 255, 0.45)", transitionDuration: "0ms" },
+  [HOVER]: { "&:hover": { background: "rgba(255, 255, 255, 0.45)", transitionDuration: "0ms" } },
   "& > span:nth-of-type(2)": { fontWeight: 500 },
   // Phones keep the name and the status; every amount is the same, and the total below says it.
   "@media (max-width: 599px)": { "& > span:last-of-type": { display: "none" } },

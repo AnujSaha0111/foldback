@@ -35,7 +35,7 @@ export function Field({ label, help, type, ...input }: FieldProps) {
           {...input}
         />
         {password ? (
-          <Reveal type="button" aria-controls={id} aria-pressed={shown} onClick={() => setShown(!shown)}>
+          <Reveal type="button" aria-controls={id} onClick={() => setShown(!shown)}>
             {shown ? "Hide" : "Show"}
             <span className="sr-only"> password</span>
           </Reveal>

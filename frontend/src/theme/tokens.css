@@ -14,7 +14,7 @@
 
   /* Sun: the one accent. Text on it is always black. The wide gradient slides on hover instead of swapping. */
   --sun: #ff7a1a;
-  --sun-deep: #e8480f;
+  --sun-text: #c63a08;
   --sun-grad: linear-gradient(100deg, #ffb547 0%, #ff7a1a 52%, #f2501e 100%);
   --sun-grad-wide: linear-gradient(100deg, #ffc266 0%, #ffb547 18%, #ff7a1a 48%, #f2501e 74%, #e2421a 100%);
   --sun-glow: 0 10px 28px -10px rgba(242, 80, 30, 0.6);
@@ -158,6 +158,7 @@
   --line: #393939;
   --line-strong: #f4f4f4;
   --link: #78a9ff;
+  --sun-text: #ff8f4d;
   --focus: #ffffff;
   --btn-bg: #ffffff;
   --btn-fg: #000000;

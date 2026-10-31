@@ -25,6 +25,7 @@ function toSummary(c: ContractRow): ContractSummary {
     released_count: c.releasedCount,
     share_cents: c.shareCents,
     deadline_at: iso(c.deadlineAt),
+    timezone: c.timezone,
     demo_now: iso(c.demoNow),
     resolution_reason: c.resolutionReason,
   };
@@ -36,7 +37,6 @@ function toApiContract(c: ContractRow): ApiContract {
     direction: c.direction,
     currency: c.currency,
     total_cents: c.totalCents,
-    timezone: c.timezone,
     grace_person_name: c.graceName,
     grace_until: iso(c.graceUntil),
     clarification_question: c.clarificationQuestion,
