@@ -41,7 +41,7 @@ export function ClarifyForm({ question, busy, error, onAnswer }: ClarifyFormProp
           autoComplete="off"
           required
         />
-        <Button type="submit" disabled={busy}>
+        <Button type="submit" loading={busy}>
           {busy ? "Reading…" : "Answer"}
         </Button>
         <FormError error={error} />

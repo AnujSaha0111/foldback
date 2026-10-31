@@ -145,7 +145,7 @@ The model is described once on the Rule screen (`Read from your text…`) and on
 
 ## Loading and errors
 
-Buttons disable while their request is in flight. Failures show the API `message` under the button. No stack traces, no toasts.
+A button in flight shows the Foldback spinner (three squares held, one to go, turning a quarter at a time) in place of its arrow, and takes no more presses until the next screen has arrived. A screen or section waiting on data shows the same spinner with a line of text. Failures show the API `message` under the button. No stack traces, no toasts.
 
 ## Demo clock labels
 

@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ComponentProps, ReactNode } from "react";
+import { Spinner } from "@/components/Spinner";
 import { StyledButton, StyledLink } from "./styled";
 import type { ButtonVariant, LookProps } from "./styled";
 
@@ -11,7 +12,12 @@ interface LookOptions {
   children: ReactNode;
 }
 
-type ButtonProps = LookOptions & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children">;
+interface ButtonOptions extends LookOptions {
+  /** A request is running: the button stops taking presses and shows the spinner where the arrow was. */
+  loading?: boolean;
+}
+
+type ButtonProps = ButtonOptions & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children">;
 type ButtonLinkProps = LookOptions &
   Omit<ComponentProps<typeof StyledLink>, "children" | keyof LookOptions | keyof LookProps>;
 
@@ -22,6 +28,8 @@ export function Button({
   small = false,
   block = false,
   arrow = true,
+  loading = false,
+  disabled = false,
   children,
   ...rest
 }: ButtonProps) {
@@ -32,10 +40,12 @@ export function Button({
       $variant={variant}
       $small={small}
       $block={block}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
       {...rest}
     >
       {children}
-      {arrow ? <Arrow /> : null}
+      {loading ? <Spinner /> : arrow ? <Arrow /> : null}
     </StyledButton>
   );
 }

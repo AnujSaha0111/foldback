@@ -102,7 +102,7 @@ function RuleFlow() {
             />
             <TextTools count={text.length} onSample={() => setText(CABIN_CHAT_TEXT)} />
             <Actions>
-              <Button type="submit" disabled={read.isLoading}>
+              <Button type="submit" loading={read.isLoading}>
                 {read.isLoading ? "Reading…" : "Read the plan"}
               </Button>
               <FormError error={failure(read.error)} />
