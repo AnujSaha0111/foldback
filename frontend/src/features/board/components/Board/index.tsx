@@ -31,7 +31,7 @@ function timeLeft(now: string, deadline: string): string {
 
 /** "Maya has grace until Mon 9 Nov" for the stat strip. */
 const graceLine = (name: string, until: string, timeZone: string) =>
-  ` · ${name.split(" ")[0]} has grace until ${formatMoment(until, timeZone, true).split(",")[0]}`;
+  `. ${name.split(" ")[0]} has grace until ${formatMoment(until, timeZone, true).split(",")[0]}`;
 
 /** The plan's board: the numbers that matter, people across the days, and the selected person's hold. */
 export function Board({ id }: { id: string }) {
@@ -85,9 +85,9 @@ function Numbers({
   const total = contract.total_cents ?? shares.reduce((sum, share) => sum + share.amount_cents, 0);
   const heldCents = held.reduce((sum, share) => sum + share.amount_cents, 0);
   const extra = contract.kept_count
-    ? ` · ${contract.kept_count} kept`
+    ? `, ${contract.kept_count} kept`
     : contract.released_count
-      ? ` · ${contract.released_count} released`
+      ? `, ${contract.released_count} released`
       : "";
   return (
     <Stats aria-label="Plan summary">

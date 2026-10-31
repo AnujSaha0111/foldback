@@ -87,7 +87,7 @@ export function AppHeader() {
                 {user.display_name}
                 {guestDays === null ? null : (
                   <Badge>
-                    Guest · expires in {guestDays} {guestDays === 1 ? "day" : "days"}
+                    Guest, expires in {guestDays} {guestDays === 1 ? "day" : "days"}
                   </Badge>
                 )}
               </User>

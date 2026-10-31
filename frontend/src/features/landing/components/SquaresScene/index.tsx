@@ -8,7 +8,7 @@ export function SquaresScene() {
         <div>
           <h2 id="squares-title">Four people. One deadline.</h2>
           <Muted>Each share is its own hold. The group is complete only when the last square closes.</Muted>
-          <Count>3 of 4 held · 1 to go</Count>
+          <Count>3 of 4 held, 1 to go</Count>
         </div>
         <Art
           role="img"

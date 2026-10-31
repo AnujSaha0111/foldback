@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Logo } from "@/components/Logo";
+import { Inner } from "@/components/Page/styled";
 import { Bar, Root } from "./styled";
 
 interface HeaderProps {
@@ -7,14 +8,16 @@ interface HeaderProps {
   children: ReactNode;
 }
 
-/** The white bar every page starts with. The logo lives here, never on the sky hero, where its sky block would vanish. */
+/** The floating bar every page starts with. The logo lives here, never on the sky hero, where its sky block would vanish. */
 export function Header({ children }: HeaderProps) {
   return (
     <Root>
-      <Bar>
-        <Logo href="/" />
-        {children}
-      </Bar>
+      <Inner>
+        <Bar>
+          <Logo href="/" />
+          {children}
+        </Bar>
+      </Inner>
     </Root>
   );
 }

@@ -37,6 +37,12 @@ export const Root = styled("div")({
   "& > *": { position: "relative" },
 });
 
+/** The panel's last row: the page's actions, on the panel so the eye lands on them after the sum. */
+export const Foot = styled("div")({
+  padding: "var(--s-4) var(--s-5)",
+  borderTop: "1px solid rgba(1, 33, 105, 0.07)",
+});
+
 export const Wrap = styled("div")({ width: "100%", maxWidth: "35rem", justifySelf: "end" });
 
 /** Under the panel: what the demo shows, and a way to watch the holds land again. */
