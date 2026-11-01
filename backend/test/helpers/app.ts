@@ -23,6 +23,7 @@ const GENEROUS: Limits = {
   aiIpMinute: { limit: 10_000, windowMs: 60_000 },
   aiIpDay: { limit: 10_000, windowMs: 60_000 },
   createContract: { limit: 10_000, windowMs: 60_000 },
+  checkout: { limit: 10_000, windowMs: 60_000 },
 };
 
 /** A notifier that remembers what it was told, so tests can check that events fire after a commit and only then. */
@@ -45,6 +46,8 @@ export interface BuildOptions {
   realLimits?: boolean;
   /** Model calls go here instead of the network. */
   llmFetch?: typeof fetch;
+  /** PayPal calls go here instead of the network. */
+  paypalFetch?: typeof fetch;
   notifier?: Notifier;
   /** "Now" for pasted text. */
   now?: () => Date;
@@ -60,6 +63,7 @@ export function buildApp(pools: Pools, options: BuildOptions = {}): Express {
     limits: { ...base, ...options.limits },
     notifier: options.notifier ?? recordingNotifier(),
     ...(options.llmFetch ? { llmFetch: options.llmFetch } : {}),
+    ...(options.paypalFetch ? { paypalFetch: options.paypalFetch } : {}),
     ...(options.now ? { now: options.now } : {}),
   });
 }

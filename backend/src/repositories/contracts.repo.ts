@@ -13,6 +13,18 @@ export async function lockContractRow(client: PoolClient, contractId: string): P
   return result.rowCount === 1;
 }
 
+/**
+ * Locks the contract and raises its version, for a change that touches only its shares. Browsers ignore an event
+ * whose version they have already seen, so without this the board would not refresh.
+ */
+export async function touchContract(client: PoolClient, contractId: string): Promise<number> {
+  const result = await client.query<{ version: number }>(
+    "UPDATE contracts SET updated_at = now() WHERE id = $1 RETURNING version",
+    [contractId],
+  );
+  return result.rows[0]?.version ?? 0;
+}
+
 export interface SeedContractInput {
   ownerId: string;
   seedKey: "cabin-hold" | "print-full";

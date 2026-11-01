@@ -1,5 +1,7 @@
 import { formatMoment, formatMoney } from "@/lib/format";
 import type { PublicShare } from "@/types/generated/api-types";
+import { UNCLEAR_RESULT } from "@/types/generated/rules";
+import { UNKNOWN_SHARE_STATUSES } from "@/types/generated/statuses";
 import type { ShareStatus } from "@/types/generated/statuses";
 
 export interface PayView {
@@ -16,8 +18,6 @@ const OVER: Partial<Record<ShareStatus, string>> = {
   capture_failed: "PayPal refused this capture, so nothing was taken for your share.",
 };
 
-const UNKNOWN: ReadonlySet<ShareStatus> = new Set(["authorize_unknown", "capture_unknown", "void_unknown"]);
-
 const note = (message: string): PayView => ({ message, final: false, action: null });
 
 /** What the page says and offers. Reads the server's `status` and `payable`, and decides nothing about money. */
@@ -25,9 +25,7 @@ export function payView(share: PublicShare): PayView {
   if (share.money_source === "sample") return note("This is a sample plan. No PayPal payment is possible.");
   const over = OVER[share.status];
   if (over) return { message: over, final: true, action: null };
-  if (UNKNOWN.has(share.status)) {
-    return note("PayPal did not return a clear result. Your share stays reserved while we check.");
-  }
+  if (UNKNOWN_SHARE_STATUSES.includes(share.status)) return note(UNCLEAR_RESULT);
   if (share.status === "held") {
     return note(`Your ${formatMoney(share.amount_cents)} is held. You'll only be charged if everyone pays.`);
   }

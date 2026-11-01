@@ -15,6 +15,7 @@ import {
   CREATED_ORDER,
   EXPIRES,
   ORDER_ID,
+  PAYPAL_KEYS as KEYS,
   SHARE_ID,
   TOKEN,
   authorizedOrder,
@@ -23,8 +24,6 @@ import {
 } from "../fixtures/paypal";
 import type { PayPalStep } from "../fixtures/paypal";
 import { testEnv } from "../helpers/env";
-
-const KEYS = { PAYPAL_CLIENT_ID: "client-id", PAYPAL_CLIENT_SECRET: "client-secret-value" };
 
 const INPUT: OrderInput = {
   shareId: SHARE_ID,

@@ -1,3 +1,6 @@
+/** Stand-in sandbox keys. Without keys the client makes no call at all. */
+export const PAYPAL_KEYS = { PAYPAL_CLIENT_ID: "client-id", PAYPAL_CLIENT_SECRET: "client-secret-value" };
+
 /** A share id in the format the database expects. */
 export const SHARE_ID = "shr_aaaaaaaaaaaaaaaaaaaaaa";
 export const ORDER_ID = "TESTORDER0000001";

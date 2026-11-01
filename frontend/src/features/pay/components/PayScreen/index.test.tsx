@@ -1,13 +1,28 @@
-import { render, screen } from "@testing-library/react";
-import { useGetShareQuery } from "@/api/sharesApi";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { useCheckoutMutation, useGetShareQuery } from "@/api/sharesApi";
+import { leaveFor } from "@/lib/leaveFor";
 import { PayScreen } from "./index";
 
 jest.mock("@/api/sharesApi");
+jest.mock("@/lib/leaveFor");
 jest.mock("@/sockets/useShareLive", () => ({ useShareLive: () => 10_000 }));
 jest.mock("@/components/ThemeToggle", () => ({ ThemeToggle: () => null }));
 
 const answer = (state: object) =>
   jest.mocked(useGetShareQuery).mockReturnValue(state as ReturnType<typeof useGetShareQuery>);
+
+const checkout = jest.fn();
+const checkoutState = (state: object) =>
+  jest
+    .mocked(useCheckoutMutation)
+    .mockReturnValue([checkout, state] as unknown as ReturnType<typeof useCheckoutMutation>);
+
+const pressHold = () => fireEvent.click(screen.getByRole("button", { name: /Hold my share with PayPal/ }));
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  checkoutState({});
+});
 
 const share = {
   share_id: "shr_1",
@@ -43,11 +58,54 @@ describe("PayScreen", () => {
     expect(screen.getByText("Sandbox")).toBeInTheDocument();
   });
 
-  it("keeps the hold button off until checkout exists, and asks the API on the live hook's interval", () => {
+  it("asks the API on the live hook's interval", () => {
     answer({ data: share });
     render(<PayScreen shareId="shr_1" />);
-    expect(screen.getByRole("button", { name: /Hold my share with PayPal/ })).toBeDisabled();
     expect(useGetShareQuery).toHaveBeenCalledWith("shr_1", { pollingInterval: 10_000 });
+  });
+
+  it("opens checkout for this share, then leaves for PayPal", async () => {
+    answer({ data: share });
+    checkout.mockResolvedValue({
+      data: { outcome: "completed", order_id: "O1", approve_url: "https://www.sandbox.paypal.com/x" },
+    });
+    render(<PayScreen shareId="shr_1" />);
+    pressHold();
+    expect(checkout).toHaveBeenCalledWith("shr_1");
+    await waitFor(() => expect(leaveFor).toHaveBeenCalledWith("https://www.sandbox.paypal.com/x"));
+  });
+
+  it("stays on the page when PayPal's reply was lost, and says so", async () => {
+    answer({ data: share });
+    checkout.mockResolvedValue({ data: { outcome: "unknown", order_id: null, approve_url: null } });
+    checkoutState({ data: { outcome: "unknown" } });
+    render(<PayScreen shareId="shr_1" />);
+    pressHold();
+    await waitFor(() => expect(checkout).toHaveBeenCalled());
+    expect(leaveFor).not.toHaveBeenCalled();
+    expect(screen.getByText(/PayPal did not return a clear result/)).toBeInTheDocument();
+  });
+
+  it("shows the API's sentence when checkout is refused, and does not leave", async () => {
+    answer({ data: share });
+    const refused = { status: 409, data: { error: "share_not_payable", message: "Too late." } };
+    checkout.mockResolvedValue({ error: refused });
+    checkoutState({ error: refused });
+    render(<PayScreen shareId="shr_1" />);
+    pressHold();
+    await waitFor(() => expect(checkout).toHaveBeenCalled());
+    expect(screen.getByRole("alert")).toHaveTextContent("Too late.");
+    expect(leaveFor).not.toHaveBeenCalled();
+  });
+
+  it("shows the button as working during the call", () => {
+    answer({ data: share });
+    checkoutState({ isLoading: true });
+    render(<PayScreen shareId="shr_1" />);
+    expect(screen.getByRole("button", { name: /Hold my share with PayPal/ })).toHaveAttribute(
+      "aria-busy",
+      "true",
+    );
   });
 
   it("replaces the condition once the plan is over for this person", () => {

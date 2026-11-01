@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useGetShareQuery } from "@/api/sharesApi";
+import { useCheckoutMutation, useGetShareQuery } from "@/api/sharesApi";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { FormError } from "@/components/FormError";
@@ -11,10 +11,13 @@ import { Loading } from "@/components/Spinner";
 import { Squares } from "@/components/Squares";
 import { StatusTag } from "@/components/StatusTag";
 import { formatMoney } from "@/lib/format";
+import { leaveFor } from "@/lib/leaveFor";
 import { SHARE_STATUS_VIEW } from "@/lib/status";
 import { useShareLive } from "@/sockets/useShareLive";
 import type { PublicShare } from "@/types/generated/api-types";
+import { UNCLEAR_RESULT } from "@/types/generated/rules";
 import { conditionText, payView, withOthers } from "../../payView";
+import type { PayView } from "../../payView";
 import { Act, Amount, Band, Body, Column, Help, Lead, Message, Others, Panel, Row, Who } from "./styled";
 
 /** The page a friend opens from a pay link. Mobile first, one column, and no scroll scenes. */
@@ -80,18 +83,36 @@ function Share({ share }: { share: PublicShare }) {
                 {view.message}
               </Sentence>
             ) : null}
-            {view.action ? (
-              <>
-                {/* phase 6: calls checkout, then goes to approve_url */}
-                <Button variant="sun" block disabled>
-                  {view.action.label}
-                </Button>
-                <Help>{view.action.help}</Help>
-              </>
-            ) : null}
+            {view.action ? <HoldButton shareId={share.share_id} action={view.action} /> : null}
           </Act>
         </Column>
       </Body>
+    </>
+  );
+}
+
+interface HoldButtonProps {
+  shareId: string;
+  action: NonNullable<PayView["action"]>;
+}
+
+/** Asks the server for the PayPal link, then leaves for it. A second press gets the same link, never a new order. */
+function HoldButton({ shareId, action }: HoldButtonProps) {
+  const [checkout, { data, error, isLoading }] = useCheckoutMutation();
+
+  const hold = async () => {
+    const { data: opened } = await checkout(shareId);
+    if (opened?.approve_url) leaveFor(opened.approve_url);
+  };
+
+  return (
+    <>
+      <Button variant="sun" block loading={isLoading} onClick={() => void hold()}>
+        {action.label}
+      </Button>
+      <Help>{action.help}</Help>
+      {data?.outcome === "unknown" ? <Help>{UNCLEAR_RESULT}</Help> : null}
+      <FormError error={error} />
     </>
   );
 }

@@ -50,6 +50,10 @@ export const CLARIFY_FALLBACK_QUESTION =
   "I could not read a complete rule. Restate the price, the people, and the deadline.";
 export const CLARIFY_LIMIT_MESSAGE = "Start a new rule with all the details in one message.";
 
+/** Said on the pay page and in the API's refusal while a share's PayPal result is unknown. */
+export const UNCLEAR_RESULT =
+  "PayPal did not return a clear result. Your share stays reserved while we check.";
+
 /** Said before a reset in the dialog and after it in the API response. */
 export const RESET_HOLDS_WARNING =
   "Sandbox holds that already exist in PayPal stay there until they are voided or expire.";
