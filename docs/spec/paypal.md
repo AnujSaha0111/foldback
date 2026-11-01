@@ -8,10 +8,10 @@ Flow: create an order with `intent: AUTHORIZE` → buyer approves in PayPal → 
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `PAYPAL_CLIENT_ID` | yes | Sandbox REST app |
-| `PAYPAL_CLIENT_SECRET` | yes | Server only |
+| `PAYPAL_CLIENT_ID` | for checkout | Sandbox REST app. Boot accepts it unset, so a deploy never takes the app down. Without it no PayPal call is made and checkout stays closed |
+| `PAYPAL_CLIENT_SECRET` | for checkout | Server only. Same as above |
 | `PAYPAL_ENV` | yes | Literal `sandbox` |
-| `PAYPAL_API_BASE` | yes | `https://api-m.sandbox.paypal.com` |
+| `PAYPAL_API_BASE` | no | Default and only accepted value: `https://api-m.sandbox.paypal.com` |
 | `APP_BASE_URL` | yes | `http://localhost:3000` in dev, `https://{domain}` in prod. Return URLs are built from it |
 | `GEMINI_API_KEY` | phase 4+ | Free key from aistudio.google.com/apikey. Do not enable billing on its Google Cloud project |
 | `GROQ_API_KEY` | phase 4+ | Free Groq key (console.groq.com/keys). No card. Use a key dedicated to this project |
@@ -43,8 +43,9 @@ In the PayPal developer dashboard, use the default sandbox accounts or create tw
 - Store the `paypal-debug-id` response header on the operation row. It is what PayPal support asks for.
 - Classify each response as one of:
   - **completed**: the documented success status.
-  - **definite failure**: HTTP 4xx with a parseable JSON body. Record `name` and `details[0].issue`.
-  - **unknown**: abort, network error, HTTP 5xx, or an unparseable body.
+  - **definite failure**: HTTP 4xx with a parseable JSON body. Record `name` and `details[0].issue`. A call that never left because no token could be had is also a definite failure: nothing reached PayPal.
+  - **unknown**: abort, network error, HTTP 5xx, an unparseable body, a 2xx body missing what this file promises, or `RESOURCE_CONFLICT` (issue `PREVIOUS_REQUEST_IN_PROGRESS`), which means an earlier request with this key is still running.
+- A stored response drops `payer`, `payment_source`, and `purchase_units[].shipping`, all of which carry the buyer's details.
 
 ## Idempotency keys
 
@@ -90,6 +91,8 @@ A declined checkout increments `checkout_attempt`, so the next order gets a fres
 ```
 
 - `value` is `amount_cents` formatted with two decimals, inside `integrations/paypal/client.ts` only.
+- `description` is cut to PayPal's limit of 127 characters.
+- `approve_url` must start with `https://www.sandbox.paypal.com/`. Any other link is unknown, because the `shares` CHECK would refuse it.
 - `application_context` is deprecated. Use `payment_source.paypal.experience_context` as shown.
 - Success: HTTP 200/201 with `status` `PAYER_ACTION_REQUIRED` (or `CREATED`). Store `id` as `order_id`. The approval link is the `links[]` entry whose `rel` is `payer-action` (with `payment_source`) or `approve` (older shape). Accept either.
 - Lost response before an order id is parsed: operation `unknown`, share `checkout_open` with a null `order_id`. Sync with a null `order_id` marks the operation `failed` and returns the share to `waiting`, without calling PayPal. This is the one sync path that makes no PayPal call. Because the key is per attempt, the new attempt cannot collide.

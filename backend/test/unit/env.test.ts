@@ -48,6 +48,19 @@ describe("env fails fast (test 15)", () => {
     expect(failure({ PAYPAL_ENV: "live" }).variables).toContain("PAYPAL_ENV");
   });
 
+  it("refuses the live PayPal API", () => {
+    const err = failure({ PAYPAL_API_BASE: "https://api-m.paypal.com" });
+    expect(err.variables).toContain("PAYPAL_API_BASE");
+  });
+
+  it("defaults to the sandbox API and boots without PayPal keys, with writes on", () => {
+    const env = testEnv();
+    expect(env.PAYPAL_API_BASE).toBe("https://api-m.sandbox.paypal.com");
+    expect(env.PAYPAL_CLIENT_ID).toBeUndefined();
+    expect(env.PAYPAL_WRITES_ENABLED).toBe(true);
+    expect(env.PAYPAL_TIMEOUT_MS).toBe(15_000);
+  });
+
   it("treats an empty string as unset", () => {
     expect(failure({ JWT_SECRET: "" }).variables).toContain("JWT_SECRET");
     expect(testEnv({ GROQ_API_KEY: "" }).GROQ_API_KEY).toBeUndefined();

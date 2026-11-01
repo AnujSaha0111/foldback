@@ -53,6 +53,18 @@ const schema = z.object({
   SIGNUPS_ENABLED: flag,
   GIT_SHA: z.string().min(1).default("dev"),
   PAYPAL_ENV: z.literal("sandbox", "must be exactly sandbox. Foldback never runs against live PayPal"),
+  PAYPAL_API_BASE: z
+    .literal(
+      "https://api-m.sandbox.paypal.com",
+      "must be the sandbox API. Foldback never runs against live PayPal",
+    )
+    .default("https://api-m.sandbox.paypal.com"),
+  /** Optional at boot, so a deploy without them still serves the app. Without them no PayPal call is made. */
+  PAYPAL_CLIENT_ID: z.string().min(1).optional(),
+  PAYPAL_CLIENT_SECRET: z.string().min(1).optional(),
+  /** Kill switch for checkout and authorize. */
+  PAYPAL_WRITES_ENABLED: flag,
+  PAYPAL_TIMEOUT_MS: z.coerce.number().int().positive().default(15_000),
   AI_ENABLED: flag,
   AI_DAILY_CALLS: z.coerce.number().int().positive().default(600),
   /** AI attempts per minute across everyone, kept under the smallest free provider limit (docs/spec/ai.md). */

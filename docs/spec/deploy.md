@@ -81,6 +81,9 @@ Every variable is parsed by `config/env.ts` (zod). Boot fails on a missing or in
 | `LOG_LEVEL` | `info` | |
 | `METRICS_TOKEN` | random | Bearer token for `/metrics` |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | unset | Set it to turn on tracing |
+| `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET` | sandbox REST app | Without them the app runs and checkout stays closed |
+| `PAYPAL_WRITES_ENABLED` | `true` | Kill switch for checkout and authorize |
+| `PAYPAL_TIMEOUT_MS` | `15000` | A call that takes longer counts as unknown |
 | `SIGNUPS_ENABLED`, `AI_ENABLED`, `AI_DAILY_CALLS` | `true`, `true`, `600` | Kill switches and caps |
 | `AI_GLOBAL_PER_MIN`, `AI_USER_PER_MIN`, `AI_USER_PER_DAY`, `AI_IP_PER_MIN`, `AI_IP_PER_DAY` (optional) | `12`, `6`, `30`, `10`, `60` | AI limits from `ai.md`. Leave unset to use these defaults. `compose.yml` must list a variable before setting it in `.env` has any effect |
 | `GIT_SHA` | baked into the image by CI | Shown in `/api/health`. Compose does not override it |
