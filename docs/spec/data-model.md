@@ -323,7 +323,7 @@ A senior-database-engineer review of the first draft found 7 problems that were 
 4. `demo_now` may move backward only while no share has ever been held. The route enforces it; the database does not.
 5. `version` orders socket invalidations. It is not used for optimistic concurrency.
 6. Idempotency keys are derived per PayPal object (`paypal.md`).
-7. No flow records a mutating operation without calling PayPal. A definite 4xx is inserted `pending`, then updated to `failed`.
+7. No flow records a mutating operation without calling PayPal. A definite 4xx is inserted `pending`, then updated to `failed`. The one exception is a token fetch that fails after the row is inserted: nothing reached PayPal, so the row settles `failed` with `{"error": "paypal_token_unavailable"}` and no status.
 8. There is no per-IP AI cap in the database. Per-IP limits live in memory. `ip_hash` is for audit only.
 9. Nothing looks a share up by an older order id. The return URL token must equal the stored `order_id`.
 10. `contracts_sample_is_seed` stays one-directional.
