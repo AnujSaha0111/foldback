@@ -1,3 +1,6 @@
+/** Stand-in sandbox keys. Without keys the client makes no call at all. */
+export const PAYPAL_KEYS = { PAYPAL_CLIENT_ID: "client-id", PAYPAL_CLIENT_SECRET: "client-secret-value" };
+
 /** A share id in the format the database expects. */
 export const SHARE_ID = "shr_aaaaaaaaaaaaaaaaaaaaaa";
 export const ORDER_ID = "TESTORDER0000001";
@@ -49,6 +52,8 @@ export interface PayPalStep {
   fail?: "timeout" | "network";
   /** The reply starts, then breaks while its body is read. */
   breaksInBody?: boolean;
+  /** Runs while the call is in flight, before the reply arrives. */
+  during?: () => Promise<void>;
 }
 
 interface PayPalCall {
@@ -88,7 +93,10 @@ export function scriptedPayPal(steps: PayPalStep[], tokenStep: PayPalStep = { bo
     });
     const step = url.endsWith("/v1/oauth2/token") ? tokenStep : queue.shift();
     if (step === undefined) return Promise.reject(new Error(`No scripted PayPal reply for ${url}`));
-    return step.fail ? Promise.reject(failure(step.fail)) : Promise.resolve(reply(step));
+    return (step.during?.() ?? Promise.resolve()).then(() => {
+      if (step.fail) throw failure(step.fail);
+      return reply(step);
+    });
   };
   return {
     fetch: stub,

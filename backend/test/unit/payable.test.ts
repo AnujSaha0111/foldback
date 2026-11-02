@@ -1,4 +1,4 @@
-import { isPayable } from "../../src/domain/payable";
+import { isPayable, payRefusal } from "../../src/domain/payable";
 import type { PayableContract, PayableShare } from "../../src/domain/payable";
 import { SHARE_STATUSES } from "../../src/domain/statuses";
 
@@ -74,5 +74,46 @@ describe("isPayable", () => {
   it("refuses when the clock or the deadline is missing", () => {
     expect(isPayable(contract({ demoNow: null }), share())).toBe(false);
     expect(isPayable(contract({ deadlineAt: null }), share())).toBe(false);
+  });
+});
+
+describe("payRefusal", () => {
+  it("has no objection to a payable share", () => {
+    for (const status of ["waiting", "checkout_open", "declined"] as const) {
+      expect(payRefusal(contract(), share({ status }))).toBeNull();
+    }
+  });
+
+  it("names a sample row first, whatever else is true", () => {
+    const row = share({ moneySource: "sample", status: "kept" });
+    expect(payRefusal(contract({ status: "kept", direction: "keep" }), row)).toBe("sample_row");
+  });
+
+  it("names unknown money even on a closed plan", () => {
+    for (const status of ["authorize_unknown", "capture_unknown", "void_unknown"] as const) {
+      expect(payRefusal(contract({ status: "blocked", direction: "keep" }), share({ status }))).toBe(
+        "money_unknown",
+      );
+    }
+  });
+
+  it("calls a plan closed once a decision exists", () => {
+    expect(payRefusal(contract({ status: "releasing", direction: "release" }), share())).toBe(
+      "contract_closed",
+    );
+    expect(payRefusal(contract({ status: "kept" }), share())).toBe("contract_closed");
+    expect(payRefusal(contract({ status: "released" }), share())).toBe("contract_closed");
+  });
+
+  it("says a held share is held, not unpayable", () => {
+    expect(payRefusal(contract(), share({ status: "held" }))).toBe("share_already_held");
+  });
+
+  it("refuses an expired share, a late one, and anyone but the grace person in grace", () => {
+    const grace = contract({ status: "grace", demoNow: AFTER_DEADLINE });
+    expect(payRefusal(contract(), share({ status: "expired" }))).toBe("share_not_payable");
+    expect(payRefusal(contract({ demoNow: DEADLINE }), share())).toBe("share_not_payable");
+    expect(payRefusal(grace, share())).toBe("share_not_payable");
+    expect(payRefusal(grace, share({ isGraceSubject: true }))).toBeNull();
   });
 });

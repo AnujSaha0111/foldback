@@ -1,4 +1,4 @@
-import { OPEN_SHARE_STATUSES } from "./statuses";
+import { HOLDING_SHARE_STATUSES, OPEN_SHARE_STATUSES, UNKNOWN_SHARE_STATUSES } from "./statuses";
 import type { ContractStatus, Direction, MoneySource, ShareStatus } from "./statuses";
 
 export interface PayableContract {
@@ -37,4 +37,18 @@ export function isPayable(contract: PayableContract, share: PayableShare): boole
     return share.isGraceSubject && contract.graceUntil !== null && now < contract.graceUntil.getTime();
   }
   return false;
+}
+
+export type PayRefusal =
+  "sample_row" | "money_unknown" | "contract_closed" | "share_already_held" | "share_not_payable";
+
+/** Why a share may not go to PayPal, most specific reason first, or null when it may. */
+export function payRefusal(contract: PayableContract, share: PayableShare): PayRefusal | null {
+  if (share.moneySource !== "sandbox") return "sample_row";
+  if (UNKNOWN_SHARE_STATUSES.includes(share.status)) return "money_unknown";
+  if (contract.direction !== null || contract.status === "kept" || contract.status === "released") {
+    return "contract_closed";
+  }
+  if (HOLDING_SHARE_STATUSES.includes(share.status)) return "share_already_held";
+  return isPayable(contract, share) ? null : "share_not_payable";
 }

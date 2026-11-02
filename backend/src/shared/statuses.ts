@@ -38,5 +38,12 @@ export const HOLDING_SHARE_STATUSES: readonly ShareStatus[] = [
   "capture_failed",
 ];
 
+/** PayPal has not said how a call ended, so the share stays reserved until sync asks. */
+export const UNKNOWN_SHARE_STATUSES: readonly ShareStatus[] = [
+  "authorize_unknown",
+  "capture_unknown",
+  "void_unknown",
+];
+
 export type Direction = "keep" | "release";
 export type MoneySource = "sample" | "sandbox";

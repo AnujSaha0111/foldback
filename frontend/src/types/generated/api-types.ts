@@ -101,6 +101,11 @@ export interface PublicShare {
   other_names: string[];
 }
 
+/** POST /api/shares/:id/checkout. A lost PayPal reply is `unknown`: there is no link, and the share stays reserved. */
+export type CheckoutResponse =
+  | { outcome: "completed"; order_id: string; approve_url: string }
+  | { outcome: "unknown"; order_id: null; approve_url: null };
+
 /** Colors the board gives a bar. The word on the bar, never the color, says the status. */
 export type SchedulerColor = "gray" | "blue" | "green" | "red";
 

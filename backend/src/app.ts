@@ -18,6 +18,7 @@ import { createLimiters, limitsFromEnv } from "./http/middleware/rateLimit";
 import type { Limits } from "./http/middleware/rateLimit";
 import { requestId } from "./http/middleware/requestId";
 import { requestLogger } from "./http/middleware/requestLogger";
+import { createPayPalClient } from "./integrations/paypal/client";
 import type { Logger } from "./observability/logger";
 import type { Notifier } from "./realtime/notify";
 import { authRoutes } from "./routes/auth.routes";
@@ -37,6 +38,8 @@ export interface AppDeps {
   notifier: Notifier;
   /** Replaces the global fetch for model calls. Tests use it so nothing reaches the network. */
   llmFetch?: typeof fetch;
+  /** Replaces the global fetch for PayPal calls, for the same reason. */
+  paypalFetch?: typeof fetch;
   now?: () => Date;
 }
 
@@ -47,6 +50,7 @@ export function createApp({
   logger,
   notifier,
   llmFetch,
+  paypalFetch,
   now,
   limits = limitsFromEnv(env),
 }: AppDeps): Express {
@@ -87,7 +91,8 @@ export function createApp({
     ),
   );
 
-  app.use("/api/shares", sharesRoutes(createSharesController(pool)));
+  const paypal = createPayPalClient({ env, logger, ...(paypalFetch ? { fetch: paypalFetch } : {}) });
+  app.use("/api/shares", sharesRoutes(createSharesController({ env, pool, notifier, paypal }), limiters));
 
   app.use(notFoundHandler);
   app.use(errorHandler(logger));

@@ -1,10 +1,12 @@
 import type { Request, RequestHandler } from "express";
-import type { Pool } from "pg";
 import { AppError } from "../http/errors";
+import { startCheckout } from "../services/holds.service";
+import type { HoldDeps } from "../services/holds.service";
 import { readPublicShare } from "../services/shares.service";
 
 export interface SharesController {
   read: RequestHandler;
+  checkout: RequestHandler;
 }
 
 const SHARE_ID = /^shr_[A-Za-z0-9_-]{22}$/;
@@ -18,10 +20,13 @@ function parseShareId(req: Request): string {
   return id;
 }
 
-export function createSharesController(pool: Pool): SharesController {
+export function createSharesController(deps: HoldDeps): SharesController {
   return {
     read: async (req, res) => {
-      res.json(await readPublicShare(pool, parseShareId(req)));
+      res.json(await readPublicShare(deps.pool, parseShareId(req)));
+    },
+    checkout: async (req, res) => {
+      res.json(await startCheckout(deps, parseShareId(req)));
     },
   };
 }

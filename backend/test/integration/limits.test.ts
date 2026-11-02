@@ -7,10 +7,11 @@ import {
   MAX_CONTRACTS_PER_USER,
 } from "../../src/shared/rules";
 import { CABIN_CHAT_READING } from "../fixtures/llm";
+import { CREATED_ORDER, PAYPAL_KEYS, scriptedPayPal } from "../fixtures/paypal";
 import { CABIN_CHAT } from "../fixtures/rules";
 import { ORIGIN, buildApp, recordingNotifier, sessionCookie } from "../helpers/app";
 import type { BuildOptions } from "../helpers/app";
-import { createPools, prepareDatabase, truncateAll } from "../helpers/db";
+import { confirmed, createPools, member, prepareDatabase, truncateAll } from "../helpers/db";
 import type { Pools } from "../helpers/db";
 import { says, scripted } from "../helpers/llmStub";
 import type { Step } from "../helpers/llmStub";
@@ -195,6 +196,31 @@ describe("request size (L7)", () => {
     expect(res.status).toBe(413);
     expect((res.body as { error: string }).error).toBe("payload_too_large");
     expect(calls).toHaveLength(0);
+  });
+});
+
+describe("checkout limit (L8)", () => {
+  it("stops the third checkout from one IP, and PayPal was asked once", async () => {
+    const paypal = scriptedPayPal([{ status: 201, body: CREATED_ORDER }]);
+    const app = buildApp(pools, {
+      env: PAYPAL_KEYS,
+      paypalFetch: paypal.fetch,
+      limits: { checkout: { limit: 2, windowMs: 600_000 } },
+    });
+    const { shareIds } = await confirmed(pools.app, await member(pools.app));
+    const checkout = () =>
+      request(app)
+        .post(`/api/shares/${shareIds[0] ?? ""}/checkout`)
+        .set("Origin", ORIGIN)
+        .send({});
+
+    expect((await checkout()).status).toBe(200);
+    expect((await checkout()).status).toBe(200);
+    const third = await checkout();
+    expect(third.status).toBe(429);
+    expect((third.body as { error: string }).error).toBe("rate_limited");
+    expect(Number(third.headers["retry-after"])).toBeGreaterThan(0);
+    expect(paypal.apiCalls()).toHaveLength(1);
   });
 });
 

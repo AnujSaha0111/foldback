@@ -366,6 +366,8 @@ function httpInit(request: PayPalRequest, bearer: string, timeoutMs: number): Re
   };
 }
 
+export type PayPalClient = ReturnType<typeof createPayPalClient>;
+
 /** One per process, because it holds the cached OAuth token. */
 export function createPayPalClient(deps: PayPalDeps) {
   const { env } = deps;

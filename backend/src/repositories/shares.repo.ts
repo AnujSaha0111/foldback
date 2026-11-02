@@ -62,6 +62,73 @@ export async function shareExists(db: Db, shareId: string): Promise<boolean> {
   return result.rowCount === 1;
 }
 
+/** What checkout works from. It holds the approval link, so it stays on the server. */
+export interface CheckoutShare {
+  displayName: string;
+  isGraceSubject: boolean;
+  status: ShareStatus;
+  amountCents: number;
+  moneySource: MoneySource;
+  checkoutAttempt: number;
+  orderId: string | null;
+  approveUrl: string | null;
+}
+
+export async function findForCheckout(db: Db, shareId: string): Promise<CheckoutShare | null> {
+  const result = await db.query<{
+    display_name: string;
+    is_grace_subject: boolean;
+    status: ShareStatus;
+    amount_cents: number;
+    money_source: MoneySource;
+    checkout_attempt: number;
+    order_id: string | null;
+    approve_url: string | null;
+  }>(
+    `SELECT display_name, is_grace_subject, status, amount_cents, money_source, checkout_attempt, order_id, approve_url
+       FROM shares WHERE id = $1`,
+    [shareId],
+  );
+  const row = result.rows[0];
+  if (!row) return null;
+  return {
+    displayName: row.display_name,
+    isGraceSubject: row.is_grace_subject,
+    status: row.status,
+    amountCents: row.amount_cents,
+    moneySource: row.money_source,
+    checkoutAttempt: row.checkout_attempt,
+    orderId: row.order_id,
+    approveUrl: row.approve_url,
+  };
+}
+
+/** Starts an attempt. A retry after a cancel drops the old order, or its dead link could be handed out again. */
+export async function openCheckout(client: PoolClient, shareId: string, attempt: number): Promise<void> {
+  await client.query(
+    `UPDATE shares SET status = 'checkout_open', checkout_attempt = $2, order_id = NULL, approve_url = NULL
+      WHERE id = $1`,
+    [shareId, attempt],
+  );
+}
+
+export async function storeOrder(
+  client: PoolClient,
+  shareId: string,
+  order: { orderId: string; approveUrl: string },
+): Promise<void> {
+  await client.query("UPDATE shares SET order_id = $2, approve_url = $3 WHERE id = $1", [
+    shareId,
+    order.orderId,
+    order.approveUrl,
+  ]);
+}
+
+/** PayPal refused the order, so nothing exists there and the share is free again. */
+export async function closeCheckout(client: PoolClient, shareId: string): Promise<void> {
+  await client.query("UPDATE shares SET status = 'waiting' WHERE id = $1", [shareId]);
+}
+
 export interface SeedShareInput {
   name: string;
   position: number;

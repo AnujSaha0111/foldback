@@ -287,7 +287,7 @@ A senior-database-engineer review of the first draft found 7 problems that were 
 | F1 | Insert guards: a **sandbox** contract must be born unconfirmed and undecided; a sandbox share must be born `waiting` with no PayPal ids. Sample seeds are exempt. The state machine can no longer be skipped by an INSERT |
 | F2 | Money moves only on "keep": `held → capture_unknown/kept` needs the contract's `direction = 'keep'`, and a `capture` operation row needs it too |
 | F3 | A share cannot become `expired` while a PayPal mutation for it is `pending` or `unknown` (the authorization might exist) |
-| F4 | A share whose money may be live (held, any unknown status, `capture_failed`, or a call in flight) cannot be deleted, directly or by cascade. Guest cleanup and reset must skip such rows |
+| F4 | A share whose money may be live (held, any unknown status, `capture_failed`, or an authorize, capture, or void in flight) cannot be deleted, directly or by cascade. Guest cleanup and reset must skip such rows. A `create_order` does not count: an unapproved order holds no money |
 | F5 | The operation log is an audit record: identity and request never change, outcome moves only `pending → completed/failed/unknown` and `unknown → completed/failed`, settled rows are frozen, mutating operations are born `pending`, and sample shares cannot have operations |
 | F6 | `ops_one_completion_per_key` became `ops_one_live_per_key` (any non-`failed` row), so a replay insert gets `23505` and the caller reads the existing row |
 | F7 | A deferred constraint trigger checks at commit that share count, amounts, and the grace subject match the confirmed terms. The share set is frozen once confirmed |
@@ -362,7 +362,7 @@ Seed rows are inserted directly in their starting statuses. The insert guards ap
 
 ## Reset
 
-`POST /api/demo/reset` (authenticated) deletes the caller's contracts (shares, operations, and events cascade), then re-inserts that caller's two seeds, in one transaction. It never touches other users' data, never touches `ai_usage`, and never calls PayPal. **If any of the caller's sandbox shares holds live money** (held, an unknown status, `capture_failed`, or a call in flight) the delete is refused by `shares_live_money_undeletable` and the route returns `409 live_money` with "Release or void your live holds first." Contracts without live money are fine to reset.
+`POST /api/demo/reset` (authenticated) deletes the caller's contracts (shares, operations, and events cascade), then re-inserts that caller's two seeds, in one transaction. It never touches other users' data, never touches `ai_usage`, and never calls PayPal. **If any of the caller's sandbox shares holds live money** (held, an unknown status, `capture_failed`, or an authorize, capture, or void in flight) the delete is refused by `shares_live_money_undeletable` and the route returns `409 live_money` with "Release or void your live holds first." Contracts without live money are fine to reset.
 
 ## Guest cleanup
 

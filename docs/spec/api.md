@@ -31,7 +31,7 @@ Every non-GET request must carry an `Origin` (or `Referer`) header in `CORS_ORIG
 | 404 | `not_found` | Unknown contract or share, or a contract owned by someone else |
 | 409 | `email_taken` | Signup with an existing email. Same response time as success, to limit enumeration |
 | 409 | `resolve_in_progress` | The contract lock is held by another request |
-| 409 | `live_money` | Reset while a sandbox share is held, in an unknown status, `capture_failed`, or has a PayPal call in flight. Release or void it first |
+| 409 | `live_money` | Reset while a sandbox share is held, in an unknown status, `capture_failed`, or has an authorize, capture, or void call in flight. Release or void it first |
 | 409 | `sample_row` | Checkout or authorize on a `sample` share |
 | 409 | `share_already_held` | Checkout or authorize when the share is `held` or later |
 | 409 | `share_not_payable` | Deadline passed and this share is not the open grace subject, or the share is `expired` |
@@ -241,11 +241,16 @@ No PayPal ids and no other people's statuses beyond `held_count`.
 `POST /api/shares/:shareId/checkout`, no body.
 
 - Share `checkout_open` with a stored `approve_url`: return it without calling PayPal.
-- Share `waiting` or `declined` and payable: increment `checkout_attempt`, create the order (`paypal.md`), store `order_id` and `approve_url`, status `checkout_open`, event `order_created`.
+- Share `waiting` or `declined` and payable: increment `checkout_attempt`, clear any previous order, create the order (`paypal.md`), store `order_id` and `approve_url`, status `checkout_open`, event `order_created`.
+- Share `checkout_open` with no stored link (the create is in flight or its result is unknown): `409 money_unknown`.
+- `paypal_disabled` also covers a stored link, so nothing leaves for PayPal while writes are off.
+- `checkout_attempt` stops at 20, after which the share returns `409 share_not_payable`.
 
 ```json
-{ "order_id": "5O190127TN364715T", "approve_url": "https://www.sandbox.paypal.com/checkoutnow?token=5O190127TN364715T" }
+{ "outcome": "completed", "order_id": "5O190127TN364715T", "approve_url": "https://www.sandbox.paypal.com/checkoutnow?token=5O190127TN364715T" }
 ```
+
+A lost reply returns 200 with `{ "outcome": "unknown", "order_id": null, "approve_url": null }`.
 
 ## Authorize
 
