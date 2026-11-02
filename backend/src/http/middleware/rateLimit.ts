@@ -24,6 +24,8 @@ export interface Limits {
   createContract: LimitRule;
   /** Pay-link checkouts per IP (architecture.md). */
   checkout: LimitRule;
+  /** Authorize and sync per IP, counted together (architecture.md). */
+  authorize: LimitRule;
 }
 
 const MINUTE_MS = 60_000;
@@ -42,6 +44,7 @@ export const DEFAULT_LIMITS: Limits = {
   aiIpDay: { limit: 60, windowMs: DAY_MS },
   createContract: { limit: 15, windowMs: DAY_MS },
   checkout: { limit: 10, windowMs: 10 * MINUTE_MS },
+  authorize: { limit: 20, windowMs: 10 * MINUTE_MS },
 };
 
 /** The defaults, with the AI limits the operator set in the environment. */
@@ -65,6 +68,7 @@ export interface Limiters {
   ai: RequestHandler[];
   createContract: RequestHandler;
   checkout: RequestHandler;
+  authorize: RequestHandler;
 }
 
 const ipKey = (req: Request): string => ipKeyGenerator(req.ip ?? "unknown");
@@ -104,6 +108,7 @@ export function createLimiters(limits: Limits = DEFAULT_LIMITS): Limiters {
     reset: make(limits.reset, (_req, res) => currentUser(res).id),
     createContract: make(limits.createContract, (_req, res) => `create|${currentUser(res).id}`),
     checkout: make(limits.checkout, (req) => `checkout|${ipKey(req)}`),
+    authorize: make(limits.authorize, (req) => `authorize|${ipKey(req)}`),
     ai: [
       make(limits.aiUserMinute, (_req, res) => `user-min|${currentUser(res).id}`),
       make(limits.aiUserDay, (_req, res) => `user-day|${currentUser(res).id}`),

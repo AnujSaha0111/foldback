@@ -85,3 +85,5 @@ export const Help = styled("p")({
   fontSize: "var(--fs-small)",
   color: "var(--text-2)",
 });
+
+export const HoldId = styled(Help)({ fontFamily: "var(--font-mono)", overflowWrap: "anywhere" });

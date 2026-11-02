@@ -18,12 +18,35 @@ import type { PublicShare } from "@/types/generated/api-types";
 import { UNCLEAR_RESULT } from "@/types/generated/rules";
 import { conditionText, payView, withOthers } from "../../payView";
 import type { PayView } from "../../payView";
-import { Act, Amount, Band, Body, Column, Help, Lead, Message, Others, Panel, Row, Who } from "./styled";
+import { useReturnFromPayPal } from "../../useReturnFromPayPal";
+import type { PayPalReturn } from "../../useReturnFromPayPal";
+import {
+  Act,
+  Amount,
+  Band,
+  Body,
+  Column,
+  Help,
+  HoldId,
+  Lead,
+  Message,
+  Others,
+  Panel,
+  Row,
+  Who,
+} from "./styled";
+
+interface PayScreenProps {
+  shareId: string;
+  /** The order PayPal sent the friend back with, if it did. */
+  returnedOrder?: string | null;
+}
 
 /** The page a friend opens from a pay link. Mobile first, one column, and no scroll scenes. */
-export function PayScreen({ shareId }: { shareId: string }) {
+export function PayScreen({ shareId, returnedOrder = null }: PayScreenProps) {
   const pollingInterval = useShareLive(shareId);
-  const { data, error } = useGetShareQuery(shareId, { pollingInterval });
+  const { data, error, refetch } = useGetShareQuery(shareId, { pollingInterval });
+  const paypalReturn = useReturnFromPayPal(shareId, returnedOrder, refetch);
   return (
     <Page
       compactFooter
@@ -34,7 +57,7 @@ export function PayScreen({ shareId }: { shareId: string }) {
       }
     >
       {data ? (
-        <Share share={data} />
+        <Share share={data} paypalReturn={paypalReturn} />
       ) : (
         <Column>{error ? <FormError error={error} /> : <Loading label="Loading your share…" />}</Column>
       )}
@@ -42,7 +65,7 @@ export function PayScreen({ shareId }: { shareId: string }) {
   );
 }
 
-function Share({ share }: { share: PublicShare }) {
+function Share({ share, paypalReturn }: { share: PublicShare; paypalReturn: PayPalReturn }) {
   const view = payView(share);
   const others = withOthers(share.other_names);
   const [firstStatus] = useState(share.status);
@@ -73,17 +96,26 @@ function Share({ share }: { share: PublicShare }) {
             </Row>
             <Row>
               <span>{share.display_name} (you)</span>
-              <StatusTag view={SHARE_STATUS_VIEW[share.status]} />
+              {/* The share reads as unknown during the call by design, which must not alarm the friend. */}
+              {paypalReturn.confirming ? null : <StatusTag view={SHARE_STATUS_VIEW[share.status]} />}
             </Row>
             {others ? <Others>{others}</Others> : null}
           </Panel>
           <Act aria-live="polite">
-            {view.message ? (
-              <Sentence key={view.message} data-rise={share.status === firstStatus ? undefined : true}>
-                {view.message}
-              </Sentence>
-            ) : null}
-            {view.action ? <HoldButton shareId={share.share_id} action={view.action} /> : null}
+            {paypalReturn.confirming ? (
+              <Loading label="Confirming with PayPal…" />
+            ) : (
+              <>
+                {view.message ? (
+                  <Sentence key={view.message} data-rise={share.status === firstStatus ? undefined : true}>
+                    {view.message}
+                  </Sentence>
+                ) : null}
+                {paypalReturn.holdId ? <HoldId>Hold {paypalReturn.holdId}</HoldId> : null}
+                <FormError error={paypalReturn.error} />
+                {view.action ? <HoldButton shareId={share.share_id} action={view.action} /> : null}
+              </>
+            )}
           </Act>
         </Column>
       </Body>

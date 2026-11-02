@@ -1,4 +1,4 @@
-import type { CheckoutResponse, PublicShare } from "@/types/generated/api-types";
+import type { AuthorizeResponse, CheckoutResponse, PublicShare } from "@/types/generated/api-types";
 import { baseApi } from "./baseApi";
 
 const sharesApi = baseApi.injectEndpoints({
@@ -13,7 +13,15 @@ const sharesApi = baseApi.injectEndpoints({
       query: (id) => ({ url: `/api/shares/${encodeURIComponent(id)}/checkout`, method: "POST", body: {} }),
       invalidatesTags: (_result, _error, id) => [{ type: "PublicShare", id }],
     }),
+    /** Places the hold after PayPal sent the friend back. `orderId` is the `token` from the return URL. */
+    authorize: build.mutation<AuthorizeResponse, { shareId: string; orderId: string }>({
+      query: ({ shareId, orderId }) => ({
+        url: `/api/shares/${encodeURIComponent(shareId)}/authorize`,
+        method: "POST",
+        body: { order_id: orderId },
+      }),
+    }),
   }),
 });
 
-export const { useCheckoutMutation, useGetShareQuery } = sharesApi;
+export const { useAuthorizeMutation, useCheckoutMutation, useGetShareQuery } = sharesApi;
