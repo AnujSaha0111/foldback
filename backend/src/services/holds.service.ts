@@ -93,6 +93,8 @@ async function finishCheckout(
 ): Promise<number> {
   return withTransaction(deps.pool, async (client) => {
     const version = await touchContract(client, attempt.contractId);
+    // A reset can delete the plan during the call. Its link never reached the friend, so the order stays unapproved.
+    if (version === 0) throw new AppError("not_found", "That pay link does not exist.");
     await settle(client, attempt.operationId, result);
     if (result.outcome === "failed") await closeCheckout(client, shareId);
     if (result.outcome === "completed") {

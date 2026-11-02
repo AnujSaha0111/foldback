@@ -31,7 +31,7 @@ Every non-GET request must carry an `Origin` (or `Referer`) header in `CORS_ORIG
 | 404 | `not_found` | Unknown contract or share, or a contract owned by someone else |
 | 409 | `email_taken` | Signup with an existing email. Same response time as success, to limit enumeration |
 | 409 | `resolve_in_progress` | The contract lock is held by another request |
-| 409 | `live_money` | Reset while a sandbox share is held, in an unknown status, `capture_failed`, or has a PayPal call in flight. Release or void it first |
+| 409 | `live_money` | Reset while a sandbox share is held, in an unknown status, `capture_failed`, or has an authorize, capture, or void call in flight. Release or void it first |
 | 409 | `sample_row` | Checkout or authorize on a `sample` share |
 | 409 | `share_already_held` | Checkout or authorize when the share is `held` or later |
 | 409 | `share_not_payable` | Deadline passed and this share is not the open grace subject, or the share is `expired` |

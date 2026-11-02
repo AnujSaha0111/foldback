@@ -347,6 +347,19 @@ describe("checkout", () => {
     expect(await operations(shareId)).toEqual([]);
   });
 
+  it("answers 404, not 500, when a reset deletes the plan during the call", async () => {
+    const { contractId, shareId } = await plan();
+    const deletePlan = async () => {
+      await db.query("DELETE FROM contracts WHERE id = $1", [contractId]);
+    };
+    const { notifier, checkout } = setup([{ ...CREATED, during: deletePlan }]);
+
+    const res = await checkout(shareId);
+    expect(res.status).toBe(404);
+    expect((res.body as { message: string }).message).toBe("That pay link does not exist.");
+    expect(notifier.contractEvents).toEqual([]);
+  });
+
   it("does not hand out a stored link while the kill switch is on", async () => {
     const open = setup([CREATED]);
     const { shareId } = await plan();
