@@ -106,10 +106,10 @@ On cancel, PayPal redirects to `cancel_url`. The Pay screen calls sync with `{ "
 
 ## Authorize order
 
-`POST /v2/checkout/orders/{order_id}/authorize`, body `{}`, key `fb-auth-{orderId}`.
+`POST /v2/checkout/orders/{order_id}/authorize`, body `{}`, key `fb-auth-{orderId}`. The share is set to `authorize_unknown` in the transaction before the call, so a crash during it reads as unknown money. Each result below then moves it on.
 
 - Success: HTTP 201, order `status` `COMPLETED`, and `purchase_units[0].payments.authorizations[0]` with `status` `CREATED`. Store `authorization_id` = that `id` and `authorization_expires_at` = `expiration_time`. Share `held`, event `hold_placed`.
-- An authorization `status` of `DENIED` (or `PENDING`, for review) counts as a definite failure. `PENDING` is not a hold we can rely on. Share stays `checkout_open`, `502 paypal_failed` with "PayPal did not approve this hold."
+- An authorization `status` of `DENIED` (or `PENDING`, for review) counts as a definite failure. `PENDING` is not a hold we can rely on. This order can never succeed, because a retry would replay the same answer, so the share becomes `declined`, event `checkout_declined`, `502 paypal_failed` with "PayPal did not approve this hold." The next checkout starts a new order. Foldback stores no id for the refused authorization, so it can never capture it.
 - Definite 4xx with issue `ORDER_ALREADY_AUTHORIZED`: GET the order, read the existing authorization, store it as `held`. That is a replay, not a second hold.
 - Definite 4xx with issue `ORDER_NOT_APPROVED`: share stays `checkout_open` so the buyer can go back to PayPal from the pay page.
 - Unknown: share `authorize_unknown`, operation `unknown`, return 200 `outcome: unknown`.

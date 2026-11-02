@@ -62,8 +62,8 @@ export async function shareExists(db: Db, shareId: string): Promise<boolean> {
   return result.rowCount === 1;
 }
 
-/** What checkout works from. It holds the approval link, so it stays on the server. */
-export interface CheckoutShare {
+/** What checkout and authorize work from. It holds the approval link, so it stays on the server. */
+export interface PayingShare {
   displayName: string;
   isGraceSubject: boolean;
   status: ShareStatus;
@@ -72,9 +72,10 @@ export interface CheckoutShare {
   checkoutAttempt: number;
   orderId: string | null;
   approveUrl: string | null;
+  authorizationId: string | null;
 }
 
-export async function findForCheckout(db: Db, shareId: string): Promise<CheckoutShare | null> {
+export async function findForPayment(db: Db, shareId: string): Promise<PayingShare | null> {
   const result = await db.query<{
     display_name: string;
     is_grace_subject: boolean;
@@ -84,8 +85,10 @@ export async function findForCheckout(db: Db, shareId: string): Promise<Checkout
     checkout_attempt: number;
     order_id: string | null;
     approve_url: string | null;
+    authorization_id: string | null;
   }>(
-    `SELECT display_name, is_grace_subject, status, amount_cents, money_source, checkout_attempt, order_id, approve_url
+    `SELECT display_name, is_grace_subject, status, amount_cents, money_source, checkout_attempt, order_id,
+            approve_url, authorization_id
        FROM shares WHERE id = $1`,
     [shareId],
   );
@@ -100,6 +103,7 @@ export async function findForCheckout(db: Db, shareId: string): Promise<Checkout
     checkoutAttempt: row.checkout_attempt,
     orderId: row.order_id,
     approveUrl: row.approve_url,
+    authorizationId: row.authorization_id,
   };
 }
 
@@ -127,6 +131,38 @@ export async function storeOrder(
 /** PayPal refused the order, so nothing exists there and the share is free again. */
 export async function closeCheckout(client: PoolClient, shareId: string): Promise<void> {
   await client.query("UPDATE shares SET status = 'waiting' WHERE id = $1", [shareId]);
+}
+
+/**
+ * Reserves the share before authorize is sent, so a crash during the call reads as unknown money, never as free.
+ * A `declined` share has no direct way there, so it passes through `checkout_open`.
+ */
+export async function markAuthorizing(client: PoolClient, shareId: string): Promise<void> {
+  await client.query("UPDATE shares SET status = 'checkout_open' WHERE id = $1 AND status = 'declined'", [
+    shareId,
+  ]);
+  await client.query("UPDATE shares SET status = 'authorize_unknown' WHERE id = $1", [shareId]);
+}
+
+/** PayPal refused the hold. The order is still open, so the friend can go back to it. */
+export async function backToCheckout(client: PoolClient, shareId: string): Promise<void> {
+  await client.query("UPDATE shares SET status = 'checkout_open' WHERE id = $1", [shareId]);
+}
+
+/** PayPal refused the hold itself, so this order can never succeed. `declined` lets the friend start a new one. */
+export async function declineCheckout(client: PoolClient, shareId: string): Promise<void> {
+  await client.query("UPDATE shares SET status = 'declined' WHERE id = $1", [shareId]);
+}
+
+export async function markHeld(
+  client: PoolClient,
+  shareId: string,
+  hold: { authorizationId: string; expiresAt: Date },
+): Promise<void> {
+  await client.query(
+    "UPDATE shares SET status = 'held', authorization_id = $2, authorization_expires_at = $3 WHERE id = $1",
+    [shareId, hold.authorizationId, hold.expiresAt],
+  );
 }
 
 export interface SeedShareInput {

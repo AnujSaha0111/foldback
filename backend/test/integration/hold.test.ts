@@ -3,8 +3,11 @@ import type { Pool } from "pg";
 import {
   APPROVE_URL,
   CREATED_ORDER,
+  EXPIRES,
+  HOLD_ID,
   ORDER_ID,
   PAYPAL_KEYS,
+  authorizedOrder,
   refusal,
   scriptedPayPal,
 } from "../fixtures/paypal";
@@ -368,5 +371,310 @@ describe("checkout", () => {
     const res = await setup([], { PAYPAL_WRITES_ENABLED: "false" }).checkout(shareId);
     expect(res.status).toBe(503);
     expect(errorOf(res)).toBe("paypal_disabled");
+  });
+});
+
+describe("authorize", () => {
+  const HELD: PayPalStep = { status: 201, body: authorizedOrder() };
+  const notApproved: PayPalStep = {
+    status: 422,
+    body: refusal("UNPROCESSABLE_ENTITY", "ORDER_NOT_APPROVED"),
+  };
+  const alreadyDone: PayPalStep = {
+    status: 422,
+    body: refusal("UNPROCESSABLE_ENTITY", "ORDER_ALREADY_AUTHORIZED"),
+  };
+
+  /** A share with an open order, and the requests that act on it. `steps` follow the order's own create call. */
+  async function opened(steps: PayPalStep[], env: Record<string, string | undefined> = {}) {
+    const harness = setup([CREATED, ...steps], env);
+    const { contractId, shareId, second } = await plan();
+    await harness.checkout(shareId);
+    const authorize = (orderId: string = ORDER_ID) =>
+      request(harness.app)
+        .post(`/api/shares/${shareId}/authorize`)
+        .set("Origin", ORIGIN)
+        .send({ order_id: orderId });
+    const authorizeCalls = () => harness.paypal.apiCalls().filter((call) => call.url.endsWith("/authorize"));
+    return { ...harness, contractId, shareId, second, authorize, authorizeCalls };
+  }
+
+  async function heldRow(shareId: string) {
+    const result = await db.query<{
+      status: string;
+      authorization_id: string | null;
+      authorization_expires_at: Date | null;
+    }>("SELECT status, authorization_id, authorization_expires_at FROM shares WHERE id = $1", [shareId]);
+    return result.rows[0];
+  }
+
+  it("stores the hold, keeps the plan active and tells the board (test 50)", async () => {
+    const { contractId, shareId, notifier, authorize, authorizeCalls } = await opened([HELD]);
+    const eventsBefore = notifier.contractEvents.length;
+
+    const res = await authorize();
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      outcome: "completed",
+      share: { share_id: shareId, status: "held", authorization_id: HOLD_ID, held_count: 1 },
+      contract: { id: contractId, status: "active" },
+    });
+
+    const [call] = authorizeCalls();
+    expect(call?.method).toBe("POST");
+    expect(call?.url).toBe(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${ORDER_ID}/authorize`);
+    expect(call?.headers["paypal-request-id"]).toBe(`fb-auth-${ORDER_ID}`);
+
+    expect(await heldRow(shareId)).toEqual({
+      status: "held",
+      authorization_id: HOLD_ID,
+      authorization_expires_at: new Date(EXPIRES),
+    });
+    expect(await eventTypes(contractId)).toContain("hold_placed");
+    expect(notifier.contractEvents).toHaveLength(eventsBefore + 1);
+    const [first, second] = notifier.contractEvents;
+    expect(second?.[1]).toBeGreaterThan(first?.[1] ?? 0);
+  });
+
+  it("never returns the buyer's details or the approval link", async () => {
+    const { authorize } = await opened([HELD]);
+    const text = JSON.stringify((await authorize()).body);
+    for (const secret of ["buyer@example.com", "approve_url", "payer", "extraction", "rule_text"]) {
+      expect(text).not.toContain(secret);
+    }
+  });
+
+  it("stores the existing hold on a replay, with one key across calls (test 51)", async () => {
+    const { shareId, paypal, authorize, authorizeCalls } = await opened([
+      notApproved,
+      alreadyDone,
+      { body: authorizedOrder() },
+    ]);
+
+    expect((await authorize()).status).toBe(502);
+    expect(await shareRow(shareId)).toMatchObject({ status: "checkout_open" });
+
+    const res = await authorize();
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ outcome: "completed", share: { authorization_id: HOLD_ID } });
+    expect(authorizeCalls().map((call) => call.headers["paypal-request-id"])).toEqual([
+      `fb-auth-${ORDER_ID}`,
+      `fb-auth-${ORDER_ID}`,
+    ]);
+    expect(paypal.apiCalls().at(-1)?.url).toContain(`/v2/checkout/orders/${ORDER_ID}`);
+    expect(paypal.apiCalls().at(-1)?.method).toBe("GET");
+    expect((await operations(shareId)).map((op) => [op.kind, op.outcome])).toEqual([
+      ["create_order", "completed"],
+      ["authorize", "failed"],
+      ["authorize", "failed"],
+      ["get_order", "completed"],
+    ]);
+  });
+
+  it("stays unknown when a replay's read shows no usable hold", async () => {
+    const { shareId, authorize } = await opened([alreadyDone, { fail: "timeout" }]);
+
+    const res = await authorize();
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ outcome: "unknown", share: { authorization_id: null } });
+    expect(await shareRow(shareId)).toMatchObject({ status: "authorize_unknown" });
+    expect((await operations(shareId)).map((op) => [op.kind, op.outcome])).toEqual([
+      ["create_order", "completed"],
+      ["authorize", "unknown"],
+      ["get_order", "unknown"],
+    ]);
+  });
+
+  it("returns the same hold for the same return URL, without calling PayPal", async () => {
+    const { authorize, authorizeCalls, contractId } = await opened([HELD]);
+    await authorize();
+
+    const again = await authorize();
+    expect(again.status).toBe(200);
+    expect(again.body).toMatchObject({ outcome: "completed", share: { authorization_id: HOLD_ID } });
+    expect(authorizeCalls()).toHaveLength(1);
+    expect((await eventTypes(contractId)).filter((type) => type === "hold_placed")).toHaveLength(1);
+  });
+
+  it("refuses an order that is not this share's, and calls nothing (test 52)", async () => {
+    const { shareId, authorize, authorizeCalls } = await opened([]);
+
+    const res = await authorize("SOMEONEELSESORDER");
+    expect(res.status).toBe(400);
+    expect(errorOf(res)).toBe("bad_request");
+    expect(authorizeCalls()).toHaveLength(0);
+    expect(await shareRow(shareId)).toMatchObject({ status: "checkout_open" });
+  });
+
+  it("refuses an order on a share that has none", async () => {
+    const { app, paypal } = setup();
+    const { shareId } = await plan();
+    const res = await request(app)
+      .post(`/api/shares/${shareId}/authorize`)
+      .set("Origin", ORIGIN)
+      .send({ order_id: ORDER_ID });
+    expect(res.status).toBe(400);
+    expect(paypal.calls).toHaveLength(0);
+  });
+
+  it("reserves the share when the reply is lost (test 53)", async () => {
+    const { contractId, shareId, checkout, authorize, authorizeCalls } = await opened([{ fail: "timeout" }]);
+
+    const lost = await authorize();
+    expect(lost.status).toBe(200);
+    expect(lost.body).toMatchObject({ outcome: "unknown", share: { status: "authorize_unknown" } });
+    expect((await operations(shareId)).at(-1)).toMatchObject({ kind: "authorize", outcome: "unknown" });
+    expect(await eventTypes(contractId)).toContain("hold_unknown");
+
+    const next = await checkout(shareId);
+    expect(next.status).toBe(409);
+    expect(errorOf(next)).toBe("money_unknown");
+    expect(errorOf(await authorize())).toBe("money_unknown");
+    expect(authorizeCalls()).toHaveLength(1);
+  });
+
+  it("is marked unknown before the call, so a crash during it cannot free the share", async () => {
+    let during: string | undefined;
+    const { authorize } = await opened([
+      {
+        ...HELD,
+        during: async () => {
+          const { rows } = await db.query<{ status: string }>(
+            "SELECT status FROM shares WHERE order_id = $1",
+            [ORDER_ID],
+          );
+          during = rows[0]?.status;
+        },
+      },
+    ]);
+
+    await authorize();
+    expect(during).toBe("authorize_unknown");
+  });
+
+  it("sends one authorize when two requests race (test 54)", async () => {
+    const slow = () => new Promise<void>((done) => setTimeout(done, 200));
+    const { shareId, authorize, authorizeCalls } = await opened([{ ...HELD, during: slow }]);
+
+    const results = await Promise.all([authorize(), authorize()]);
+    expect(authorizeCalls()).toHaveLength(1);
+    expect(results.map((res) => res.status).sort()).toEqual([200, 409]);
+    expect(["money_unknown", "resolve_in_progress"]).toContain(
+      errorOf(results.find((res) => res.status === 409) ?? { body: {} }),
+    );
+    expect(await shareRow(shareId)).toMatchObject({ status: "held" });
+  });
+
+  it("releases the contract lock, so the next friend can confirm", async () => {
+    const { authorize, shareId } = await opened([notApproved, HELD]);
+    expect((await authorize()).status).toBe(502);
+    expect((await authorize()).status).toBe(200);
+    expect(await shareRow(shareId)).toMatchObject({ status: "held" });
+  });
+
+  it.each(["DENIED", "PENDING"])(
+    "refuses a hold PayPal marked %s, and allows a new order",
+    async (status) => {
+      const { contractId, shareId, checkout, authorize } = await opened([
+        { status: 201, body: authorizedOrder(status) },
+        SECOND,
+      ]);
+
+      const res = await authorize();
+      expect(res.status).toBe(502);
+      expect(errorOf(res)).toBe("paypal_failed");
+      expect((res.body as { message: string }).message).toBe("PayPal did not approve this hold.");
+      expect(await heldRow(shareId)).toMatchObject({ status: "declined", authorization_id: null });
+      const events = await eventTypes(contractId);
+      expect(events).toContain("checkout_declined");
+      expect(events).not.toContain("hold_placed");
+
+      expect((await checkout(shareId)).body).toMatchObject({
+        order_id: SECOND_ORDER_ID,
+        approve_url: SECOND_URL,
+      });
+      expect(await shareRow(shareId)).toMatchObject({ status: "checkout_open", checkout_attempt: 2 });
+    },
+  );
+
+  it("lets a friend finish an order on a declined share", async () => {
+    const { shareId, authorize } = await opened([HELD]);
+    await db.query("UPDATE shares SET status = 'declined' WHERE id = $1", [shareId]);
+
+    expect((await authorize()).status).toBe(200);
+    expect(await shareRow(shareId)).toMatchObject({ status: "held" });
+  });
+
+  it("refuses after the decision and calls nothing (test 74)", async () => {
+    const { contractId, authorize, authorizeCalls } = await opened([]);
+    await db.query("UPDATE contracts SET status = 'releasing', direction = 'release' WHERE id = $1", [
+      contractId,
+    ]);
+
+    const res = await authorize();
+    expect(res.status).toBe(409);
+    expect(errorOf(res)).toBe("contract_closed");
+    expect(authorizeCalls()).toHaveLength(0);
+  });
+
+  it("refuses after the deadline, so an approved order is not money", async () => {
+    const { contractId, authorize, authorizeCalls } = await opened([]);
+    await db.query("UPDATE contracts SET demo_now = deadline_at WHERE id = $1", [contractId]);
+
+    const res = await authorize();
+    expect(res.status).toBe(409);
+    expect(errorOf(res)).toBe("share_not_payable");
+    expect(authorizeCalls()).toHaveLength(0);
+  });
+
+  it("refuses a sample share and never calls PayPal", async () => {
+    const { app, paypal } = setup();
+    const contractId = await seedContract(db, await member(db));
+    const sample = await db.query<{ id: string }>("SELECT id FROM shares WHERE contract_id = $1 LIMIT 1", [
+      contractId,
+    ]);
+    const res = await request(app)
+      .post(`/api/shares/${sample.rows[0]?.id ?? ""}/authorize`)
+      .set("Origin", ORIGIN)
+      .send({ order_id: ORDER_ID });
+    expect(res.status).toBe(409);
+    expect(errorOf(res)).toBe("sample_row");
+    expect(paypal.calls).toHaveLength(0);
+  });
+
+  it("stays closed with the kill switch, and changes nothing", async () => {
+    const { shareId } = await plan();
+    const open = setup([CREATED]);
+    await open.checkout(shareId);
+    const { app, paypal } = setup([], { PAYPAL_WRITES_ENABLED: "false" });
+
+    const res = await request(app)
+      .post(`/api/shares/${shareId}/authorize`)
+      .set("Origin", ORIGIN)
+      .send({ order_id: ORDER_ID });
+    expect(res.status).toBe(503);
+    expect(errorOf(res)).toBe("paypal_disabled");
+    expect(paypal.calls).toHaveLength(0);
+    expect(await shareRow(shareId)).toMatchObject({ status: "checkout_open" });
+  });
+
+  it("refuses a body with anything else in it", async () => {
+    const { app, paypal } = setup();
+    const { shareId } = await plan();
+    const res = await request(app)
+      .post(`/api/shares/${shareId}/authorize`)
+      .set("Origin", ORIGIN)
+      .send({ order_id: ORDER_ID, amount_cents: 1 });
+    expect(res.status).toBe(400);
+    expect(paypal.calls).toHaveLength(0);
+  });
+
+  it("answers an unknown share the same as any bad link", async () => {
+    const { app } = setup();
+    const res = await request(app)
+      .post(`/api/shares/${newId("shr")}/authorize`)
+      .set("Origin", ORIGIN)
+      .send({ order_id: ORDER_ID });
+    expect(res.status).toBe(404);
   });
 });

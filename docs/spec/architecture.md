@@ -189,7 +189,7 @@ Only these arrows are allowed, and a database trigger enforces them (see `data-m
 | `void_unknown` | Void sent; response lost | + `authorization_id` |
 | `released` | Authorization `VOIDED` or `EXPIRED`; nobody charged | + `authorization_id` |
 | `expired` | Never held by the cutoff | maybe `order_id` |
-| `declined` | Buyer cancelled at PayPal; may retry while payable | maybe `order_id` |
+| `declined` | Buyer cancelled at PayPal, or PayPal refused the hold; may retry while payable | maybe `order_id` |
 
 The unknown statuses are `authorize_unknown`, `capture_unknown`, and `void_unknown`. There is no share status `grace`; grace is a contract status.
 

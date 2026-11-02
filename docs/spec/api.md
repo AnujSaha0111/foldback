@@ -33,7 +33,7 @@ Every non-GET request must carry an `Origin` (or `Referer`) header in `CORS_ORIG
 | 409 | `resolve_in_progress` | The contract lock is held by another request |
 | 409 | `live_money` | Reset while a sandbox share is held, in an unknown status, `capture_failed`, or has an authorize, capture, or void call in flight. Release or void it first |
 | 409 | `sample_row` | Checkout or authorize on a `sample` share |
-| 409 | `share_already_held` | Checkout or authorize when the share is `held` or later |
+| 409 | `share_already_held` | Checkout when the share is `held` or later. Authorize with the same order returns the existing hold instead |
 | 409 | `share_not_payable` | Deadline passed and this share is not the open grace subject, or the share is `expired` |
 | 409 | `contract_closed` | Mutation after `kept` or `released`, or after `direction` is set |
 | 409 | `money_unknown` | A mutating call while this share (or, on resolve, any share) is in an unknown status |
@@ -259,10 +259,16 @@ A lost reply returns 200 with `{ "outcome": "unknown", "order_id": null, "approv
 Response:
 
 ```json
-{ "outcome": "completed", "share": { }, "contract": { } }
+{
+  "outcome": "completed",
+  "share": { "share_id": "shr_…", "status": "held", "authorization_id": "…" },
+  "contract": { "id": "con_…", "status": "active" }
+}
 ```
 
-`outcome` is `completed`, `unknown`, or `failed` (with a 502 for the last). On `completed`, the route runs resolve before responding, so the fourth hold can come back with the share and contract both `kept`.
+`share` is the public share view plus `authorization_id`, and `contract` holds only its id and status, because this route is public too. `outcome` is `completed` or `unknown`. A PayPal refusal is `502 paypal_failed` with the normal error body. On `completed`, the route runs resolve before responding, so the fourth hold can come back with the share and contract both `kept`.
+
+The same return URL twice is safe: a share that already has a hold for this order returns it with `outcome: "completed"` and makes no PayPal call. The contract lock covers the whole request, so a second friend confirming at the same moment gets `409 resolve_in_progress`. The Pay page asks again for up to 30 seconds, and also after a `500 internal`, because a stored hold comes straight back.
 
 ## Sync
 

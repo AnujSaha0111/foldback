@@ -1,12 +1,14 @@
 import type { Request, RequestHandler } from "express";
 import { AppError } from "../http/errors";
-import { startCheckout } from "../services/holds.service";
+import { authorizeShare, startCheckout } from "../services/holds.service";
 import type { HoldDeps } from "../services/holds.service";
 import { readPublicShare } from "../services/shares.service";
+import type { AuthorizeInput } from "./shares.schemas";
 
 export interface SharesController {
   read: RequestHandler;
   checkout: RequestHandler;
+  authorize: RequestHandler;
 }
 
 const SHARE_ID = /^shr_[A-Za-z0-9_-]{22}$/;
@@ -27,6 +29,10 @@ export function createSharesController(deps: HoldDeps): SharesController {
     },
     checkout: async (req, res) => {
       res.json(await startCheckout(deps, parseShareId(req)));
+    },
+    authorize: async (req, res) => {
+      const body = req.body as AuthorizeInput;
+      res.json(await authorizeShare(deps, parseShareId(req), body.order_id));
     },
   };
 }

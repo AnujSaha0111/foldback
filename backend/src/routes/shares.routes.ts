@@ -1,5 +1,6 @@
 import { Router } from "express";
 import type { SharesController } from "../controllers/shares.controller";
+import { authorizeSchema } from "../controllers/shares.schemas";
 import type { Limiters } from "../http/middleware/rateLimit";
 import { emptyBodySchema, validateBody } from "../http/middleware/validate";
 
@@ -8,5 +9,6 @@ export function sharesRoutes(controller: SharesController, limiters: Limiters): 
   const router = Router();
   router.get("/:id", controller.read);
   router.post("/:id/checkout", limiters.checkout, validateBody(emptyBodySchema), controller.checkout);
+  router.post("/:id/authorize", limiters.authorize, validateBody(authorizeSchema), controller.authorize);
   return router;
 }
