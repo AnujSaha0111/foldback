@@ -10,6 +10,7 @@ import { BryntumScheduler } from "@bryntum/scheduler-react";
 import type { BryntumSchedulerProps } from "@bryntum/scheduler-react";
 import GlobalStyles from "@mui/material/GlobalStyles";
 import { useCallback, useMemo } from "react";
+import { copyText } from "@/lib/copyText";
 import { SHARE_STATUS_VIEW } from "@/lib/status";
 import type { SchedulerProjection } from "@/types/generated/api-types";
 import type { ShareStatus } from "@/types/generated/statuses";
@@ -30,9 +31,33 @@ const VIEW_PRESET = {
     { unit: "hour", increment: 6, dateFormat: "HH" },
   ],
 };
+/** A sandbox row's pay link, to copy or open. A sample row has none, so it says Sample. */
+const renderLinks = ({ record }: { record: { id: string | number; get: (field: string) => unknown } }) =>
+  record.get("badge") === "Sample"
+    ? "Sample"
+    : {
+        children: [
+          {
+            tag: "button",
+            type: "button",
+            className: "fb-link",
+            dataset: { action: "copy" },
+            text: "Copy link",
+          },
+          {
+            tag: "a",
+            href: `/pay/${record.id}`,
+            target: "_blank",
+            rel: "noopener",
+            className: "fb-link",
+            text: "Open link",
+          },
+        ],
+      };
+
 const COLUMNS = [
   { text: "Person", field: "name", width: 180 },
-  { text: "", field: "badge", width: 96 },
+  { text: "Pay link", field: "badge", width: 220, renderer: renderLinks },
 ];
 const TIME_RANGES_FEATURE = { showHeaderElements: true };
 const TOOLTIP_FEATURE = {
@@ -100,8 +125,21 @@ export default function FoldbackScheduler({ projection, onSelect, proposedAt }: 
     ({ eventRecord }) => onSelect(String(eventRecord.resourceId)),
     [onSelect],
   );
+  // The link buttons act on their own; a click anywhere else in the row opens the person.
   const selectCell = useCallback<Exclude<BryntumSchedulerProps["onCellClick"], string | undefined>>(
-    ({ record }) => onSelect(String(record.id)),
+    ({ record, event }) => {
+      const target = event.target as HTMLElement;
+      const copy = target.closest<HTMLButtonElement>("[data-action='copy']");
+      if (copy) {
+        void copyText(`${window.location.origin}/pay/${String(record.id)}`).then((copied) => {
+          copy.textContent = copied ? "Copied" : "Copy failed";
+          setTimeout(() => (copy.textContent = "Copy link"), 1600);
+        });
+        return;
+      }
+      if (target.closest("a")) return;
+      onSelect(String(record.id));
+    },
     [onSelect],
   );
 
