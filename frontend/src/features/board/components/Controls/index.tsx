@@ -54,7 +54,7 @@ export function Controls({ contract, shares }: ControlsProps) {
             arrow={false}
             disabled={closed || busy}
             loading={resolving.isLoading}
-            onClick={() => void resolvePlan(contract.id)}
+            onClick={() => void resolvePlan({ id: contract.id })}
           >
             Resolve now
           </Button>
@@ -80,7 +80,7 @@ function Paused({ contract, shares }: ControlsProps) {
   const check = async () => {
     setChecking(true);
     for (const share of unknown) await sync({ shareId: share.id });
-    await resolvePlan(contract.id);
+    await resolvePlan({ id: contract.id });
     setChecking(false);
   };
 

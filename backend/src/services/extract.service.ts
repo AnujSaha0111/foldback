@@ -85,7 +85,7 @@ function ruleHash(ruleText: string, referenceAt: Date): string {
   return createHash("sha256").update(ruleText).update(referenceAt.toISOString()).digest("hex");
 }
 
-function budgetError(reason: Exclude<Allowance, "ok">): AppError {
+export function budgetError(reason: Exclude<Allowance, "ok">): AppError {
   if (reason === "busy") {
     return new AppError("rate_limited", BUSY_MESSAGE, undefined, { "Retry-After": "60" });
   }

@@ -39,10 +39,15 @@ export function createContractsController(deps: HoldDeps): ContractsController {
     },
     clock: async (req, res) => {
       const body = req.body as ClockInput;
-      res.json(await moveClock(deps, currentUser(res).id, parseContractId(req), new Date(body.demo_now)));
+      const viaAgent = req.query["via"] === "agent";
+      res.json(
+        await moveClock(deps, currentUser(res).id, parseContractId(req), new Date(body.demo_now), viaAgent),
+      );
     },
     resolve: async (req, res) => {
-      res.json(await resolveOwned(deps, currentUser(res).id, parseContractId(req)));
+      res.json(
+        await resolveOwned(deps, currentUser(res).id, parseContractId(req), req.query["via"] === "agent"),
+      );
     },
   };
 }

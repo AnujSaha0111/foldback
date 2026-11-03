@@ -16,6 +16,9 @@ import { runResolve } from "./resolve.service";
 
 // The organizer's two controls: Resolve now, and the demo clock. Both run the rule under the contract lock.
 
+/** `?via=agent`: the organizer approved the assistant's proposal. The rules are the same either way. */
+const APPROVED = "The organizer approved the assistant's proposal.";
+
 async function assertOwned(deps: HoldDeps, ownerId: string, contractId: string): Promise<void> {
   if (!(await findOwned(deps.pool, ownerId, contractId))) {
     throw new AppError("not_found", "That plan does not exist.");
@@ -27,9 +30,14 @@ export async function resolveOwned(
   deps: HoldDeps,
   ownerId: string,
   contractId: string,
+  viaAgent = false,
 ): Promise<ContractRead> {
   await assertOwned(deps, ownerId, contractId);
-  await withContractLock(deps.pool, contractId, () => runResolve(deps, contractId));
+  await withContractLock(deps.pool, contractId, async () => {
+    if (viaAgent)
+      await insertEvent(deps.pool, { contractId, type: "agent_proposal_approved", detail: APPROVED });
+    await runResolve(deps, contractId);
+  });
   return readContract(deps.pool, ownerId, contractId);
 }
 
@@ -42,6 +50,7 @@ export async function moveClock(
   ownerId: string,
   contractId: string,
   demoNow: Date,
+  viaAgent = false,
 ): Promise<ContractRead> {
   await assertOwned(deps, ownerId, contractId);
   await withContractLock(deps.pool, contractId, async () => {
@@ -60,6 +69,8 @@ export async function moveClock(
       await setDemoNow(client, contractId, demoNow);
       const detail = reasons.clockMoved(demoNow, contract.timezone);
       await insertEvent(client, { contractId, type: "clock_moved", detail });
+      if (viaAgent)
+        await insertEvent(client, { contractId, type: "agent_proposal_approved", detail: APPROVED });
       return touchContract(client, contractId);
     });
     deps.notifier.contractChanged(contractId, version);

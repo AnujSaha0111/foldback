@@ -2,9 +2,12 @@ import { DateTime } from "luxon";
 
 // The one sentence the board shows for a decision. Written by the engine, never by a model (ai.md).
 
-/** "Mon 9 Nov, 6:00pm PT"-style, in the organizer's zone. */
-function when(instant: Date, zone: string): string {
-  return DateTime.fromJSDate(instant, { zone }).setLocale("en-US").toFormat("ccc d LLL, h:mma ZZZZ");
+/** "Mon 9 Nov, 6:00pm PT", in the organizer's zone: the same style the board uses. */
+export function when(instant: Date, zone: string): string {
+  const time = DateTime.fromJSDate(instant, { zone }).setLocale("en-US");
+  // "PST" and "PDT" are both "PT" to a reader, like the board's own times.
+  const name = time.toFormat("ZZZZ").replace(/^([A-Z])[SD]T$/, "$1T");
+  return `${time.toFormat("ccc d LLL, h:mm")}${time.toFormat("a").toLowerCase()} ${name}`;
 }
 
 export const reasons = {

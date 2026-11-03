@@ -126,7 +126,7 @@ Button copy: "Confirm these terms". Helper under it: "Each person gets a PayPal 
 
 ## Job 2: Organizer agent (`services/agent.service.ts`, `integrations/llm/agentTools.ts`, `agentRunner.ts`)
 
-`POST /api/contracts/:id/agent` runs the manual tool loop in `agentRunner.ts` (at most 6 iterations) with zod-validated tool inputs, and the conversation the client sends. Each tool's `run` calls a repository read or `domain/decide`. **No tool calls PayPal and no tool writes to the database.** Action tools add a proposal to the response; the organizer approves it in the UI, which calls the normal route.
+`POST /api/contracts/:id/agent` runs the manual tool loop in `agentRunner.ts` (at most 6 iterations) with zod-validated tool inputs, and the conversation the client sends. Each step is one JSON reply through the normal model chain, `{ action: "tool" | "reply", tool, input_json, reply }`, instead of a provider's own tool-calling format: every provider in the chain handles JSON the same way, and each step is one counted attempt. The tools live in `services/agentTools.ts`, because they read repositories and `integrations/` may not. Each tool's `run` calls a repository read or `domain/decide`. **No tool calls PayPal and no tool writes to the database.** Action tools add a proposal to the response; the organizer approves it in the UI, which calls the normal route.
 
 ### System prompt (verbatim, with the live context appended)
 

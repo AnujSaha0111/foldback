@@ -4,18 +4,20 @@ import type { Env } from "../config/env";
 import { AppError } from "../http/errors";
 import { currentUser } from "../http/middleware/auth";
 import { hashIp } from "../services/aiBudget.service";
+import { askAgent } from "../services/agent.service";
 import { confirmContract } from "../services/confirm.service";
 import type { ConfirmDeps } from "../services/confirm.service";
 import { readContract } from "../services/contracts.service";
 import { clarifyContract, createContract } from "../services/extract.service";
 import type { Requester, RuleDeps, RuleOutcome } from "../services/extract.service";
 import { parseContractId } from "./contracts.controller";
-import type { ClarifyInput, ConfirmInput, CreateRuleInput } from "./rules.schemas";
+import type { AgentInput, ClarifyInput, ConfirmInput, CreateRuleInput } from "./rules.schemas";
 
 export interface RulesController {
   create: RequestHandler;
   clarify: RequestHandler;
   confirm: RequestHandler;
+  agent: RequestHandler;
 }
 
 /** A complete reading is a 200. One that needs an answer is the 422 `needs_clarification`, carrying what was read. */
@@ -62,6 +64,10 @@ export function createRulesController(env: Env, pool: Pool, deps: RuleDeps & Con
       const contractId = parseContractId(req);
       await confirmContract(deps, userId, contractId, req.body as ConfirmInput);
       res.json(await readContract(pool, userId, contractId));
+    },
+    agent: async (req, res) => {
+      const body = req.body as AgentInput;
+      res.json(await askAgent(deps, requester(req, res), parseContractId(req), body.messages));
     },
   };
 }

@@ -15,6 +15,7 @@ import { CONTRACT_STATUS_VIEW } from "@/lib/status";
 import { useContractLive } from "@/sockets/useContractLive";
 import type { ApiContract, ApiShare } from "@/types/generated/api-types";
 import { HOLDING_SHARE_STATUSES } from "@/types/generated/statuses";
+import { AssistantCard } from "@/features/assistant/components/AssistantCard";
 import { Controls } from "../Controls";
 import { PersonCard } from "../PersonCard";
 import { SchedulerPanel } from "../SchedulerPanel";
@@ -39,6 +40,7 @@ export function Board({ id }: { id: string }) {
   const pollingInterval = useContractLive(id);
   const { data, error } = useGetContractQuery(id, { pollingInterval });
   const [picked, setPicked] = useState<string | null>(null);
+  const [proposedAt, setProposedAt] = useState<string | null>(null);
   if (!data) return error ? <FormError error={error} /> : <Loading label="Loading the plan…" />;
   const { contract, shares } = data;
   // Until someone is chosen, show the one the plan is waiting on.
@@ -56,7 +58,12 @@ export function Board({ id }: { id: string }) {
       {contract.resolution_reason ? <Reason aria-live="polite">{contract.resolution_reason}</Reason> : null}
       <Controls contract={contract} shares={shares} />
       <Layout>
-        <SchedulerPanel contractId={id} pollingInterval={pollingInterval} onSelect={setPicked} />
+        <SchedulerPanel
+          contractId={id}
+          pollingInterval={pollingInterval}
+          onSelect={setPicked}
+          proposedAt={proposedAt}
+        />
         <PersonCard
           share={shares.find((share) => share.id === selectedId)}
           shares={shares}
@@ -65,6 +72,7 @@ export function Board({ id }: { id: string }) {
           graceUntil={contract.grace_until}
         />
       </Layout>
+      <AssistantCard contract={contract} shares={shares} onProposed={setProposedAt} />
       <Back>
         <ButtonLink href="/plans" variant="link" arrow={false}>
           Back to plans
