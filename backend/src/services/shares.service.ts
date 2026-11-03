@@ -4,7 +4,7 @@ import { HOLDING_SHARE_STATUSES } from "../domain/statuses";
 import { AppError } from "../http/errors";
 import { findByShare } from "../repositories/contracts.repo";
 import { listForContract } from "../repositories/shares.repo";
-import type { PublicShare } from "../shared/api-types";
+import type { PublicShare, ShareReply } from "../shared/api-types";
 
 /**
  * What a pay link shows. Holding the link is the permission, so this returns only what the payer needs: no PayPal
@@ -45,4 +45,10 @@ export async function readPublicShare(pool: Pool, shareId: string): Promise<Publ
     payable: isPayable(contract, share),
     other_names: shares.filter((candidate) => candidate.id !== shareId).map((other) => other.displayName),
   };
+}
+
+/** What a pay-link mutation answers with: the payer's view and the plan's status, nothing an organizer alone sees. */
+export async function readShareReply(pool: Pool, shareId: string): Promise<ShareReply> {
+  const share = await readPublicShare(pool, shareId);
+  return { share, contract: { id: share.contract_id, status: share.contract_status } };
 }

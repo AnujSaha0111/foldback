@@ -1,4 +1,9 @@
-import type { AuthorizeResponse, CheckoutResponse, PublicShare } from "@/types/generated/api-types";
+import type {
+  AuthorizeResponse,
+  CheckoutResponse,
+  PublicShare,
+  ShareReply,
+} from "@/types/generated/api-types";
 import { baseApi } from "./baseApi";
 
 const sharesApi = baseApi.injectEndpoints({
@@ -21,7 +26,15 @@ const sharesApi = baseApi.injectEndpoints({
         body: { order_id: orderId },
       }),
     }),
+    /** Settles an unclear PayPal result for this share, or closes a checkout the friend cancelled at PayPal. */
+    sync: build.mutation<ShareReply, { shareId: string; buyerCancelled?: boolean }>({
+      query: ({ shareId, buyerCancelled }) => ({
+        url: `/api/shares/${encodeURIComponent(shareId)}/sync`,
+        method: "POST",
+        body: buyerCancelled ? { buyer_cancelled: true } : {},
+      }),
+    }),
   }),
 });
 
-export const { useAuthorizeMutation, useCheckoutMutation, useGetShareQuery } = sharesApi;
+export const { useAuthorizeMutation, useCheckoutMutation, useGetShareQuery, useSyncMutation } = sharesApi;

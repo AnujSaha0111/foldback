@@ -3,7 +3,7 @@ import { newId } from "../db/ids";
 
 type Db = Pick<Pool | PoolClient, "query">;
 
-type WriteKind = "create_order" | "authorize";
+type WriteKind = "create_order" | "authorize" | "capture" | "void";
 type ReadKind = "get_order" | "get_authorization";
 
 export interface OperationRequest {
@@ -54,6 +54,39 @@ export async function settle(db: Db, id: string, result: OperationResult): Promi
     [id, result.outcome, result.status, JSON.stringify(result.response), result.debugId],
   );
   if (updated.rowCount !== 1) throw new Error(`No PayPal operation ${id} to settle`);
+}
+
+/** The share's one mutating call that has not settled, if any. The in-flight index allows at most one. */
+export interface OpenOperation {
+  id: string;
+  kind: WriteKind;
+  outcome: "pending" | "unknown";
+  createdAt: Date;
+}
+
+export async function findOpen(db: Db, shareId: string): Promise<OpenOperation | null> {
+  const result = await db.query<{
+    id: string;
+    kind: WriteKind;
+    outcome: "pending" | "unknown";
+    created_at: Date;
+  }>(
+    `SELECT id, kind, outcome, created_at FROM paypal_operations
+      WHERE share_id = $1 AND outcome IN ('pending', 'unknown')
+        AND kind IN ('create_order', 'authorize', 'capture', 'void')`,
+    [shareId],
+  );
+  const row = result.rows[0];
+  return row ? { id: row.id, kind: row.kind, outcome: row.outcome, createdAt: row.created_at } : null;
+}
+
+/** Sync learned how the call ended. The reply that was lost stays lost, so only the outcome and the flag change. */
+export async function resolveBySync(db: Db, id: string, outcome: "completed" | "failed"): Promise<void> {
+  const updated = await db.query(
+    "UPDATE paypal_operations SET outcome = $2, resolved_by_sync = true WHERE id = $1",
+    [id, outcome],
+  );
+  if (updated.rowCount !== 1) throw new Error(`No PayPal operation ${id} to resolve`);
 }
 
 /** Reads have no pending stage and no key: they cannot change anything at PayPal, so each is logged after it ran. */

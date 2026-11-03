@@ -146,9 +146,11 @@ On cancel, PayPal redirects to `cancel_url`. The Pay screen calls sync with `{ "
 
 | Local status | PayPal fact | Result |
 |---|---|---|
-| `checkout_open`, `order_id` null | none (no call) | operation `failed`, share `waiting` |
-| `checkout_open` + `buyer_cancelled` | order `CREATED` / `PAYER_ACTION_REQUIRED` | share `declined` |
-| `authorize_unknown` | order has `payments.authorizations[0]` | share `held`, store ids |
+| `checkout_open`, `order_id` null, create older than three timeouts | none (no call) | operation `failed`, share `waiting` |
+| `checkout_open` + `buyer_cancelled` | order `CREATED` / `PAYER_ACTION_REQUIRED`, or 404 `RESOURCE_NOT_FOUND` | share `declined` |
+| `held` or later + `buyer_cancelled` | none (no call) | unchanged |
+| `authorize_unknown` | authorization `CREATED` with an expiry | share `held`, store ids |
+| `authorize_unknown` | authorization `DENIED`, `PENDING`, `VOIDED` or `EXPIRED` | share `declined` |
 | `authorize_unknown` | order `APPROVED`, no authorization | share `checkout_open` (pay page shows "Finish holding my share") |
 | `authorize_unknown` | order `CREATED` / `PAYER_ACTION_REQUIRED` / `VOIDED` | share `checkout_open` / `checkout_open` / `declined` |
 | `capture_unknown` | authorization `CAPTURED` (or `PARTIALLY_CAPTURED`) | GET order, store `capture_id`, share `kept` |

@@ -274,7 +274,9 @@ The same return URL twice is safe: a share that already has a hold for this orde
 
 `POST /api/shares/:shareId/sync`, optional body `{ "buyer_cancelled": true }`.
 
-Re-reads PayPal for the stored ids and applies the mapping in `paypal.md`. This is the only route that moves a share out of an unknown status. With `buyer_cancelled: true` and an order that was never approved, the share becomes `declined`. Response: `{ "share": { }, "contract": { } }`. Sync never captures or voids. The organizer presses Resolve (or approves the agent's proposal) afterward.
+Re-reads PayPal for the stored ids and applies the mapping in `paypal.md`. This is the only route that moves a share out of an unknown status. With `buyer_cancelled: true` and an order that was never approved (or that PayPal no longer has), the share becomes `declined`. A cancel on a share that is already held changes nothing. Response: `{ "share": { }, "contract": { "id": "…", "status": "…" } }`, the same public view as authorize. Sync never captures or voids. The organizer presses Resolve (or approves the agent's proposal) afterward.
+
+It runs under the contract lock, and it is safe to call any time: with nothing to settle, it answers the current state. A create started less than three PayPal timeouts ago is left alone, because it may still be running. The Pay page calls sync on its own: after a cancel return, once on load when the share is `authorize_unknown`, and once when checkout answers `money_unknown`.
 
 ## Organizer agent
 

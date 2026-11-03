@@ -30,7 +30,7 @@ import {
 import type { PayingShare } from "../repositories/shares.repo";
 import type { AuthorizeResponse, CheckoutResponse } from "../shared/api-types";
 import { UNCLEAR_RESULT } from "../shared/rules";
-import { readPublicShare } from "./shares.service";
+import { readShareReply } from "./shares.service";
 
 export interface HoldDeps {
   env: Env;
@@ -51,7 +51,7 @@ const REFUSALS: Record<PayRefusal, string> = {
 };
 
 const refused = (refusal: PayRefusal): AppError => new AppError(refusal, REFUSALS[refusal]);
-const badLink = (): AppError => new AppError("not_found", "That pay link does not exist.");
+export const badLink = (): AppError => new AppError("not_found", "That pay link does not exist.");
 const writesClosed = (): AppError =>
   new AppError("paypal_disabled", "PayPal checkout is turned off right now. Nothing was charged.");
 
@@ -258,12 +258,8 @@ async function authorizeReply(
   outcome: AuthorizeResponse["outcome"],
   authorizationId: string | null,
 ): Promise<AuthorizeResponse> {
-  const share = await readPublicShare(deps.pool, shareId);
-  return {
-    outcome,
-    share: { ...share, authorization_id: authorizationId },
-    contract: { id: share.contract_id, status: share.contract_status },
-  };
+  const reply = await readShareReply(deps.pool, shareId);
+  return { ...reply, outcome, share: { ...reply.share, authorization_id: authorizationId } };
 }
 
 /**

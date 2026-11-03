@@ -37,7 +37,7 @@ export function payView(share: PublicShare): PayView {
     };
   }
   return {
-    message: null,
+    message: share.status === "declined" ? "Checkout closed. Nothing was held." : null,
     final: false,
     action:
       share.status === "checkout_open"

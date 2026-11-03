@@ -13,6 +13,7 @@ export default async function PayPage({ params, searchParams }: PayPageProps) {
   const { shareId } = await params;
   const { token, cancelled } = await searchParams;
   // PayPal's way back. A cancel carries a token too, and that one must never place a hold.
-  const returnedOrder = typeof token === "string" && cancelled === undefined ? token : null;
-  return <PayScreen shareId={shareId} returnedOrder={returnedOrder} />;
+  const isCancel = cancelled !== undefined;
+  const orderId = typeof token === "string" && !isCancel ? token : null;
+  return <PayScreen shareId={shareId} returned={{ orderId, cancelled: isCancel }} />;
 }
