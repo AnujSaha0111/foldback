@@ -5,6 +5,7 @@ import { styled } from "@mui/material/styles";
 export const Root = styled("section")({
   display: "grid",
   gap: "var(--s-3)",
+  marginTop: "var(--s-1)",
   marginBottom: "var(--s-4)",
 });
 

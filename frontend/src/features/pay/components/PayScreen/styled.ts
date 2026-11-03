@@ -15,6 +15,7 @@ export const Column = styled("div")({
 
 export const Band = styled("section")({
   ...onSky,
+  marginTop: "var(--s-2)",
   paddingBottom: SHEET,
   background: "var(--field-sky)",
   "& h1": { marginTop: "var(--s-1)", fontSize: "1.5rem", fontWeight: 500, letterSpacing: "-0.01em" },

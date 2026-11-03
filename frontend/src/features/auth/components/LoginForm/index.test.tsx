@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { useLoginMutation } from "@/api/authApi";
+import { useGetMeQuery, useLoginMutation } from "@/api/authApi";
 import { LoginForm } from "./index";
 
 const push = jest.fn();
@@ -22,10 +22,20 @@ function fillAndSubmit() {
 
 beforeEach(() => {
   push.mockClear();
+  jest.mocked(useGetMeQuery).mockReturnValue({} as ReturnType<typeof useGetMeQuery>);
   window.history.pushState({}, "", "/login");
 });
 
 describe("LoginForm", () => {
+  it("skips the form when the session is still good", async () => {
+    answer({});
+    jest
+      .mocked(useGetMeQuery)
+      .mockReturnValue({ data: { id: "usr_1" } } as unknown as ReturnType<typeof useGetMeQuery>);
+    render(<LoginForm />);
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/plans"));
+  });
+
   it("sends the fields and goes to the plans", async () => {
     const login = answer({ data: { user: {} } });
     render(<LoginForm />);

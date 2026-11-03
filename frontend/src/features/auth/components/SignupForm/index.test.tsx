@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { useSignupMutation } from "@/api/authApi";
+import { useGetMeQuery, useSignupMutation } from "@/api/authApi";
 import { SignupForm } from "./index";
 
 const push = jest.fn();
@@ -14,7 +14,10 @@ function answer(result: object, state: object = {}) {
   return signup;
 }
 
-beforeEach(() => push.mockClear());
+beforeEach(() => {
+  push.mockClear();
+  jest.mocked(useGetMeQuery).mockReturnValue({} as ReturnType<typeof useGetMeQuery>);
+});
 
 describe("SignupForm", () => {
   it("sends the name as display_name and goes to the plans", async () => {
