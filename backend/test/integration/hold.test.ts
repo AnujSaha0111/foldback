@@ -374,40 +374,43 @@ describe("checkout", () => {
   });
 });
 
+const HELD: PayPalStep = { status: 201, body: authorizedOrder() };
+const notApproved: PayPalStep = {
+  status: 422,
+  body: refusal("UNPROCESSABLE_ENTITY", "ORDER_NOT_APPROVED"),
+};
+const alreadyDone: PayPalStep = {
+  status: 422,
+  body: refusal("UNPROCESSABLE_ENTITY", "ORDER_ALREADY_AUTHORIZED"),
+};
+
+/** A share with an open order, and the requests that act on it. `steps` follow the order's own create call. */
+async function opened(steps: PayPalStep[], env: Record<string, string | undefined> = {}) {
+  const harness = setup([CREATED, ...steps], env);
+  const { contractId, shareId, second } = await plan();
+  await harness.checkout(shareId);
+  const authorize = (orderId: string = ORDER_ID) =>
+    request(harness.app)
+      .post(`/api/shares/${shareId}/authorize`)
+      .set("Origin", ORIGIN)
+      .send({ order_id: orderId });
+  const authorizeCalls = () => harness.paypal.apiCalls().filter((call) => call.url.endsWith("/authorize"));
+  const sync = (body: object = {}) =>
+    request(harness.app).post(`/api/shares/${shareId}/sync`).set("Origin", ORIGIN).send(body);
+  const readCalls = () => harness.paypal.apiCalls().filter((call) => call.method === "GET");
+  return { ...harness, contractId, shareId, second, authorize, authorizeCalls, sync, readCalls };
+}
+
+async function heldRow(shareId: string) {
+  const result = await db.query<{
+    status: string;
+    authorization_id: string | null;
+    authorization_expires_at: Date | null;
+  }>("SELECT status, authorization_id, authorization_expires_at FROM shares WHERE id = $1", [shareId]);
+  return result.rows[0];
+}
+
 describe("authorize", () => {
-  const HELD: PayPalStep = { status: 201, body: authorizedOrder() };
-  const notApproved: PayPalStep = {
-    status: 422,
-    body: refusal("UNPROCESSABLE_ENTITY", "ORDER_NOT_APPROVED"),
-  };
-  const alreadyDone: PayPalStep = {
-    status: 422,
-    body: refusal("UNPROCESSABLE_ENTITY", "ORDER_ALREADY_AUTHORIZED"),
-  };
-
-  /** A share with an open order, and the requests that act on it. `steps` follow the order's own create call. */
-  async function opened(steps: PayPalStep[], env: Record<string, string | undefined> = {}) {
-    const harness = setup([CREATED, ...steps], env);
-    const { contractId, shareId, second } = await plan();
-    await harness.checkout(shareId);
-    const authorize = (orderId: string = ORDER_ID) =>
-      request(harness.app)
-        .post(`/api/shares/${shareId}/authorize`)
-        .set("Origin", ORIGIN)
-        .send({ order_id: orderId });
-    const authorizeCalls = () => harness.paypal.apiCalls().filter((call) => call.url.endsWith("/authorize"));
-    return { ...harness, contractId, shareId, second, authorize, authorizeCalls };
-  }
-
-  async function heldRow(shareId: string) {
-    const result = await db.query<{
-      status: string;
-      authorization_id: string | null;
-      authorization_expires_at: Date | null;
-    }>("SELECT status, authorization_id, authorization_expires_at FROM shares WHERE id = $1", [shareId]);
-    return result.rows[0];
-  }
-
   it("stores the hold, keeps the plan active and tells the board (test 50)", async () => {
     const { contractId, shareId, notifier, authorize, authorizeCalls } = await opened([HELD]);
     const eventsBefore = notifier.contractEvents.length;
@@ -676,5 +679,179 @@ describe("authorize", () => {
       .set("Origin", ORIGIN)
       .send({ order_id: ORDER_ID });
     expect(res.status).toBe(404);
+  });
+});
+
+describe("sync", () => {
+  async function resolvedBySync(shareId: string, kind: string) {
+    const result = await db.query<{ outcome: string; resolved_by_sync: boolean }>(
+      "SELECT outcome, resolved_by_sync FROM paypal_operations WHERE share_id = $1 AND kind = $2",
+      [shareId, kind],
+    );
+    return result.rows;
+  }
+
+  it("completes an unknown hold from the order (test 55)", async () => {
+    const { contractId, shareId, authorize, sync, readCalls, notifier } = await opened([
+      { fail: "timeout" },
+      { body: authorizedOrder() },
+    ]);
+    await authorize();
+    const eventsBefore = notifier.contractEvents.length;
+
+    const res = await sync();
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      share: { status: "held", held_count: 1 },
+      contract: { id: contractId },
+    });
+    expect(await heldRow(shareId)).toMatchObject({ status: "held", authorization_id: HOLD_ID });
+    expect(await resolvedBySync(shareId, "authorize")).toEqual([
+      { outcome: "completed", resolved_by_sync: true },
+    ]);
+    expect(await resolvedBySync(shareId, "get_order")).toEqual([
+      { outcome: "completed", resolved_by_sync: false },
+    ]);
+    expect(readCalls()[0]?.url).toBe(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${ORDER_ID}`);
+    expect(await eventTypes(contractId)).toContain("hold_placed");
+    expect(notifier.contractEvents).toHaveLength(eventsBefore + 1);
+  });
+
+  it("reopens the checkout when the order was approved but never authorized, and authorize then works", async () => {
+    const { shareId, authorize, sync } = await opened([
+      { fail: "timeout" },
+      { body: { id: ORDER_ID, status: "APPROVED" } },
+      { status: 201, body: authorizedOrder() },
+    ]);
+    await authorize();
+
+    await sync();
+    expect(await shareRow(shareId)).toMatchObject({ status: "checkout_open" });
+    expect(await resolvedBySync(shareId, "authorize")).toEqual([
+      { outcome: "failed", resolved_by_sync: true },
+    ]);
+    expect((await authorize()).body).toMatchObject({ outcome: "completed", share: { status: "held" } });
+  });
+
+  it("declines a share whose authorization PayPal voided", async () => {
+    const { shareId, authorize, sync } = await opened([
+      { fail: "timeout" },
+      { body: authorizedOrder("VOIDED") },
+    ]);
+    await authorize();
+    await sync();
+    expect(await shareRow(shareId)).toMatchObject({ status: "declined" });
+  });
+
+  it("stays unknown when PayPal cannot be read", async () => {
+    const { shareId, authorize, sync } = await opened([{ fail: "timeout" }, { fail: "timeout" }]);
+    await authorize();
+
+    const res = await sync();
+    expect(res.status).toBe(200);
+    expect(await shareRow(shareId)).toMatchObject({ status: "authorize_unknown" });
+    expect(await resolvedBySync(shareId, "authorize")).toEqual([
+      { outcome: "unknown", resolved_by_sync: false },
+    ]);
+  });
+
+  it("declines a cancelled checkout, and the retry gets a new key (test 56)", async () => {
+    const { contractId, shareId, sync, checkout, paypal } = await opened([{ body: CREATED_ORDER }, SECOND]);
+
+    const res = await sync({ buyer_cancelled: true });
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ share: { status: "declined" } });
+    expect(await eventTypes(contractId)).toContain("checkout_declined");
+
+    expect((await checkout(shareId)).body).toMatchObject({ order_id: SECOND_ORDER_ID });
+    const keys = paypal
+      .apiCalls()
+      .map((call) => call.headers["paypal-request-id"])
+      .filter(Boolean);
+    expect(keys).toEqual([`fb-order-${shareId}-1`, `fb-order-${shareId}-2`]);
+  });
+
+  it("declines a cancelled checkout whose order PayPal no longer has", async () => {
+    const { shareId, sync } = await opened([
+      { status: 404, body: refusal("RESOURCE_NOT_FOUND", "INVALID_RESOURCE_ID") },
+    ]);
+    await sync({ buyer_cancelled: true });
+    expect(await shareRow(shareId)).toMatchObject({ status: "declined" });
+  });
+
+  it("keeps an approved order open on a cancel, so the friend can still finish it", async () => {
+    const { shareId, sync } = await opened([{ body: { id: ORDER_ID, status: "APPROVED" } }]);
+    await sync({ buyer_cancelled: true });
+    expect(await shareRow(shareId)).toMatchObject({ status: "checkout_open", order_id: ORDER_ID });
+  });
+
+  it("leaves a held share alone on a cancel, and asks PayPal nothing", async () => {
+    const { authorize, sync, readCalls } = await opened([{ status: 201, body: authorizedOrder() }]);
+    await authorize();
+
+    const res = await sync({ buyer_cancelled: true });
+    expect(res.body).toMatchObject({ share: { status: "held" } });
+    expect(readCalls()).toHaveLength(0);
+  });
+
+  it("frees a lost create without asking PayPal", async () => {
+    const harness = setup([{ fail: "timeout" }]);
+    const { shareId } = await plan();
+    await harness.checkout(shareId);
+
+    const res = await request(harness.app).post(`/api/shares/${shareId}/sync`).set("Origin", ORIGIN).send({});
+    expect(res.body).toMatchObject({ share: { status: "waiting" } });
+    expect(await resolvedBySync(shareId, "create_order")).toEqual([
+      { outcome: "failed", resolved_by_sync: true },
+    ]);
+    expect(harness.paypal.apiCalls()).toHaveLength(1);
+  });
+
+  it("leaves a create that is still running alone", async () => {
+    const { shareId } = await plan();
+    let during: { status: number; body: unknown } | undefined;
+    const harness = setup([
+      {
+        ...CREATED,
+        during: async () => {
+          const res = await request(harness.app)
+            .post(`/api/shares/${shareId}/sync`)
+            .set("Origin", ORIGIN)
+            .send({});
+          during = { status: res.status, body: res.body };
+        },
+      },
+    ]);
+
+    expect((await harness.checkout(shareId)).body).toMatchObject({ order_id: ORDER_ID });
+    expect(during).toMatchObject({ status: 200, body: { share: { status: "checkout_open" } } });
+    expect(await shareRow(shareId)).toMatchObject({ status: "checkout_open", order_id: ORDER_ID });
+    expect(await resolvedBySync(shareId, "create_order")).toEqual([
+      { outcome: "completed", resolved_by_sync: false },
+    ]);
+  });
+
+  it("does nothing on a sample share", async () => {
+    const { app, paypal } = setup();
+    const contractId = await seedContract(db, await member(db));
+    const sample = await db.query<{ id: string }>("SELECT id FROM shares WHERE contract_id = $1 LIMIT 1", [
+      contractId,
+    ]);
+    const res = await request(app)
+      .post(`/api/shares/${sample.rows[0]?.id ?? ""}/sync`)
+      .set("Origin", ORIGIN)
+      .send({ buyer_cancelled: true });
+    expect(res.status).toBe(200);
+    expect(paypal.calls).toHaveLength(0);
+  });
+
+  it("refuses any other body", async () => {
+    const { app } = setup();
+    const { shareId } = await plan();
+    const res = await request(app)
+      .post(`/api/shares/${shareId}/sync`)
+      .set("Origin", ORIGIN)
+      .send({ buyer_cancelled: false });
+    expect(res.status).toBe(400);
   });
 });

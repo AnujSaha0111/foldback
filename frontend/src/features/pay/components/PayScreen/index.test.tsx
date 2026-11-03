@@ -1,5 +1,10 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { useAuthorizeMutation, useCheckoutMutation, useGetShareQuery } from "@/api/sharesApi";
+import {
+  useAuthorizeMutation,
+  useCheckoutMutation,
+  useGetShareQuery,
+  useSyncMutation,
+} from "@/api/sharesApi";
 import { leaveFor } from "@/lib/leaveFor";
 import { PayScreen } from "./index";
 
@@ -12,6 +17,7 @@ const refetch = jest.fn();
 const answer = (state: object) => jest.mocked(useGetShareQuery).mockReturnValue({ refetch, ...state });
 
 const authorize = jest.fn();
+const sync = jest.fn();
 
 const checkout = jest.fn();
 const checkoutState = (state: object) =>
@@ -27,6 +33,8 @@ beforeEach(() => {
   jest
     .mocked(useAuthorizeMutation)
     .mockReturnValue([authorize, {}] as unknown as ReturnType<typeof useAuthorizeMutation>);
+  sync.mockResolvedValue({ data: {} });
+  jest.mocked(useSyncMutation).mockReturnValue([sync, {}] as unknown as ReturnType<typeof useSyncMutation>);
   window.history.replaceState(null, "", "/pay/shr_1?token=O1&PayerID=P1");
 });
 
@@ -114,6 +122,29 @@ describe("PayScreen", () => {
     );
   });
 
+  it("asks PayPal once and tries again when an earlier checkout is unclear", async () => {
+    answer({ data: { ...share, status: "checkout_open" } });
+    const unclear = { error: { status: 409, data: { error: "money_unknown", message: "Unclear." } } };
+    const opened = {
+      data: { outcome: "completed", order_id: "O2", approve_url: "https://www.sandbox.paypal.com/y" },
+    };
+    checkout.mockResolvedValueOnce(unclear).mockResolvedValueOnce(opened);
+    render(<PayScreen shareId="shr_1" />);
+    fireEvent.click(screen.getByRole("button", { name: /Continue in PayPal/ }));
+    await waitFor(() => expect(leaveFor).toHaveBeenCalledWith("https://www.sandbox.paypal.com/y"));
+    expect(sync).toHaveBeenCalledWith({ shareId: "shr_1" });
+    expect(checkout).toHaveBeenCalledTimes(2);
+  });
+
+  it("asks PayPal once when the page opens on an unclear hold", async () => {
+    answer({ data: { ...share, status: "authorize_unknown", payable: false } });
+    const { rerender } = render(<PayScreen shareId="shr_1" />);
+    await waitFor(() => expect(sync).toHaveBeenCalledWith({ shareId: "shr_1" }));
+    rerender(<PayScreen shareId="shr_1" />);
+    await waitFor(() => expect(refetch).toHaveBeenCalled());
+    expect(sync).toHaveBeenCalledTimes(1);
+  });
+
   describe("back from PayPal", () => {
     const held = { data: { outcome: "completed", share: { authorization_id: "HOLD1" } } };
     const busy = { error: { status: 409, data: { error: "resolve_in_progress", message: "Busy." } } };
@@ -128,7 +159,7 @@ describe("PayScreen", () => {
       answer({ data: { ...share, status: "held", payable: false } });
       let finish: (value: unknown) => void = () => undefined;
       authorize.mockReturnValue(new Promise((done) => (finish = done)));
-      render(<PayScreen shareId="shr_1" returnedOrder="O1" />);
+      render(<PayScreen shareId="shr_1" returned={{ orderId: "O1", cancelled: false }} />);
 
       expect(screen.getByText("Confirming with PayPal…")).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: /PayPal/ })).not.toBeInTheDocument();
@@ -145,7 +176,7 @@ describe("PayScreen", () => {
     it("shows nothing alarming while the share reads as unknown during the call", () => {
       answer({ data: { ...share, status: "authorize_unknown", payable: false } });
       authorize.mockReturnValue(new Promise(() => undefined));
-      render(<PayScreen shareId="shr_1" returnedOrder="O1" />);
+      render(<PayScreen shareId="shr_1" returned={{ orderId: "O1", cancelled: false }} />);
 
       expect(screen.getByText("Confirming with PayPal…")).toBeInTheDocument();
       expect(screen.queryByText("Hold unknown")).not.toBeInTheDocument();
@@ -160,7 +191,7 @@ describe("PayScreen", () => {
           data: { error: "paypal_failed", message: "PayPal did not approve this hold." },
         },
       });
-      render(<PayScreen shareId="shr_1" returnedOrder="O1" />);
+      render(<PayScreen shareId="shr_1" returned={{ orderId: "O1", cancelled: false }} />);
 
       expect(await screen.findByRole("alert")).toHaveTextContent("PayPal did not approve this hold.");
       expect(screen.getByRole("button", { name: /Continue in PayPal/ })).toBeInTheDocument();
@@ -170,10 +201,27 @@ describe("PayScreen", () => {
     it("keeps the token when the server could not be reached, so a refresh can ask again", async () => {
       answer({ data: { ...share, status: "checkout_open" } });
       authorize.mockResolvedValue({ error: { status: "FETCH_ERROR", error: "failed" } });
-      render(<PayScreen shareId="shr_1" returnedOrder="O1" />);
+      render(<PayScreen shareId="shr_1" returned={{ orderId: "O1", cancelled: false }} />);
 
       await screen.findByRole("alert");
       expect(window.location.search).toContain("token=O1");
+    });
+
+    it("closes a cancelled checkout, says nothing was held and drops the query", async () => {
+      window.history.replaceState(null, "", "/pay/shr_1?cancelled=1&token=O1");
+      answer({ data: { ...share, status: "declined" } });
+      let finish: (value: unknown) => void = () => undefined;
+      sync.mockReturnValue(new Promise((done) => (finish = done)));
+      render(<PayScreen shareId="shr_1" returned={{ orderId: null, cancelled: true }} />);
+
+      expect(screen.getByText("Closing the checkout…")).toBeInTheDocument();
+      expect(sync).toHaveBeenCalledWith({ shareId: "shr_1", buyerCancelled: true });
+      expect(authorize).not.toHaveBeenCalled();
+
+      finish({ data: {} });
+      expect(await screen.findByText("Checkout closed. Nothing was held.")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Hold my share with PayPal/ })).toBeInTheDocument();
+      expect(window.location.search).toBe("");
     });
 
     describe("while another friend is confirming", () => {
@@ -191,7 +239,7 @@ describe("PayScreen", () => {
       it("waits and asks again", async () => {
         answer({ data: { ...share, status: "held", payable: false } });
         authorize.mockResolvedValueOnce(busy).mockResolvedValueOnce(held);
-        render(<PayScreen shareId="shr_1" returnedOrder="O1" />);
+        render(<PayScreen shareId="shr_1" returned={{ orderId: "O1", cancelled: false }} />);
 
         await advance(0);
         expect(authorize).toHaveBeenCalledTimes(1);
@@ -204,7 +252,7 @@ describe("PayScreen", () => {
         answer({ data: { ...share, status: "held", payable: false } });
         const failed = { error: { status: 500, data: { error: "internal", message: "Oops." } } };
         authorize.mockResolvedValueOnce(failed).mockResolvedValueOnce(held);
-        render(<PayScreen shareId="shr_1" returnedOrder="O1" />);
+        render(<PayScreen shareId="shr_1" returned={{ orderId: "O1", cancelled: false }} />);
 
         await advance(3_000);
         expect(screen.getByText("Hold HOLD1")).toBeInTheDocument();
@@ -214,7 +262,7 @@ describe("PayScreen", () => {
       it("gives up after 30 seconds, and keeps the token", async () => {
         answer({ data: { ...share, status: "checkout_open" } });
         authorize.mockResolvedValue(busy);
-        render(<PayScreen shareId="shr_1" returnedOrder="O1" />);
+        render(<PayScreen shareId="shr_1" returned={{ orderId: "O1", cancelled: false }} />);
 
         await advance(30_000);
         expect(authorize).toHaveBeenCalledTimes(11);

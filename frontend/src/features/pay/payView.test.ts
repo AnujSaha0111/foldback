@@ -30,6 +30,12 @@ describe("payView", () => {
     }
   });
 
+  it("says a closed checkout held nothing, and offers the hold again", () => {
+    const view = payView(share({ status: "declined" }));
+    expect(view.message).toBe("Checkout closed. Nothing was held.");
+    expect(view.action?.label).toBe("Hold my share with PayPal");
+  });
+
   it("offers to continue an open checkout", () => {
     expect(payView(share({ status: "checkout_open" })).action?.label).toBe("Continue in PayPal");
   });

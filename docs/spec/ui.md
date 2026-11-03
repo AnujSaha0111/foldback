@@ -121,7 +121,8 @@ Content, from `GET /api/shares/:shareId`. The page joins the `share:{id}` socket
 Return handling:
 
 - URL has `token` (and no `cancelled`): call authorize immediately, show `Confirming with PayPal…`, then the result: completed → the held (or kept) message above, plus `Hold {authorization_id}`; unknown → `PayPal did not return a clear result. Your share stays reserved while we check.`; failed → the API `message`.
-- URL has `cancelled=1`: call sync with `buyer_cancelled: true`, then show `Checkout closed. Nothing was held.` with the hold button again.
+- URL has `cancelled=1`: show `Closing the checkout…`, call sync with `buyer_cancelled: true`, then show `Checkout closed. Nothing was held.` with the hold button again. The same sentence shows whenever the share is `declined`.
+- The page settles unknowns by itself: it syncs once on load when the share is `authorize_unknown`, and once (then retries checkout) when checkout answers `money_unknown`.
 - Remove the query string with `history.replaceState` after handling it, so a refresh never re-posts.
 
 No card form. The PayPal window is the approval.

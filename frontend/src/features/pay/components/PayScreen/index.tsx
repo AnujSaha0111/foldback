@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useCheckoutMutation, useGetShareQuery } from "@/api/sharesApi";
+import { errorCode } from "@/api/baseApi";
+import { useCheckoutMutation, useGetShareQuery, useSyncMutation } from "@/api/sharesApi";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { FormError } from "@/components/FormError";
@@ -18,8 +19,8 @@ import type { PublicShare } from "@/types/generated/api-types";
 import { UNCLEAR_RESULT } from "@/types/generated/rules";
 import { conditionText, payView, withOthers } from "../../payView";
 import type { PayView } from "../../payView";
-import { useReturnFromPayPal } from "../../useReturnFromPayPal";
-import type { PayPalReturn } from "../../useReturnFromPayPal";
+import { useReturnFromPayPal, useSettleUnknown } from "../../useReturnFromPayPal";
+import type { PayPalReturn, Returned } from "../../useReturnFromPayPal";
 import {
   Act,
   Amount,
@@ -38,15 +39,18 @@ import {
 
 interface PayScreenProps {
   shareId: string;
-  /** The order PayPal sent the friend back with, if it did. */
-  returnedOrder?: string | null;
+  /** How PayPal sent the friend back, if it did. */
+  returned?: Returned;
 }
 
+const NOT_RETURNED: Returned = { orderId: null, cancelled: false };
+
 /** The page a friend opens from a pay link. Mobile first, one column, and no scroll scenes. */
-export function PayScreen({ shareId, returnedOrder = null }: PayScreenProps) {
+export function PayScreen({ shareId, returned = NOT_RETURNED }: PayScreenProps) {
   const pollingInterval = useShareLive(shareId);
   const { data, error, refetch } = useGetShareQuery(shareId, { pollingInterval });
-  const paypalReturn = useReturnFromPayPal(shareId, returnedOrder, refetch);
+  const paypalReturn = useReturnFromPayPal(shareId, returned, refetch);
+  useSettleUnknown(shareId, data?.status, !paypalReturn.confirming, refetch);
   return (
     <Page
       compactFooter
@@ -57,7 +61,7 @@ export function PayScreen({ shareId, returnedOrder = null }: PayScreenProps) {
       }
     >
       {data ? (
-        <Share share={data} paypalReturn={paypalReturn} />
+        <Share share={data} paypalReturn={paypalReturn} cancelled={returned.cancelled} />
       ) : (
         <Column>{error ? <FormError error={error} /> : <Loading label="Loading your share…" />}</Column>
       )}
@@ -65,7 +69,13 @@ export function PayScreen({ shareId, returnedOrder = null }: PayScreenProps) {
   );
 }
 
-function Share({ share, paypalReturn }: { share: PublicShare; paypalReturn: PayPalReturn }) {
+interface ShareProps {
+  share: PublicShare;
+  paypalReturn: PayPalReturn;
+  cancelled: boolean;
+}
+
+function Share({ share, paypalReturn, cancelled }: ShareProps) {
   const view = payView(share);
   const others = withOthers(share.other_names);
   const [firstStatus] = useState(share.status);
@@ -103,7 +113,7 @@ function Share({ share, paypalReturn }: { share: PublicShare; paypalReturn: PayP
           </Panel>
           <Act aria-live="polite">
             {paypalReturn.confirming ? (
-              <Loading label="Confirming with PayPal…" />
+              <Loading label={cancelled ? "Closing the checkout…" : "Confirming with PayPal…"} />
             ) : (
               <>
                 {view.message ? (
@@ -131,15 +141,21 @@ interface HoldButtonProps {
 /** Asks the server for the PayPal link, then leaves for it. A second press gets the same link, never a new order. */
 function HoldButton({ shareId, action }: HoldButtonProps) {
   const [checkout, { data, error, isLoading }] = useCheckoutMutation();
+  const [sync, { isLoading: syncing }] = useSyncMutation();
 
+  // An earlier checkout with no clear result blocks a new one, so ask PayPal once and try again.
   const hold = async () => {
-    const { data: opened } = await checkout(shareId);
-    if (opened?.approve_url) leaveFor(opened.approve_url);
+    let answer = await checkout(shareId);
+    if (errorCode(answer.error) === "money_unknown") {
+      await sync({ shareId });
+      answer = await checkout(shareId);
+    }
+    if (answer.data?.approve_url) leaveFor(answer.data.approve_url);
   };
 
   return (
     <>
-      <Button variant="sun" block loading={isLoading} onClick={() => void hold()}>
+      <Button variant="sun" block loading={isLoading || syncing} onClick={() => void hold()}>
         {action.label}
       </Button>
       <Help>{action.help}</Help>

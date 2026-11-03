@@ -105,11 +105,16 @@ export type CheckoutResponse =
   | { outcome: "completed"; order_id: string; approve_url: string }
   | { outcome: "unknown"; order_id: null; approve_url: null };
 
-/** POST /api/shares/:id/authorize. Public, like the pay link: `authorization_id` is the only PayPal id in it. */
-export interface AuthorizeResponse {
+/** What a pay-link mutation answers with, POST /api/shares/:id/sync among them. Public, like the pay link. */
+export interface ShareReply {
+  share: PublicShare;
+  contract: { id: string; status: ContractStatus };
+}
+
+/** POST /api/shares/:id/authorize. `authorization_id` is the only PayPal id in it. */
+export interface AuthorizeResponse extends ShareReply {
   outcome: "completed" | "unknown";
   share: PublicShare & { authorization_id: string | null };
-  contract: { id: string; status: ContractStatus };
 }
 
 /** Colors the board gives a bar. The word on the bar, never the color, says the status. */
