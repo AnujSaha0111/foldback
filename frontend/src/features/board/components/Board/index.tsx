@@ -15,6 +15,7 @@ import { CONTRACT_STATUS_VIEW } from "@/lib/status";
 import { useContractLive } from "@/sockets/useContractLive";
 import type { ApiContract, ApiShare } from "@/types/generated/api-types";
 import { HOLDING_SHARE_STATUSES } from "@/types/generated/statuses";
+import { Controls } from "../Controls";
 import { PersonCard } from "../PersonCard";
 import { SchedulerPanel } from "../SchedulerPanel";
 import { Back, Head, Layout, Meter, Reason, Stat, Stats, Urgent } from "./styled";
@@ -53,6 +54,7 @@ export function Board({ id }: { id: string }) {
       </Head>
       <Numbers contract={contract} shares={shares} timeZone={timeZone} />
       {contract.resolution_reason ? <Reason aria-live="polite">{contract.resolution_reason}</Reason> : null}
+      <Controls contract={contract} shares={shares} />
       <Layout>
         <SchedulerPanel contractId={id} pollingInterval={pollingInterval} onSelect={setPicked} />
         <PersonCard

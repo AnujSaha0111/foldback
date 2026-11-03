@@ -1,14 +1,18 @@
 import type { Request, RequestHandler } from "express";
-import type { Pool } from "pg";
 import { AppError } from "../http/errors";
 import { currentUser } from "../http/middleware/auth";
 import { listContracts, readContract } from "../services/contracts.service";
+import type { HoldDeps } from "../services/holds.service";
 import { readScheduler } from "../services/projection.service";
+import { moveClock, resolveOwned } from "../services/clock.service";
+import type { ClockInput } from "./contracts.schemas";
 
 export interface ContractsController {
   list: RequestHandler;
   read: RequestHandler;
   scheduler: RequestHandler;
+  clock: RequestHandler;
+  resolve: RequestHandler;
 }
 
 const CONTRACT_ID = /^con_[A-Za-z0-9_-]{22}$/;
@@ -21,7 +25,8 @@ export function parseContractId(req: Request): string {
   return id;
 }
 
-export function createContractsController(pool: Pool): ContractsController {
+export function createContractsController(deps: HoldDeps): ContractsController {
+  const { pool } = deps;
   return {
     list: async (_req, res) => {
       res.json({ contracts: await listContracts(pool, currentUser(res).id) });
@@ -31,6 +36,13 @@ export function createContractsController(pool: Pool): ContractsController {
     },
     scheduler: async (req, res) => {
       res.json(await readScheduler(pool, currentUser(res).id, parseContractId(req)));
+    },
+    clock: async (req, res) => {
+      const body = req.body as ClockInput;
+      res.json(await moveClock(deps, currentUser(res).id, parseContractId(req), new Date(body.demo_now)));
+    },
+    resolve: async (req, res) => {
+      res.json(await resolveOwned(deps, currentUser(res).id, parseContractId(req)));
     },
   };
 }

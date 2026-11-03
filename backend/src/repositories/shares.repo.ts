@@ -165,6 +165,23 @@ export async function markHeld(
   );
 }
 
+/** One step of a resolve wave. The transition table and the guard trigger refuse anything the rule does not allow. */
+export async function setShareStatus(
+  client: PoolClient,
+  shareId: string,
+  status: ShareStatus,
+): Promise<void> {
+  await client.query("UPDATE shares SET status = $2 WHERE id = $1", [shareId, status]);
+}
+
+/** Captured. A sample share has no capture id, a sandbox one always does (the table checks it). */
+export async function markKept(client: PoolClient, shareId: string, captureId: string | null): Promise<void> {
+  await client.query("UPDATE shares SET status = 'kept', capture_id = $2 WHERE id = $1", [
+    shareId,
+    captureId,
+  ]);
+}
+
 export interface SeedShareInput {
   name: string;
   position: number;

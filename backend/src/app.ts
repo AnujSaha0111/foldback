@@ -81,18 +81,19 @@ export function createApp({
     ...(llmFetch ? { llmFetch } : {}),
     ...(now ? { now } : {}),
   };
+  const paypal = createPayPalClient({ env, logger, ...(paypalFetch ? { fetch: paypalFetch } : {}) });
+  const holdDeps = { env, pool, notifier, paypal };
   app.use(
     "/api/contracts",
     contractsRoutes(
-      createContractsController(pool),
+      createContractsController(holdDeps),
       createRulesController(env, pool, ruleDeps),
       limiters,
       guard,
     ),
   );
 
-  const paypal = createPayPalClient({ env, logger, ...(paypalFetch ? { fetch: paypalFetch } : {}) });
-  app.use("/api/shares", sharesRoutes(createSharesController({ env, pool, notifier, paypal }), limiters));
+  app.use("/api/shares", sharesRoutes(createSharesController(holdDeps), limiters));
 
   app.use(notFoundHandler);
   app.use(errorHandler(logger));

@@ -44,6 +44,27 @@ const contractsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_result, _error, { id }) => ["ContractList", { type: "Contract", id }],
     }),
+    /** Moves the demo clock, then the server resolves. A 409 still moved the clock, so the board refreshes anyway. */
+    moveClock: build.mutation<ContractRead, { id: string; demoNow: string }>({
+      query: ({ id, demoNow }) => ({
+        url: `/api/contracts/${encodeURIComponent(id)}/clock`,
+        method: "POST",
+        body: { demo_now: demoNow },
+      }),
+      invalidatesTags: (_result, _error, { id }) => [
+        "ContractList",
+        { type: "Contract", id },
+        { type: "Scheduler", id },
+      ],
+    }),
+    resolvePlan: build.mutation<ContractRead, string>({
+      query: (id) => ({ url: `/api/contracts/${encodeURIComponent(id)}/resolve`, method: "POST", body: {} }),
+      invalidatesTags: (_result, _error, id) => [
+        "ContractList",
+        { type: "Contract", id },
+        { type: "Scheduler", id },
+      ],
+    }),
     resetDemo: build.mutation<ResetResponse, void>({
       query: () => ({ url: "/api/demo/reset", method: "POST", body: {} }),
       invalidatesTags: ["ContractList", "Contract"],
@@ -64,4 +85,6 @@ export const {
   useClarifyRuleMutation,
   useConfirmRuleMutation,
   useResetDemoMutation,
+  useMoveClockMutation,
+  useResolvePlanMutation,
 } = contractsApi;

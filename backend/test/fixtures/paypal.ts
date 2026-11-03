@@ -5,6 +5,9 @@ export const PAYPAL_KEYS = { PAYPAL_CLIENT_ID: "client-id", PAYPAL_CLIENT_SECRET
 export const SHARE_ID = "shr_aaaaaaaaaaaaaaaaaaaaaa";
 export const ORDER_ID = "TESTORDER0000001";
 export const HOLD_ID = "TESTHOLD00000001";
+/** A void as PayPal answers it: 204 and no body. */
+export const VOIDED_STEP = { status: 204 };
+
 export const APPROVE_URL = `https://www.sandbox.paypal.com/checkoutnow?token=${ORDER_ID}`;
 export const EXPIRES = "2026-12-05T18:00:00Z";
 
@@ -75,7 +78,9 @@ function reply(step: PayPalStep): Response {
     start: (controller) => controller.error(new TypeError("terminated")),
   });
   const payload = step.breaksInBody ? stream : (step.text ?? JSON.stringify(step.body ?? {}));
-  return new Response(payload, { status: step.status ?? 200, headers: { "paypal-debug-id": "debug-1" } });
+  // A 204 carries no body at all, which is how PayPal answers a void.
+  const body = step.status === 204 ? null : payload;
+  return new Response(body, { status: step.status ?? 200, headers: { "paypal-debug-id": "debug-1" } });
 }
 
 /** A fake PayPal: answers token requests by itself, and every other call from the script in order. */

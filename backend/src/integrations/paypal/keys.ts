@@ -9,3 +9,11 @@ export function orderKey(shareId: string, checkoutAttempt: number): string {
 export function authorizeKey(orderId: string): string {
   return `fb-auth-${orderId}`;
 }
+
+export function captureKey(authorizationId: string): string {
+  return `fb-capture-${authorizationId}`;
+}
+
+export function voidKey(authorizationId: string): string {
+  return `fb-void-${authorizationId}`;
+}

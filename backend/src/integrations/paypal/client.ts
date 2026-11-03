@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { Env } from "../../config/env";
 import type { Logger } from "../../observability/logger";
-import { authorizeKey, orderKey } from "./keys";
+import { authorizeKey, captureKey, orderKey, voidKey } from "./keys";
 
 // The only file that makes PayPal HTTP calls (docs/spec/paypal.md). Plain fetch, sandbox only: env.ts refuses any other
 // base URL. It never touches the database. Callers record each call in paypal_operations, outside any transaction.
@@ -103,6 +103,36 @@ export function authorizeOrderRequest(orderId: string): PayPalRequest {
   };
 }
 
+export interface CaptureInput {
+  authorizationId: string;
+  shareId: string;
+  amountCents: number;
+}
+
+/** `final_capture` closes the authorization, so nothing more can ever be taken from it. */
+export function captureAuthorizationRequest(input: CaptureInput): PayPalRequest {
+  return {
+    method: "POST",
+    path: `/v2/payments/authorizations/${encodeURIComponent(input.authorizationId)}/capture`,
+    key: captureKey(input.authorizationId),
+    body: {
+      amount: { currency_code: "USD", value: moneyValue(input.amountCents) },
+      final_capture: true,
+      invoice_id: `foldback-capture-${input.shareId}`,
+      note_to_payer: "Everyone paid by the deadline, so Foldback captured your share.",
+    },
+  };
+}
+
+export function voidAuthorizationRequest(authorizationId: string): PayPalRequest {
+  return {
+    method: "POST",
+    path: `/v2/payments/authorizations/${encodeURIComponent(authorizationId)}/void`,
+    key: voidKey(authorizationId),
+    body: {},
+  };
+}
+
 export function getOrderRequest(orderId: string): PayPalRequest {
   return {
     method: "GET",
@@ -182,6 +212,9 @@ function firstIssue(body: Record<string, unknown>): string | null {
  * is the part that states it.
  */
 function classify(status: number, debugId: string | null, text: string): PayPalResult<unknown> {
+  // A void answers 204 with no body. That is its success, not an unreadable reply.
+  if (status === 204 && text === "")
+    return { status, debugId, response: {}, outcome: "completed", value: {} };
   const body = parseObject(text);
   const reply: Reply = {
     status,
@@ -240,7 +273,16 @@ const order = z.object({
   id: z.string().min(1),
   status: z.string(),
   purchase_units: z
-    .array(z.object({ payments: z.object({ authorizations: z.array(authorization).optional() }).optional() }))
+    .array(
+      z.object({
+        payments: z
+          .object({
+            authorizations: z.array(authorization).optional(),
+            captures: z.array(z.object({ id: z.string().min(1), status: z.string() })).optional(),
+          })
+          .optional(),
+      }),
+    )
     .optional(),
 });
 
@@ -289,9 +331,31 @@ function placedHold(body: OrderBody): Reading<PlacedHold> {
   return { value: { authorizationId: placed.id, expiresAt } };
 }
 
-function orderFact(body: OrderBody): Reading<{ status: string; authorization: AuthorizationFact | null }> {
+interface OrderFact {
+  status: string;
+  authorization: AuthorizationFact | null;
+  /** The order's capture. Each order has one authorization, so a capture here is that authorization's. */
+  capture: { id: string; status: string } | null;
+}
+
+function orderFact(body: OrderBody): Reading<OrderFact> {
   const found = firstAuthorization(body);
-  return { value: { status: body.status, authorization: found === null ? null : fact(found) } };
+  const capture = body.purchase_units?.[0]?.payments?.captures?.[0] ?? null;
+  return { value: { status: body.status, authorization: found === null ? null : fact(found), capture } };
+}
+
+const captured = z.object({ id: z.string().min(1), status: z.string() });
+
+/** PENDING still means PayPal took the capture (paypal.md), so both count as kept. */
+function newCapture(body: z.infer<typeof captured>): Reading<{ captureId: string }> {
+  return body.status === "COMPLETED" || body.status === "PENDING" ? { value: { captureId: body.id } } : null;
+}
+
+const voided = z.object({ status: z.string().optional() });
+
+/** 204 has no body, and a body that says anything but VOIDED is not a release we can rely on. */
+function released(body: z.infer<typeof voided>): Reading<true> {
+  return body.status === undefined || body.status === "VOIDED" ? { value: true } : null;
 }
 
 /** Read by name, because the timeout's DOMException is not always an `Error` under test runners. */
@@ -410,6 +474,8 @@ export function createPayPalClient(deps: PayPalDeps) {
   return {
     createOrder: async (request: PayPalRequest) => read(await send(request), createdOrder, newOrder),
     authorizeOrder: async (request: PayPalRequest) => read(await send(request), order, placedHold),
+    captureAuthorization: async (request: PayPalRequest) => read(await send(request), captured, newCapture),
+    voidAuthorization: async (request: PayPalRequest) => read(await send(request), voided, released),
     getOrder: async (request: PayPalRequest) => read(await send(request), order, orderFact),
     getAuthorization: async (request: PayPalRequest) =>
       read(await send(request), authorization, (body) => ({ value: fact(body) })),
