@@ -80,6 +80,17 @@ export async function findOpen(db: Db, shareId: string): Promise<OpenOperation |
   return row ? { id: row.id, kind: row.kind, outcome: row.outcome, createdAt: row.created_at } : null;
 }
 
+/** The shares of a plan whose money may be moving: a mutating call that has not settled. */
+export async function sharesWithOpenCalls(db: Db, contractId: string): Promise<Set<string>> {
+  const result = await db.query<{ share_id: string }>(
+    `SELECT DISTINCT o.share_id FROM paypal_operations o JOIN shares s ON s.id = o.share_id
+      WHERE s.contract_id = $1 AND o.outcome IN ('pending', 'unknown')
+        AND o.kind IN ('create_order', 'authorize', 'capture', 'void')`,
+    [contractId],
+  );
+  return new Set(result.rows.map((row) => row.share_id));
+}
+
 /** Sync learned how the call ended. The reply that was lost stays lost, so only the outcome and the flag change. */
 export async function resolveBySync(db: Db, id: string, outcome: "completed" | "failed"): Promise<void> {
   const updated = await db.query(

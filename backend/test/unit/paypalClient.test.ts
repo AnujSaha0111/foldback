@@ -1,11 +1,13 @@
 import { PassThrough } from "node:stream";
 import {
   authorizeOrderRequest,
+  captureAuthorizationRequest,
   createOrderRequest,
   createPayPalClient,
   getAuthorizationRequest,
   getOrderRequest,
   paypalWritesOpen,
+  voidAuthorizationRequest,
 } from "../../src/integrations/paypal/client";
 import type { OrderInput } from "../../src/integrations/paypal/client";
 import { createLogger } from "../../src/observability/logger";
@@ -490,5 +492,56 @@ describe("closed", () => {
 
   it("is open with keys and the switch on", () => {
     expect(paypalWritesOpen(setup([]).env)).toBe(true);
+  });
+});
+
+describe("capture and void", () => {
+  const captureRequest = () =>
+    captureAuthorizationRequest({ authorizationId: HOLD_ID, shareId: SHARE_ID, amountCents: 8000 });
+
+  it("captures the share's amount once, under the authorization's key", async () => {
+    const { client, paypal } = setup([{ status: 201, body: { id: "CAPTURE1", status: "COMPLETED" } }]);
+    expect(await client.captureAuthorization(captureRequest())).toMatchObject({
+      outcome: "completed",
+      value: { captureId: "CAPTURE1" },
+    });
+    const [call] = paypal.apiCalls();
+    expect(call?.url).toBe(`https://api-m.sandbox.paypal.com/v2/payments/authorizations/${HOLD_ID}/capture`);
+    expect(call?.headers["paypal-request-id"]).toBe(`fb-capture-${HOLD_ID}`);
+    expect(JSON.parse(call?.body ?? "")).toMatchObject({ final_capture: true, amount: { value: "80.00" } });
+  });
+
+  it("counts a PENDING capture as taken, and anything else as unknown", async () => {
+    const pending = setup([{ status: 201, body: { id: "CAPTURE1", status: "PENDING" } }]);
+    expect((await pending.client.captureAuthorization(captureRequest())).outcome).toBe("completed");
+    const odd = setup([{ status: 201, body: { id: "CAPTURE1", status: "DECLINED" } }]);
+    expect((await odd.client.captureAuthorization(captureRequest())).outcome).toBe("unknown");
+  });
+
+  it("reads a void's empty 204 as done, under the void key", async () => {
+    const { client, paypal } = setup([{ status: 204 }]);
+    expect((await client.voidAuthorization(voidAuthorizationRequest(HOLD_ID))).outcome).toBe("completed");
+    expect(paypal.apiCalls()[0]?.headers["paypal-request-id"]).toBe(`fb-void-${HOLD_ID}`);
+  });
+
+  it("accepts a void that answers with the voided authorization, and nothing else", async () => {
+    const voided = setup([{ body: { id: HOLD_ID, status: "VOIDED" } }]);
+    expect((await voided.client.voidAuthorization(voidAuthorizationRequest(HOLD_ID))).outcome).toBe(
+      "completed",
+    );
+    const still = setup([{ body: { id: HOLD_ID, status: "CREATED" } }]);
+    expect((await still.client.voidAuthorization(voidAuthorizationRequest(HOLD_ID))).outcome).toBe("unknown");
+  });
+
+  it("finds an order's capture for a replay", async () => {
+    const body = {
+      id: ORDER_ID,
+      status: "COMPLETED",
+      purchase_units: [{ payments: { captures: [{ id: "CAPTURE1", status: "COMPLETED" }] } }],
+    };
+    const { client } = setup([{ body }]);
+    expect(await client.getOrder(getOrderRequest(ORDER_ID))).toMatchObject({
+      value: { capture: { id: "CAPTURE1", status: "COMPLETED" } },
+    });
   });
 });

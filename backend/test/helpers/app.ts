@@ -25,6 +25,7 @@ const GENEROUS: Limits = {
   createContract: { limit: 10_000, windowMs: 60_000 },
   checkout: { limit: 10_000, windowMs: 60_000 },
   authorize: { limit: 10_000, windowMs: 60_000 },
+  operator: { limit: 10_000, windowMs: 60_000 },
 };
 
 /** A notifier that remembers what it was told, so tests can check that events fire after a commit and only then. */

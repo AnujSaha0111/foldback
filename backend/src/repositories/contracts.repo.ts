@@ -199,6 +199,39 @@ export async function findByShare(db: Db, shareId: string): Promise<ContractRow 
   return row ? toContract(row) : null;
 }
 
+/** One contract by id, whoever owns it. Only for code that already knows the caller may act on it. */
+export async function findById(db: Db, contractId: string): Promise<ContractRow | null> {
+  const result = await db.query<RawContractRow>(`${CONTRACT_SELECT} WHERE c.id = $1 GROUP BY c.id`, [
+    contractId,
+  ]);
+  const row = result.rows[0];
+  return row ? toContract(row) : null;
+}
+
+/**
+ * Moves the plan along the state machine. `direction` is only ever filled, never changed. A reason left out keeps the
+ * current one, and null clears it. `resolved_at` is set by reaching kept or released. Returns the new version.
+ */
+export async function setResolution(
+  client: PoolClient,
+  contractId: string,
+  change: { status: ContractStatus; direction?: Direction; reason?: string | null },
+): Promise<number> {
+  const result = await client.query<{ version: number }>(
+    `UPDATE contracts
+        SET status = $2::text, direction = COALESCE(direction, $3::text),
+            resolution_reason = CASE WHEN $5 THEN $4::text ELSE resolution_reason END,
+            resolved_at = CASE WHEN $2::text IN ('kept', 'released') THEN now() ELSE resolved_at END
+      WHERE id = $1 RETURNING version`,
+    [contractId, change.status, change.direction ?? null, change.reason ?? null, change.reason !== undefined],
+  );
+  return result.rows[0]?.version ?? 0;
+}
+
+export async function setDemoNow(client: PoolClient, contractId: string, demoNow: Date): Promise<void> {
+  await client.query("UPDATE contracts SET demo_now = $2 WHERE id = $1", [contractId, demoNow]);
+}
+
 /** Cheap ownership check for the socket room join. */
 export async function ownsContract(db: Db, ownerId: string, contractId: string): Promise<boolean> {
   const result = await db.query("SELECT 1 FROM contracts WHERE id = $1 AND owner_id = $2", [

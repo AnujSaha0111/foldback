@@ -44,3 +44,12 @@ export async function insertEvent(db: Db, event: NewEvent): Promise<void> {
     [event.contractId, event.shareId ?? null, event.type, event.detail],
   );
 }
+
+/** Whether this kind of event ever happened on the plan. */
+export async function hasEvent(db: Db, contractId: string, type: string): Promise<boolean> {
+  const result = await db.query("SELECT 1 FROM events WHERE contract_id = $1 AND type = $2 LIMIT 1", [
+    contractId,
+    type,
+  ]);
+  return result.rowCount === 1;
+}

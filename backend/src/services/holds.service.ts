@@ -30,6 +30,7 @@ import {
 import type { PayingShare } from "../repositories/shares.repo";
 import type { AuthorizeResponse, CheckoutResponse } from "../shared/api-types";
 import { UNCLEAR_RESULT } from "../shared/rules";
+import { resolveAfterHold } from "./resolve.service";
 import { readShareReply } from "./shares.service";
 
 export interface HoldDeps {
@@ -284,7 +285,8 @@ export async function authorizeShare(
     deps.notifier.shareChanged(shareId, begun.contractId);
 
     if (ending.outcome === "failed") throw new AppError("paypal_failed", "PayPal did not approve this hold.");
-    // phase 7: resolve under contract lock
+    // The hold that completes the group resolves here, under the lock this request already holds.
+    if (ending.outcome === "completed") await resolveAfterHold(deps, begun.contractId);
     return authorizeReply(deps, shareId, ending.outcome, ending.hold?.authorizationId ?? null);
   });
 }

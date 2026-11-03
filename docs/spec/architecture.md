@@ -204,7 +204,7 @@ Definitions:
 Algorithm (`domain/decide`, executed by `services/resolve` under `withContractLock`):
 
 1. `kept` or `released` → `409 contract_closed`.
-2. Any unknown share → contract `blocked` (event `contract_blocked` once), `409 money_unknown`.
+2. Any unknown share → contract `blocked` (event `contract_blocked` once), `409 money_unknown`. This applies only when step 4 or 5 would move money or end the collection: before the deadline, with nobody missing a decision, one unclear result does not stop the others paying.
 3. Any `capture_failed` → stays `blocked`, `409 capture_refused`.
 4. `direction = keep` → capture wave. `direction = release` → release wave.
 5. Otherwise:
@@ -215,7 +215,7 @@ Algorithm (`domain/decide`, executed by `services/resolve` under `withContractLo
 
 **Capture wave** (`capturing`): for each `held` share in id order, sample rows → `kept` locally, and sandbox rows → capture. `COMPLETED` → `kept` + `capture_id`. Unknown → `capture_unknown`, stop, `blocked`. Definite 4xx → GET order. If a capture exists, store it (replay). Otherwise `capture_failed`, stop, `blocked`. When every share is `kept`: contract `kept`, `resolved_at`, event `contract_kept`.
 
-**Release wave** (`releasing`): `waiting`, `checkout_open`, and `declined` → `expired`. Each `held` share: sample → `released` locally; sandbox → void. 204/200 → `released`. Unknown → `void_unknown`, stop, `blocked`. Definite 4xx → GET authorization: `VOIDED` or `EXPIRED` → `released`, otherwise the share stays `held` and the contract `blocked`. When nothing is `held` or unknown: contract `released`, event `contract_released`.
+**Release wave** (`releasing`): `waiting`, `checkout_open`, and `declined` → `expired`, except a share whose checkout is still in flight (the database refuses to expire it; once the plan is decided its order can never be authorized, so nobody is charged). Each `held` share: sample → `released` locally; sandbox → void. 204/200 → `released`. Unknown → `void_unknown`, stop, `blocked`. Definite 4xx → GET authorization: `VOIDED` or `EXPIRED` → `released`, otherwise the share stays `held` and the contract `blocked`. When nothing is `held` or unknown: contract `released`, event `contract_released`.
 
 The authorize that completes the headcount runs resolve in the same request (under the contract lock), so the fourth hold returns with share and contract both `kept`.
 
@@ -230,6 +230,7 @@ Otherwise the route returns `409 share_not_payable` (or the more specific `contr
 
 ## Concurrency
 
+- **Lock holders are capped.** At most 5 requests hold a contract lock at once per process, so the pool of 10 always has connections left for their transactions. A sixth gets `409 resolve_in_progress`, which the pay page retries.
 - **Contract lock.** `withContractLock(contractId, fn)` takes `pg_try_advisory_lock(hashtextextended(contractId, 0))` on a dedicated pooled client for the whole of resolve, clock, and authorize, then releases it in `finally`. If the lock is busy, it returns `409 resolve_in_progress`. Two browser tabs pressing Resolve can never run two capture waves. The lock is session-level, so the same client must call `pg_advisory_unlock` in `finally` before it is released (a leaked lock would leave the contract "busy" until that connection dies). The authorize path takes the same lock. Inside each of transaction 1 and transaction 2, start with `SELECT 1 FROM contracts WHERE id = $1 FOR UPDATE`. Use a **direct** (not pooled) database connection, because transaction-mode poolers break session-level advisory locks.
 - **One in-flight PayPal call per share.** A partial unique index on `paypal_operations(share_id) WHERE outcome IN ('pending','unknown')` makes a second concurrent mutating call fail at insert time, before any HTTP request is sent.
 - **PayPal calls never run inside a database transaction.** The pattern is: tx 1 inserts a `pending` operation and changes the share status, then commits. Then the HTTP call. Then tx 2 records the outcome and the new status. A crash between tx 1 and tx 2 leaves a `pending` operation, which is treated as unknown.

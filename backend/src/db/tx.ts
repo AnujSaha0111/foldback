@@ -33,6 +33,24 @@ export async function withTransaction<T>(pool: Pool, fn: (client: PoolClient) =>
  * Needs a direct (not pooled) Postgres connection, because transaction-mode poolers break session locks.
  */
 export async function withContractLock<T>(pool: Pool, contractId: string, fn: () => Promise<T>): Promise<T> {
+  // Each holder keeps a pool connection for a whole PayPal call. Capping them leaves the rest of the pool (quality.md:
+  // 10) free for the transactions those holders need. A burst past the cap gets 409 at once, and callers retry.
+  if (lockHolders >= MAX_LOCK_HOLDERS) {
+    throw new AppError("resolve_in_progress", "Foldback is busy with other payments. Try again in a moment.");
+  }
+  lockHolders += 1;
+  try {
+    return await holdContractLock(pool, contractId, fn);
+  } finally {
+    lockHolders -= 1;
+  }
+}
+
+/** At most this many requests hold a contract lock at once, in this process. */
+const MAX_LOCK_HOLDERS = 5;
+let lockHolders = 0;
+
+async function holdContractLock<T>(pool: Pool, contractId: string, fn: () => Promise<T>): Promise<T> {
   const client = await pool.connect();
   let acquired = false;
   try {
