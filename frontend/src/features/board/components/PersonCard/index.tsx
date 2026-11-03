@@ -7,6 +7,7 @@ import { Button, ButtonLink } from "@/components/Button";
 import { Money } from "@/components/Money";
 import { Mono } from "@/components/Money/styled";
 import { StatusTag } from "@/components/StatusTag";
+import { copyText } from "@/lib/copyText";
 import { formatMoment } from "@/lib/format";
 import { SHARE_STATUS_VIEW } from "@/lib/status";
 import type { ApiShare } from "@/types/generated/api-types";
@@ -51,13 +52,14 @@ export function PersonCard({ share, shares, onSelect, timeZone, graceUntil }: Pe
   );
 }
 
+const COPY_LABEL = { idle: "Copy pay link", copied: "Copied", failed: "Copy failed: use Open pay link" };
+
 function Details({ share, timeZone, graceUntil }: DetailsProps) {
-  const [copied, setCopied] = useState(false);
+  const [copy, setCopy] = useState<keyof typeof COPY_LABEL>("idle");
   const sandbox = share.money_source !== "sample";
-  const copy = async () => {
-    await navigator.clipboard.writeText(`${window.location.origin}${share.pay_path}`);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1600);
+  const copyLink = async () => {
+    setCopy((await copyText(`${window.location.origin}${share.pay_path}`)) ? "copied" : "failed");
+    setTimeout(() => setCopy("idle"), 1600);
   };
 
   return (
@@ -78,8 +80,8 @@ function Details({ share, timeZone, graceUntil }: DetailsProps) {
       <HoldFacts share={share} timeZone={timeZone} graceUntil={graceUntil} />
       {sandbox && share.payable ? (
         <Actions>
-          <Button small arrow={false} onClick={() => void copy()}>
-            {copied ? "Copied" : "Copy pay link"}
+          <Button small arrow={false} onClick={() => void copyLink()}>
+            {COPY_LABEL[copy]}
           </Button>
           <ButtonLink href={share.pay_path} variant="secondary" small arrow={false}>
             Open pay link

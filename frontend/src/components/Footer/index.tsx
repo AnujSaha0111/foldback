@@ -13,11 +13,7 @@ export function Footer({ compact = false }: FooterProps) {
       <Inner>
         <Row>
           {compact ? null : <Logo href="/" />}
-          <Note>
-            {compact
-              ? "Sandbox only: no real money moves."
-              : "Built for the PayPal AI hackathon. Sandbox only: no real money moves."}
-          </Note>
+          <Note>Sandbox only: no real money moves.</Note>
           <ThemeToggle />
         </Row>
       </Inner>
