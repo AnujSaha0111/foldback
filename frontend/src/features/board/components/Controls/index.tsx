@@ -36,7 +36,7 @@ export function Controls({ contract, shares }: ControlsProps) {
           <Control key={label}>
             <Button
               small
-              variant="secondary"
+              variant="ink"
               arrow={false}
               disabled={closed || busy || !at}
               loading={clock.isLoading && clock.originalArgs?.demoNow === at}
@@ -50,6 +50,7 @@ export function Controls({ contract, shares }: ControlsProps) {
         <Control>
           <Button
             small
+            variant="ink"
             arrow={false}
             disabled={closed || busy}
             loading={resolving.isLoading}

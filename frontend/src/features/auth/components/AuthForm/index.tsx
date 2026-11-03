@@ -1,7 +1,8 @@
 "use client";
 
-import { useTransition } from "react";
+import { useEffect, useRef, useTransition } from "react";
 import type { FormEvent, ReactNode } from "react";
+import { useGetMeQuery } from "@/api/authApi";
 import type { ApiFailure } from "@/api/baseApi";
 import { Button } from "@/components/Button";
 import { FormError } from "@/components/FormError";
@@ -35,6 +36,14 @@ export function AuthForm({
   const finish = useFinishAuth();
   const [leaving, leave] = useTransition();
   const working = busy || leaving;
+  // A visitor whose session is still good goes straight on instead of signing in again. The API is the judge.
+  const { data: me } = useGetMeQuery();
+  const sent = useRef(false);
+  useEffect(() => {
+    if (!me || sent.current) return;
+    sent.current = true;
+    leave(finish);
+  }, [finish, me]);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
