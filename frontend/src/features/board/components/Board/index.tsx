@@ -1,5 +1,6 @@
 "use client";
 
+import Dialog from "@mui/material/Dialog";
 import { useState } from "react";
 import type { CSSProperties } from "react";
 import { useGetContractQuery } from "@/api/contractsApi";
@@ -18,8 +19,9 @@ import { HOLDING_SHARE_STATUSES } from "@/types/generated/statuses";
 import { AssistantCard } from "@/features/assistant/components/AssistantCard";
 import { Controls } from "../Controls";
 import { PersonCard } from "../PersonCard";
+import { Picker } from "../PersonCard/styled";
 import { SchedulerPanel } from "../SchedulerPanel";
-import { Back, Head, Layout, Meter, Reason, Stat, Stats, Urgent } from "./styled";
+import { Back, Head, Layout, Meter, Pick, Reason, Stat, Stats, Urgent } from "./styled";
 
 const HOUR_MS = 3_600_000;
 
@@ -43,8 +45,8 @@ export function Board({ id }: { id: string }) {
   const [proposedAt, setProposedAt] = useState<string | null>(null);
   if (!data) return error ? <FormError error={error} /> : <Loading label="Loading the plan…" />;
   const { contract, shares } = data;
-  // Until someone is chosen, show the one the plan is waiting on.
-  const selectedId = picked ?? (shares.find((share) => share.status === "waiting") ?? shares[0])?.id ?? null;
+  const selected = shares.find((share) => share.id === picked);
+  const close = () => setPicked(null);
   const timeZone = contract.timezone ?? "UTC";
 
   return (
@@ -57,6 +59,18 @@ export function Board({ id }: { id: string }) {
       <Numbers contract={contract} shares={shares} timeZone={timeZone} />
       {contract.resolution_reason ? <Reason aria-live="polite">{contract.resolution_reason}</Reason> : null}
       <Controls contract={contract} shares={shares} />
+      {/* The schedule opens a person on click; this does the same from the keyboard. */}
+      <Pick>
+        <label htmlFor="show-person">Show a person</label>
+        <Picker id="show-person" value="" onChange={(event) => setPicked(event.target.value || null)}>
+          <option value="">Choose…</option>
+          {shares.map((share) => (
+            <option key={share.id} value={share.id}>
+              {share.display_name}
+            </option>
+          ))}
+        </Picker>
+      </Pick>
       <Layout>
         <SchedulerPanel
           contractId={id}
@@ -64,14 +78,24 @@ export function Board({ id }: { id: string }) {
           onSelect={setPicked}
           proposedAt={proposedAt}
         />
+      </Layout>
+      <Dialog
+        open={selected !== undefined}
+        onClose={close}
+        aria-labelledby="person-title"
+        fullWidth
+        maxWidth="sm"
+        slotProps={{ paper: { square: true, sx: { background: "transparent", boxShadow: "none" } } }}
+      >
         <PersonCard
-          share={shares.find((share) => share.id === selectedId)}
+          share={selected}
           shares={shares}
           onSelect={setPicked}
+          onClose={close}
           timeZone={timeZone}
           graceUntil={contract.grace_until}
         />
-      </Layout>
+      </Dialog>
       <AssistantCard contract={contract} shares={shares} onProposed={setProposedAt} />
       <Back>
         <ButtonLink href="/plans" variant="link" arrow={false}>

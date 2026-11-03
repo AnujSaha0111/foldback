@@ -75,26 +75,28 @@ describe("Board", () => {
     expect(useGetContractQuery).toHaveBeenCalledWith("con_1", { pollingInterval: 0 });
   });
 
-  it("starts on the person the plan is waiting on, with their pay link", () => {
+  it("opens no one until a person is picked", () => {
     answer({ data });
     render(<Board id="con_1" />);
-    expect(screen.getByText("No hold yet")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open pay link" })).toHaveAttribute("href", "/pay/shr_m");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("shows the person picked on the board", () => {
+  it("opens the person picked on the board in a popup, and closes it", () => {
     answer({ data });
     render(<Board id="con_1" />);
     fireEvent.click(screen.getByRole("button", { name: "Pick Alex" }));
-    expect(screen.getByText("AUTH-1")).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toHaveTextContent("AUTH-1");
     expect(screen.queryByRole("button", { name: "Copy pay link" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    expect(screen.queryByText("AUTH-1")).not.toBeInTheDocument();
   });
 
-  it("lets a keyboard user pick a person from the card", () => {
+  it("lets a keyboard user open a person, with their pay link", () => {
     answer({ data });
     render(<Board id="con_1" />);
-    fireEvent.change(screen.getByRole("combobox", { name: "Person" }), { target: { value: "shr_a" } });
-    expect(screen.getByText("AUTH-1")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Show a person"), { target: { value: "shr_m" } });
+    expect(screen.getByText("No hold yet")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open pay link" })).toHaveAttribute("href", "/pay/shr_m");
   });
 
   it("says it is loading until the plan arrives", () => {

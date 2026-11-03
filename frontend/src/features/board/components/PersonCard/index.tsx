@@ -11,7 +11,7 @@ import { copyText } from "@/lib/copyText";
 import { formatMoment } from "@/lib/format";
 import { SHARE_STATUS_VIEW } from "@/lib/status";
 import type { ApiShare } from "@/types/generated/api-types";
-import { Actions, Amount, Body, Empty, Facts, Head, Name, Picker, Root, Top } from "./styled";
+import { Actions, Amount, Body, Close, Empty, Facts, Head, Name, Picker, Root, Top } from "./styled";
 
 interface PersonCardProps {
   share: ApiShare | undefined;
@@ -21,12 +21,14 @@ interface PersonCardProps {
   timeZone: string;
   /** The plan's grace end, shown for the person who has it. */
   graceUntil: string | null;
+  /** Closes the popup. */
+  onClose: () => void;
 }
 
 type DetailsProps = Pick<PersonCardProps, "timeZone" | "graceUntil"> & { share: ApiShare };
 
 /** The selected share: who, how much, its status, and the PayPal facts behind it. */
-export function PersonCard({ share, shares, onSelect, timeZone, graceUntil }: PersonCardProps) {
+export function PersonCard({ share, shares, onSelect, timeZone, graceUntil, onClose }: PersonCardProps) {
   return (
     <Root aria-labelledby="person-title" aria-live="polite">
       <Head>
@@ -42,6 +44,9 @@ export function PersonCard({ share, shares, onSelect, timeZone, graceUntil }: Pe
             </option>
           ))}
         </Picker>
+        <Close type="button" aria-label="Close" onClick={onClose}>
+          ×
+        </Close>
       </Head>
       {share ? (
         <Details key={share.id} share={share} timeZone={timeZone} graceUntil={graceUntil} />

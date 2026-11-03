@@ -17,21 +17,21 @@ import { BRYNTUM_THEME } from "./styled";
 
 /** Bars shorter than this keep their word beside them instead of clipped inside (docs/spec/scheduler.md). */
 const SHORT_BAR_MS = 12 * 3_600_000;
-const ROW_HEIGHT = 48;
+const ROW_HEIGHT = 64;
 
 // Everything handed to Bryntum that is not data lives outside the component. The wrapper re-applies any prop whose
 // identity changed, so a new object on each render (a click selects a person and re-renders) reset the time axis
 // and scrolled the bars out of view.
 const VIEW_PRESET = {
   base: "hourAndDay",
-  tickWidth: 24,
+  tickWidth: 32,
   headers: [
     { unit: "day", dateFormat: "ddd D" },
     { unit: "hour", increment: 6, dateFormat: "HH" },
   ],
 };
 const COLUMNS = [
-  { text: "Person", field: "name", width: 160 },
+  { text: "Person", field: "name", width: 180 },
   { text: "", field: "badge", width: 96 },
 ];
 const TIME_RANGES_FEATURE = { showHeaderElements: true };
