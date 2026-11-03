@@ -73,6 +73,19 @@ describe("Controls", () => {
     expect(sync.mock.calls).toEqual([[{ shareId: "s2" }], [{ shareId: "s3" }]]);
   });
 
+  it("shows the plan's own reason when nothing is unknown, and still offers a retry", () => {
+    const reason = "PayPal refused to release A's hold, so Foldback paused.";
+    render(
+      <Controls
+        contract={contract({ status: "blocked", resolution_reason: reason })}
+        shares={[share("s1", "held")]}
+      />,
+    );
+    expect(screen.getByText(reason)).toBeInTheDocument();
+    expect(screen.queryByText(/A PayPal result is unknown/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Check payment" })).toBeInTheDocument();
+  });
+
   it("shows the reason and no button when PayPal refused a capture", () => {
     const reason = "PayPal refused to capture A's share, so Foldback paused. Nothing else was sent.";
     render(

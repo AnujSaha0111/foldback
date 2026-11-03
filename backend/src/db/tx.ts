@@ -34,7 +34,7 @@ export async function withTransaction<T>(pool: Pool, fn: (client: PoolClient) =>
  */
 export async function withContractLock<T>(pool: Pool, contractId: string, fn: () => Promise<T>): Promise<T> {
   // Each holder keeps a pool connection for a whole PayPal call. Capping them leaves the rest of the pool (quality.md:
-  // 10) free for the transactions those holders need, so a burst on many plans waits briefly instead of failing.
+  // 10) free for the transactions those holders need. A burst past the cap gets 409 at once, and callers retry.
   if (lockHolders >= MAX_LOCK_HOLDERS) {
     throw new AppError("resolve_in_progress", "Foldback is busy with other payments. Try again in a moment.");
   }

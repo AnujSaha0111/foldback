@@ -288,7 +288,12 @@ async function captureOne(deps: HoldDeps, contractId: string, share: ShareRow): 
   const readRequest = getOrderRequest(share.orderId ?? "");
   const fact = await deps.paypal.getOrder(readRequest);
   const read: Read = { kind: "get_order", request: readRequest, result: fact };
-  const existing = fact.outcome === "completed" ? fact.value.capture : null;
+  // Without a readable order we cannot tell a refusal from a capture that already happened, so sync decides.
+  if (fact.outcome !== "completed") {
+    const unclear = { operationId, result: { ...result, outcome: "unknown" as const } };
+    return pauseOnUnknown(deps, contractId, share, unclear, "capture_unknown");
+  }
+  const existing = fact.value.capture;
   if (existing && (existing.status === "COMPLETED" || existing.status === "PENDING")) {
     return finishCall(deps, contractId, share, { operationId, result, read }, async (client) => {
       await markKept(client, share.id, existing.id);

@@ -356,6 +356,39 @@ describe("keep", () => {
     expect((await state(plan.contractId)).captures[0]).toBe("TESTCAPTURE00009");
   });
 
+  it("pauses as unknown when a refused capture's order cannot be read", async () => {
+    const { resolve, plan } = await setup(
+      [
+        { status: 422, body: refusal("UNPROCESSABLE_ENTITY", "AUTHORIZATION_ALREADY_CAPTURED") },
+        { fail: "timeout" },
+      ],
+      { held: 4, grace: null },
+    );
+    const res = await resolve();
+    expect(errorOf(res)).toBe("money_unknown");
+    expect(await state(plan.contractId)).toMatchObject({
+      status: "blocked",
+      shares: { A: "capture_unknown" },
+    });
+  });
+
+  it("holds again a lost capture whose authorization expired, so the plan can end", async () => {
+    const { resolve, sync, plan } = await setup(
+      [
+        { fail: "timeout" },
+        { body: { id: "AUTH1", status: "EXPIRED" } },
+        { status: 422, body: refusal("UNPROCESSABLE_ENTITY", "AUTHORIZATION_EXPIRED") },
+        { body: { id: "ORD1", status: "COMPLETED" } },
+      ],
+      { held: 4, grace: null },
+    );
+    await resolve();
+    await sync(plan.shareIds[0] ?? "");
+    expect(await state(plan.contractId)).toMatchObject({ shares: { A: "held" } });
+    expect(errorOf(await resolve())).toBe("capture_refused");
+    expect(await state(plan.contractId)).toMatchObject({ shares: { A: "capture_failed" } });
+  });
+
   it("pauses on a refused capture, and resolve then answers capture_refused (test 70)", async () => {
     const { resolve, calls, plan } = await setup(
       [

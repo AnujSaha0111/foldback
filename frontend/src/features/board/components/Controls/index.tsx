@@ -92,7 +92,9 @@ function Paused({ contract, shares }: ControlsProps) {
   }
   return (
     <Callout title="Paused" warn>
-      A PayPal result is unknown, so Foldback paused and sent nothing else. Check payment to continue.
+      {unknown.length > 0
+        ? "A PayPal result is unknown, so Foldback paused and sent nothing else. Check payment to continue."
+        : contract.resolution_reason}
       <BannerAction>
         <Button small arrow={false} loading={checking} onClick={() => void check()}>
           Check payment

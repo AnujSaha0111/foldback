@@ -164,13 +164,22 @@ async function nothingUnknown(client: PoolClient, contractId: string): Promise<b
   return open.size === 0 && !shares.some((share) => UNKNOWN_SHARE_STATUSES.includes(share.status));
 }
 
+/**
+ * The hold still stands, or it is gone without ever being captured. Held again, a capture is then refused by PayPal and
+ * ends as capture_failed, so the plan can finish instead of staying unknown.
+ */
+function heldAgain(seen: Look, status: string | null): boolean {
+  if (status === "CREATED") return true;
+  return seen.status === "capture_unknown" && status !== null && HOLD_GONE.has(status);
+}
+
 /** A capture or void with no clear result: the authorization says what happened, and the order holds the capture id. */
 async function askAboutHold(deps: HoldDeps, seen: Look): Promise<{ change: Change; reads: Read[] }> {
   const authRequest = getAuthorizationRequest(seen.authorizationId ?? "");
   const auth = await deps.paypal.getAuthorization(authRequest);
   const reads: Read[] = [{ kind: "get_authorization", request: authRequest, result: auth }];
   const status = auth.outcome === "completed" ? auth.value.status : null;
-  if (status === "CREATED") return { change: { to: "rehold", operation: "failed" }, reads };
+  if (heldAgain(seen, status)) return { change: { to: "rehold", operation: "failed" }, reads };
   if (seen.status === "void_unknown") {
     const gone = status === "VOIDED" || status === "EXPIRED";
     return { change: gone ? { to: "released", operation: "completed" } : null, reads };
