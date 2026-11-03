@@ -5,7 +5,7 @@ import { styled } from "@mui/material/styles";
 export const Root = styled("section")({
   overflow: "hidden",
   border: "1px solid var(--line)",
-  borderRadius: "var(--r-panel)",
+  borderRadius: 0,
   background: "var(--bg)",
   boxShadow: "var(--shadow-2)",
 });
@@ -15,9 +15,26 @@ export const Head = styled("div")({
   justifyContent: "space-between",
   alignItems: "center",
   padding: "0.875rem 1.125rem",
-  borderBottom: "1px solid var(--line-soft)",
   gap: "var(--s-3)",
-  "& h2": { fontSize: "0.9375rem", fontWeight: 600, letterSpacing: "-0.01em" },
+  background: "var(--sun-grad)",
+  color: "#000",
+  "& h2": { fontSize: "0.9375rem", fontWeight: 600, letterSpacing: "-0.01em", marginRight: "auto" },
+});
+
+/** The popup's close button: square, black on the sun header. */
+export const Close = styled("button")({
+  display: "grid",
+  placeItems: "center",
+  width: "2.25rem",
+  height: "2.25rem",
+  border: "1px solid #000",
+  borderRadius: 0,
+  background: "transparent",
+  color: "#000",
+  fontSize: "1.25rem",
+  lineHeight: 1,
+  cursor: "pointer",
+  "&:focus-visible": { outline: "2px solid #000", outlineOffset: "2px" },
 });
 
 /** Pick a person from here as well as on the board: the native list works with a keyboard and on a phone. */

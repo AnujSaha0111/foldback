@@ -67,10 +67,18 @@ export const Layout = styled("div")({
   gap: "var(--s-5)",
   alignItems: "start",
   marginTop: "var(--s-6)",
-  "@media (min-width: 1100px)": { gridTemplateColumns: "minmax(0, 65fr) minmax(20rem, 35fr)" },
 });
 
 export const Back = styled("div")({ marginTop: "var(--s-5)" });
+
+/** The keyboard way to open a person, beside the board's controls. */
+export const Pick = styled("div")({
+  display: "flex",
+  alignItems: "center",
+  gap: "var(--s-2)",
+  fontSize: "var(--fs-small)",
+  color: "var(--text-2)",
+});
 
 /** The deadline's countdown, in the deadline's own colour. */
 export const Urgent = styled("small")({
