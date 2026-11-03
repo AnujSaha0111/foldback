@@ -11,6 +11,16 @@ export const clarifySchema = z.strictObject({
 });
 
 /** The terms echoed back at confirm. Every field is required, and the service compares each with the stored reading. */
+/** The conversation the client keeps: plain turns only, ending with the organizer's question (api.md). */
+export const agentSchema = z.strictObject({
+  messages: z
+    .array(z.strictObject({ role: z.enum(["user", "assistant"]), content: z.string().min(1).max(2000) }))
+    .min(1)
+    .max(12)
+    .refine((messages) => messages.at(-1)?.role === "user", "The last message must be the organizer's."),
+});
+export type AgentInput = z.infer<typeof agentSchema>;
+
 export const confirmSchema = z.strictObject({
   title: z.string(),
   currency: z.string(),

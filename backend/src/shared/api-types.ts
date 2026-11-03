@@ -117,6 +117,31 @@ export interface AuthorizeResponse extends ShareReply {
   share: PublicShare & { authorization_id: string | null };
 }
 
+export interface AgentProposal {
+  id: string;
+  kind: "move_clock" | "resolve";
+  label: string;
+  /** Where a clock move goes. Null for resolve. */
+  demo_now: string | null;
+  /** "If approved: ..." from the same simulation the assistant ran. */
+  preview: string;
+}
+
+export interface AgentDraft {
+  share_id: string;
+  display_name: string;
+  text: string;
+  pay_url: string;
+}
+
+/** POST /api/contracts/:id/agent. Proposals and drafts are for the organizer to act on; none has been executed. */
+export interface AgentResponse {
+  reply: string;
+  tool_calls: { name: string; summary: string }[];
+  proposals: AgentProposal[];
+  drafts: AgentDraft[];
+}
+
 /** Colors the board gives a bar. The word on the bar, never the color, says the status. */
 export type SchedulerColor = "gray" | "blue" | "green" | "red";
 

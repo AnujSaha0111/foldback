@@ -73,6 +73,8 @@ const schema = z.object({
   AI_USER_PER_DAY: z.coerce.number().int().positive().default(30),
   AI_IP_PER_MIN: z.coerce.number().int().positive().default(10),
   AI_IP_PER_DAY: z.coerce.number().int().positive().default(60),
+  /** Assistant turns per plan per day (ai.md). */
+  AGENT_PER_CONTRACT_PER_DAY: z.coerce.number().int().positive().default(25),
   /** Keys the hash of a visitor's IP in ai_usage. Falls back to JWT_SECRET, so no new secret is needed. */
   IP_HASH_SALT: z.string().min(16).optional(),
   GEMINI_API_KEY: z.string().min(1).optional(),

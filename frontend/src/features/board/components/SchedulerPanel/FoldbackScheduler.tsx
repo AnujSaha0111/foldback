@@ -59,13 +59,14 @@ const renderEvent: NonNullable<BryntumSchedulerProps["eventRenderer"]> = ({ even
 interface FoldbackSchedulerProps {
   projection: SchedulerProjection;
   onSelect: (shareId: string) => void;
+  proposedAt: string | null;
 }
 
 /**
  * The organizer's board. One standard Scheduler, read only: it draws the projection and works out no status.
  * Dragging, resizing, creating and editing are all off, so selecting can never move money.
  */
-export default function FoldbackScheduler({ projection, onSelect }: FoldbackSchedulerProps) {
+export default function FoldbackScheduler({ projection, onSelect, proposedAt }: FoldbackSchedulerProps) {
   const resources = useMemo(
     () => projection.resources.map((resource) => ({ ...resource })),
     [projection.resources],
@@ -80,10 +81,18 @@ export default function FoldbackScheduler({ projection, onSelect }: FoldbackSche
       })),
     [projection.events],
   );
-  const timeRanges = useMemo(
-    () => projection.timeRanges.map((range) => ({ ...range, startDate: new Date(range.startDate) })),
-    [projection.timeRanges],
-  );
+  // The one range the client adds: a pending proposal, until it is approved or dismissed (scheduler.md).
+  const timeRanges = useMemo(() => {
+    const ranges = projection.timeRanges.map((range) => ({ ...range, startDate: new Date(range.startDate) }));
+    if (proposedAt)
+      ranges.push({
+        id: "proposed" as never,
+        name: "Proposed",
+        startDate: new Date(proposedAt),
+        cls: "fb-proposed",
+      });
+    return ranges;
+  }, [projection.timeRanges, proposedAt]);
 
   const start = useMemo(() => new Date(projection.start), [projection.start]);
   const end = useMemo(() => new Date(projection.end), [projection.end]);

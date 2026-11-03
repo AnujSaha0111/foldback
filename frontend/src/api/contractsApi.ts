@@ -1,4 +1,5 @@
 import type {
+  AgentResponse,
   ConfirmTerms,
   ContractRead,
   ContractSummary,
@@ -45,9 +46,9 @@ const contractsApi = baseApi.injectEndpoints({
       invalidatesTags: (_result, _error, { id }) => ["ContractList", { type: "Contract", id }],
     }),
     /** Moves the demo clock, then the server resolves. A 409 still moved the clock, so the board refreshes anyway. */
-    moveClock: build.mutation<ContractRead, { id: string; demoNow: string }>({
-      query: ({ id, demoNow }) => ({
-        url: `/api/contracts/${encodeURIComponent(id)}/clock`,
+    moveClock: build.mutation<ContractRead, { id: string; demoNow: string; viaAgent?: boolean }>({
+      query: ({ id, demoNow, viaAgent }) => ({
+        url: `/api/contracts/${encodeURIComponent(id)}/clock${viaAgent ? "?via=agent" : ""}`,
         method: "POST",
         body: { demo_now: demoNow },
       }),
@@ -57,13 +58,28 @@ const contractsApi = baseApi.injectEndpoints({
         { type: "Scheduler", id },
       ],
     }),
-    resolvePlan: build.mutation<ContractRead, string>({
-      query: (id) => ({ url: `/api/contracts/${encodeURIComponent(id)}/resolve`, method: "POST", body: {} }),
-      invalidatesTags: (_result, _error, id) => [
+    resolvePlan: build.mutation<ContractRead, { id: string; viaAgent?: boolean }>({
+      query: ({ id, viaAgent }) => ({
+        url: `/api/contracts/${encodeURIComponent(id)}/resolve${viaAgent ? "?via=agent" : ""}`,
+        method: "POST",
+        body: {},
+      }),
+      invalidatesTags: (_result, _error, { id }) => [
         "ContractList",
         { type: "Contract", id },
         { type: "Scheduler", id },
       ],
+    }),
+    /** One assistant turn. Nothing it proposes has happened: the organizer approves through the clock or resolve route. */
+    askAgent: build.mutation<
+      AgentResponse,
+      { id: string; messages: { role: "user" | "assistant"; content: string }[] }
+    >({
+      query: ({ id, messages }) => ({
+        url: `/api/contracts/${encodeURIComponent(id)}/agent`,
+        method: "POST",
+        body: { messages },
+      }),
     }),
     resetDemo: build.mutation<ResetResponse, void>({
       query: () => ({ url: "/api/demo/reset", method: "POST", body: {} }),
@@ -87,4 +103,5 @@ export const {
   useResetDemoMutation,
   useMoveClockMutation,
   useResolvePlanMutation,
+  useAskAgentMutation,
 } = contractsApi;

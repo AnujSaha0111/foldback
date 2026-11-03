@@ -28,6 +28,8 @@ export interface Limits {
   authorize: LimitRule;
   /** Clock and resolve, per user (architecture.md). */
   operator: LimitRule;
+  /** Assistant turns per plan per day (ai.md). */
+  agentContract: LimitRule;
 }
 
 const MINUTE_MS = 60_000;
@@ -48,6 +50,7 @@ export const DEFAULT_LIMITS: Limits = {
   checkout: { limit: 10, windowMs: 10 * MINUTE_MS },
   authorize: { limit: 20, windowMs: 10 * MINUTE_MS },
   operator: { limit: 30, windowMs: MINUTE_MS },
+  agentContract: { limit: 25, windowMs: DAY_MS },
 };
 
 /** The defaults, with the AI limits the operator set in the environment. */
@@ -58,6 +61,7 @@ export function limitsFromEnv(env: Env): Limits {
     aiUserDay: { limit: env.AI_USER_PER_DAY, windowMs: DAY_MS },
     aiIpMinute: { limit: env.AI_IP_PER_MIN, windowMs: MINUTE_MS },
     aiIpDay: { limit: env.AI_IP_PER_DAY, windowMs: DAY_MS },
+    agentContract: { limit: env.AGENT_PER_CONTRACT_PER_DAY, windowMs: DAY_MS },
   };
 }
 
@@ -73,6 +77,7 @@ export interface Limiters {
   checkout: RequestHandler;
   authorize: RequestHandler;
   operator: RequestHandler;
+  agentContract: RequestHandler;
 }
 
 const ipKey = (req: Request): string => ipKeyGenerator(req.ip ?? "unknown");
@@ -114,6 +119,7 @@ export function createLimiters(limits: Limits = DEFAULT_LIMITS): Limiters {
     checkout: make(limits.checkout, (req) => `checkout|${ipKey(req)}`),
     authorize: make(limits.authorize, (req) => `authorize|${ipKey(req)}`),
     operator: make(limits.operator, (_req, res) => `operator|${currentUser(res).id}`),
+    agentContract: make(limits.agentContract, (req) => `agent|${String(req.params["id"])}`),
     ai: [
       make(limits.aiUserMinute, (_req, res) => `user-min|${currentUser(res).id}`),
       make(limits.aiUserDay, (_req, res) => `user-day|${currentUser(res).id}`),

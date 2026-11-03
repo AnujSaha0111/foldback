@@ -48,6 +48,9 @@ const LOOK: Record<ShareStatus, Look> = {
   expired: { name: "Missed deadline", color: "gray" },
 };
 
+/** The word the board shows for a share, also used by the assistant. */
+export const statusWord = (status: ShareStatus): string => LOOK[status].name;
+
 /** The window: the deadline's day at 08:00, to two days after the last thing that can happen, at 20:00. */
 function windowOf(input: ProjectionInput): { start: DateTime; end: DateTime } {
   const zone = input.timezone;

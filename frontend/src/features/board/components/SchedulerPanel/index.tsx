@@ -21,16 +21,23 @@ interface SchedulerPanelProps {
   /** 0 while the socket is live, otherwise how often to ask the API (see useContractLive). */
   pollingInterval: number;
   onSelect: (shareId: string) => void;
+  /** A clock move the assistant proposed and nobody has approved yet: drawn dashed (scheduler.md). */
+  proposedAt?: string | null;
 }
 
 /** The board and its caption. The data is the server's projection; selecting a person never moves money. */
-export function SchedulerPanel({ contractId, pollingInterval, onSelect }: SchedulerPanelProps) {
+export function SchedulerPanel({
+  contractId,
+  pollingInterval,
+  onSelect,
+  proposedAt = null,
+}: SchedulerPanelProps) {
   const { data, error } = useGetSchedulerQuery(contractId, { pollingInterval });
   if (!data) return error ? <FormError error={error} /> : <LoadingBoard />;
 
   return (
     <Frame>
-      <FoldbackScheduler projection={data} onSelect={onSelect} />
+      <FoldbackScheduler projection={data} onSelect={onSelect} proposedAt={proposedAt} />
       <Caption>
         <span>Rows are people. Every bar carries its status word. Select a person to see their hold.</span>
         <Legend aria-hidden="true">

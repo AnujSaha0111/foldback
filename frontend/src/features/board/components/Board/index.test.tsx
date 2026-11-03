@@ -4,6 +4,7 @@ import { Board } from "./index";
 
 jest.mock("@/api/contractsApi");
 jest.mock("../Controls", () => ({ Controls: () => null }));
+jest.mock("@/features/assistant/components/AssistantCard", () => ({ AssistantCard: () => null }));
 jest.mock("@/sockets/useContractLive", () => ({ useContractLive: () => 0 }));
 // Bryntum is a browser-only library; the panel is tested on its own. This stand-in only reports a selection.
 jest.mock("../SchedulerPanel", () => ({

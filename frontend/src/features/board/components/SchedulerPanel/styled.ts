@@ -59,6 +59,8 @@ export const Frame = styled("div")({
   "& .fb-now": marker("var(--blue)", "var(--st-held-fg)"),
   "& .fb-deadline": marker("var(--sun)", "#000"),
   "& .fb-grace": marker("var(--text)", "var(--bg)"),
+  "& .fb-proposed": marker("var(--text-2)", "var(--bg)"),
+  "& .b-sch-line.fb-proposed": { borderInlineStartStyle: "dashed" },
   // Now and Deadline can be hours apart. Now's label sits left of its line and Deadline's right of its own.
   "& .b-time-ranges-header-canvas .fb-now": { translate: "-100% 0" },
 });

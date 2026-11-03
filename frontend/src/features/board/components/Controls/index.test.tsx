@@ -51,7 +51,7 @@ describe("Controls", () => {
   it("resolves now", () => {
     render(<Controls contract={contract()} shares={[]} />);
     fireEvent.click(screen.getByRole("button", { name: "Resolve now" }));
-    expect(resolvePlan).toHaveBeenCalledWith("con_1");
+    expect(resolvePlan).toHaveBeenCalledWith({ id: "con_1" });
   });
 
   it("offers no grace move without grace, and nothing once the plan is decided", () => {
@@ -69,7 +69,7 @@ describe("Controls", () => {
     expect(screen.getByText(/A PayPal result is unknown/)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Check payment" }));
-    await waitFor(() => expect(resolvePlan).toHaveBeenCalledWith("con_1"));
+    await waitFor(() => expect(resolvePlan).toHaveBeenCalledWith({ id: "con_1" }));
     expect(sync.mock.calls).toEqual([[{ shareId: "s2" }], [{ shareId: "s3" }]]);
   });
 

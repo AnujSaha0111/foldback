@@ -3,7 +3,7 @@ import { Router } from "express";
 import type { ContractsController } from "../controllers/contracts.controller";
 import { clockSchema } from "../controllers/contracts.schemas";
 import type { RulesController } from "../controllers/rules.controller";
-import { clarifySchema, confirmSchema, createRuleSchema } from "../controllers/rules.schemas";
+import { agentSchema, clarifySchema, confirmSchema, createRuleSchema } from "../controllers/rules.schemas";
 import type { Limiters } from "../http/middleware/rateLimit";
 import { emptyBodySchema, validateBody } from "../http/middleware/validate";
 
@@ -23,6 +23,7 @@ export function contractsRoutes(
   router.post("/", limiters.createContract, ...limiters.ai, validateBody(createRuleSchema), rules.create);
   router.post("/:id/clarify", ...limiters.ai, validateBody(clarifySchema), rules.clarify);
   router.post("/:id/confirm", validateBody(confirmSchema), rules.confirm);
+  router.post("/:id/agent", ...limiters.ai, limiters.agentContract, validateBody(agentSchema), rules.agent);
   router.post("/:id/clock", limiters.operator, validateBody(clockSchema), controller.clock);
   router.post("/:id/resolve", limiters.operator, validateBody(emptyBodySchema), controller.resolve);
   return router;
