@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import { COARSE, TOUCH_TARGET } from "@/theme/media";
 
 export const Root = styled("section")({
   overflow: "hidden",
@@ -23,6 +24,7 @@ export const Head = styled("div")({
 
 /** The popup's close button: square, black on the sun header. */
 export const Close = styled("button")({
+  position: "relative",
   display: "grid",
   placeItems: "center",
   width: "2.25rem",
@@ -35,6 +37,8 @@ export const Close = styled("button")({
   lineHeight: 1,
   cursor: "pointer",
   "&:focus-visible": { outline: "2px solid #000", outlineOffset: "2px" },
+  // A 44 px target around the 36 px square.
+  "&::after": { content: '""', position: "absolute", inset: "-4px" },
 });
 
 /** Pick a person from here as well as on the board: the native list works with a keyboard and on a phone. */
@@ -49,6 +53,7 @@ export const Picker = styled("select")({
   fontSize: "var(--fs-small)",
   fontWeight: 500,
   cursor: "pointer",
+  [COARSE]: { minHeight: TOUCH_TARGET },
 });
 
 /** Re-enters with a short blur-rise each time a different person is selected (keyed by the share). */

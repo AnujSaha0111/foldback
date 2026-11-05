@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { styled } from "@mui/material/styles";
 import type { CSSObject } from "@mui/material/styles";
-import { HOVER, HOVER_FINE } from "@/theme/media";
+import { COARSE, HOVER, HOVER_FINE, TOUCH_TARGET } from "@/theme/media";
 
 /**
  * `sun` is the one action that matters on a view. Use it once per screen. `ink` is the same action where it should
@@ -50,7 +50,12 @@ const BASE: CSSObject = {
     transform: "scale(0.96)",
     transitionDuration: "var(--d-press)",
   },
-  "&:focus-visible": { outline: "none", boxShadow: "var(--focus-ring)" },
+  // The ring is a shadow; the transparent outline is what forced-colors mode draws, since it drops shadows.
+  "&:focus-visible": {
+    outline: "2px solid transparent",
+    outlineOffset: "2px",
+    boxShadow: "var(--focus-ring)",
+  },
   [ARROW]: { display: "inline-block", transition: "transform var(--d-3) var(--ease-out-expo)" },
   [HOVER_FINE]: { "&:hover > span[aria-hidden='true']:last-child": { transform: "translateX(3px)" } },
 };
@@ -163,6 +168,7 @@ function look({ $variant, $small, $block }: LookProps): CSSObject {
       ? { minHeight: "2.25rem", paddingInline: "var(--s-4)", fontSize: "var(--fs-small)", gap: "var(--s-3)" }
       : {}),
     ...($block ? { width: "100%" } : {}),
+    [COARSE]: { minHeight: TOUCH_TARGET },
     "&[disabled], &[aria-disabled='true']": DISABLED,
     // Busy is not unavailable: it stays at full strength so the spinner reads as progress.
     "&[aria-busy='true']": { opacity: 1, cursor: "progress" },

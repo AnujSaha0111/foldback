@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import { COARSE, TOUCH_TARGET } from "@/theme/media";
 
 export const Root = styled("section")({
   marginTop: "var(--s-4)",
@@ -53,5 +54,6 @@ export const Ask = styled("form")({
     background: "var(--bg)",
     color: "var(--text)",
     font: "inherit",
+    [COARSE]: { minHeight: TOUCH_TARGET },
   },
 });

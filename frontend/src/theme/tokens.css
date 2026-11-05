@@ -119,6 +119,9 @@
   --s-8: 3rem;
   --s-9: 4.5rem;
   --gutter: 1rem;
+  /* The gutter, or the notch's inset where that is wider (viewport-fit=cover). Physical sides: the notch does not mirror. */
+  --gutter-l: max(var(--gutter), env(safe-area-inset-left, 0px));
+  --gutter-r: max(var(--gutter), env(safe-area-inset-right, 0px));
   --header-h: 4.5rem;
 
   /* Shape */

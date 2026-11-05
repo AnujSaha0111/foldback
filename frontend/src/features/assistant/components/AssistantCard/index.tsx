@@ -54,7 +54,10 @@ export function AssistantCard({ contract, shares, onProposed }: AssistantCardPro
     setEntries((now) => [...now, { role: "user", text: question }]);
     setDraft("");
     const { data } = await ask({ id: contract.id, messages });
-    if (!data) return;
+    if (!data) {
+      setDraft((now) => now || question);
+      return;
+    }
     setEntries((now) => [
       ...now,
       {

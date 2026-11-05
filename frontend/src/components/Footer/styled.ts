@@ -18,6 +18,8 @@ export const Row = styled("div")({
   alignItems: "center",
   gap: "var(--s-4) var(--s-5)",
   paddingBlock: "var(--s-5)",
+  // Clear of the home indicator on phones.
+  paddingBottom: "calc(var(--s-5) + env(safe-area-inset-bottom, 0px))",
 });
 
 export const Note = styled("span")({ flex: "1 1 12rem" });

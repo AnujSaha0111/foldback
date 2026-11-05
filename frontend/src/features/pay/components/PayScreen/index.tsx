@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { errorCode } from "@/api/baseApi";
 import { useCheckoutMutation, useGetShareQuery, useSyncMutation } from "@/api/sharesApi";
 import { Badge } from "@/components/Badge";
@@ -8,6 +8,7 @@ import { Button } from "@/components/Button";
 import { FormError } from "@/components/FormError";
 import { Header } from "@/components/Header";
 import { Page } from "@/components/Page";
+import { Bone, Skeleton, Stack } from "@/components/Skeleton";
 import { Loading } from "@/components/Spinner";
 import { Squares } from "@/components/Squares";
 import { StatusTag } from "@/components/StatusTag";
@@ -62,10 +63,41 @@ export function PayScreen({ shareId, returned = NOT_RETURNED }: PayScreenProps) 
     >
       {data ? (
         <Share share={data} paypalReturn={paypalReturn} cancelled={returned.cancelled} />
+      ) : error ? (
+        <Column>
+          <FormError error={error} />
+        </Column>
       ) : (
-        <Column>{error ? <FormError error={error} /> : <Loading label="Loading your share…" />}</Column>
+        <PaySkeleton />
       )}
     </Page>
+  );
+}
+
+/** The share's shapes: name, title and amount on the sky band, then the sheet below it. */
+function PaySkeleton() {
+  return (
+    <Skeleton label="Loading your share…">
+      <Band>
+        <Column>
+          <Stack>
+            <Bone $w="12rem" />
+            <Bone $w="16rem" $h="1.75rem" />
+            <Bone $w="10rem" $h="4rem" />
+          </Stack>
+        </Column>
+      </Band>
+      <Body>
+        <Column>
+          <Stack>
+            <Bone $w="14rem" $h="1.25rem" />
+            <Bone $h="2.75rem" />
+            <Bone $h="6rem" />
+            <Bone $h="2.75rem" />
+          </Stack>
+        </Column>
+      </Body>
+    </Skeleton>
   );
 }
 
@@ -142,6 +174,14 @@ interface HoldButtonProps {
 function HoldButton({ shareId, action }: HoldButtonProps) {
   const [checkout, { data, error, isLoading }] = useCheckoutMutation();
   const [sync, { isLoading: syncing }] = useSyncMutation();
+  const [leaving, setLeaving] = useState(false);
+
+  // Back from PayPal can bring this page out of the browser's cache with the button still busy.
+  useEffect(() => {
+    const ready = () => setLeaving(false);
+    window.addEventListener("pageshow", ready);
+    return () => window.removeEventListener("pageshow", ready);
+  }, []);
 
   // An earlier checkout with no clear result blocks a new one, so ask PayPal once and try again.
   const hold = async () => {
@@ -150,12 +190,14 @@ function HoldButton({ shareId, action }: HoldButtonProps) {
       await sync({ shareId });
       answer = await checkout(shareId);
     }
-    if (answer.data?.approve_url) leaveFor(answer.data.approve_url);
+    if (!answer.data?.approve_url) return;
+    setLeaving(true);
+    leaveFor(answer.data.approve_url);
   };
 
   return (
     <>
-      <Button variant="sun" block loading={isLoading || syncing} onClick={() => void hold()}>
+      <Button variant="sun" block loading={isLoading || syncing || leaving} onClick={() => void hold()}>
         {action.label}
       </Button>
       <Help>{action.help}</Help>

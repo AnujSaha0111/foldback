@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import { COARSE, TOUCH_TARGET } from "@/theme/media";
 import { TONES } from "@/components/StatusTag/styled";
 
 /**
@@ -77,6 +78,7 @@ export const Frame = styled("div")({
     "& .fb-link:hover": { background: "var(--sun-grad)", color: "#000", borderColor: "transparent" },
   },
   "& .fb-link:focus-visible": { outline: "2px solid var(--blue)", outlineOffset: "2px" },
+  [COARSE]: { "& .fb-link": { minHeight: TOUCH_TARGET } },
   "& .fb-now": marker("var(--blue)", "var(--st-held-fg)"),
   "& .fb-deadline": marker("var(--sun)", "#000"),
   "& .fb-grace": marker("var(--text)", "var(--bg)"),

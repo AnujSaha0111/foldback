@@ -1,5 +1,12 @@
 import type { ContractStatus, ShareStatus } from "@/types/generated/statuses";
 
+/** A reading nobody has confirmed is not a plan yet: it has no people, no holds and no board to open. */
+export const DRAFT_STATUSES: ReadonlySet<ContractStatus> = new Set([
+  "extracting",
+  "needs_clarification",
+  "awaiting_confirmation",
+]);
+
 /** The six looks a status can have. Each is a word on a fill or an outline (docs/spec/ui.md, Status). */
 export type Tone = "waiting" | "held" | "kept" | "released" | "failed" | "attention";
 

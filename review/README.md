@@ -74,14 +74,14 @@ The lenses come from each judge's stated role. Nobody's private opinions, prefer
 
 | File | Owner | Status |
 |---|---|---|
-| `frontend/*.md` | Nishit | Pending |
+| `frontend/*.md` | Nishit | Complete |
 | `backend/*.md` | Manveer | Pending |
 | `ai/*.md` | Ravi | Pending |
 | `misc/*.md` | Ravi | Pending |
-| `reports/nishit.md` | Nishit | Pending |
+| `reports/nishit.md` | Nishit | Complete |
 | `reports/manveer.md` | Manveer | Pending |
 | `reports/ravi.md` | Ravi | Pending |
-| `judges/*.md`, Nishit's sections | Nishit | Pending |
+| `judges/*.md`, Nishit's sections | Nishit | Complete |
 | `judges/*.md`, Manveer's sections | Manveer | Pending |
 | `judges/*.md`, Ravi's sections | Ravi | Pending |
 | `judges/*.md`, Consolidated Observations | All, after the three reviews | Pending |

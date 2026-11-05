@@ -8,7 +8,7 @@ import { Badge } from "@/components/Badge";
 import { ButtonLink } from "@/components/Button";
 import { FormError } from "@/components/FormError";
 import { Mono } from "@/components/Money/styled";
-import { Loading } from "@/components/Spinner";
+import { Bone, Skeleton } from "@/components/Skeleton";
 import { Squares } from "@/components/Squares";
 import { StatusTag } from "@/components/StatusTag";
 import { formatMoment, formatMoney } from "@/lib/format";
@@ -43,7 +43,7 @@ export function Board({ id }: { id: string }) {
   const { data, error } = useGetContractQuery(id, { pollingInterval });
   const [picked, setPicked] = useState<string | null>(null);
   const [proposedAt, setProposedAt] = useState<string | null>(null);
-  if (!data) return error ? <FormError error={error} /> : <Loading label="Loading the plan…" />;
+  if (!data) return error ? <FormError error={error} /> : <BoardSkeleton />;
   const { contract, shares } = data;
   const selected = shares.find((share) => share.id === picked);
   const close = () => setPicked(null);
@@ -103,6 +103,31 @@ export function Board({ id }: { id: string }) {
         </ButtonLink>
       </Back>
     </>
+  );
+}
+
+/** The board's own shapes: the title, the four numbers and the schedule. */
+function BoardSkeleton() {
+  return (
+    <Skeleton label="Loading the plan…">
+      <Head>
+        <Bone $w="16rem" $h="2.5rem" />
+        <Bone $w="5rem" $h="1.5rem" />
+      </Head>
+      <Stats as="div">
+        {[0, 1, 2, 3].map((stat) => (
+          <Stat key={stat}>
+            <Bone $w="5rem" $h="0.8125rem" />
+            <div>
+              <Bone $w="9rem" $h="1.25rem" />
+            </div>
+          </Stat>
+        ))}
+      </Stats>
+      <Layout>
+        <Bone $h="20rem" />
+      </Layout>
+    </Skeleton>
   );
 }
 

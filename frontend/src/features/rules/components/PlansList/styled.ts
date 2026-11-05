@@ -43,3 +43,15 @@ export const Go = styled("span")({
   transform: "translateX(-6px)",
   transition: "opacity var(--d-2) var(--ease-out-quad), transform var(--d-3) var(--ease-out-expo)",
 });
+
+/** A loading row, as tall as a real one. */
+export const Line = styled("div")({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "var(--s-6)",
+  height: "3.5rem",
+  paddingInline: "var(--s-4)",
+  borderBottom: "1px solid var(--line-soft)",
+  "&:last-child": { borderBottom: 0 },
+});

@@ -89,6 +89,20 @@ describe("PayScreen", () => {
     await waitFor(() => expect(leaveFor).toHaveBeenCalledWith("https://www.sandbox.paypal.com/x"));
   });
 
+  it("stays busy while the browser leaves for PayPal, and is ready again after Back", async () => {
+    answer({ data: share });
+    checkout.mockResolvedValue({
+      data: { outcome: "completed", order_id: "O1", approve_url: "https://www.sandbox.paypal.com/x" },
+    });
+    render(<PayScreen shareId="shr_1" />);
+    pressHold();
+    await waitFor(() => expect(leaveFor).toHaveBeenCalled());
+    const busy = screen.getByRole("button", { busy: true });
+    expect(busy).toBeDisabled();
+    act(() => void window.dispatchEvent(new Event("pageshow")));
+    expect(busy).toBeEnabled();
+  });
+
   it("stays on the page when PayPal's reply was lost, and says so", async () => {
     answer({ data: share });
     checkout.mockResolvedValue({ data: { outcome: "unknown", order_id: null, approve_url: null } });
