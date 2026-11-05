@@ -19,12 +19,16 @@ import {
   MAX_RULE_TEXT_CHARS,
 } from "@/types/generated/rules";
 import { isQuestion, nextReading } from "../../reading";
+import { useDraft } from "../../useDraft";
 import type { Reading } from "../../reading";
 import { ClarifyForm } from "../ClarifyForm";
 import { TermsList } from "../TermsList";
 import { Transcript } from "../Transcript";
 import { FlowSteps, NothingRead, ReadingNow, TextTools } from "./parts";
 import { Actions, Grid, Head, Panel } from "./styled";
+
+/** The pasted chat is kept in this tab until it has been read, so Back or a reload does not lose it. */
+const DRAFT_KEY = "foldback:rule-text";
 
 /** A question from the API is a step in the flow, so it is shown as a question and not as an error. */
 const failure = (error: ApiFailure | undefined) => (isQuestion(error) ? undefined : error);
@@ -45,13 +49,18 @@ export function RuleScreen() {
 
 /** Paste, read, answer if asked, confirm. Nothing is active until the organizer confirms. */
 function RuleFlow() {
-  const [text, setText] = useState("");
+  const [text, setText, forgetDraft] = useDraft(DRAFT_KEY);
   const [reading, setReading] = useState<Reading>({ kind: "none" });
   // After a read the text turns into a transcript with its quotes marked; Edit text brings the box back.
   const [editing, setEditing] = useState(false);
   const [pointedAt, setPointedAt] = useState<string | null>(null);
   const [readRule, read] = useReadRuleMutation();
   const [clarifyRule, clarify] = useClarifyRuleMutation();
+
+  const settle = (next: Reading) => {
+    setReading(next);
+    if (next.kind === "ready") forgetDraft();
+  };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -60,12 +69,12 @@ function RuleFlow() {
     const rule_text = text.trim();
     // The sample texts carry a fixed date, so "friday" means the same day as in the demo video.
     const body = FIXTURE_TEXTS.includes(rule_text) ? { rule_text, use_fixture_time: true } : { rule_text };
-    setReading(nextReading(await readRule(body), { kind: "none" }));
+    settle(nextReading(await readRule(body), { kind: "none" }));
   };
 
   const answer = async (id: string, value: string) => {
     const next = nextReading(await clarifyRule({ id, answer: value }), reading);
-    setReading(next);
+    settle(next);
     return next !== reading;
   };
 

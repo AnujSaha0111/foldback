@@ -13,6 +13,9 @@ export const baseApi = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({ baseUrl: API_URL, credentials: "include" }),
   tagTypes: ["Me", "ContractList", "Contract", "Scheduler", "PublicShare"],
+  // Cached data shows at once; coming back to the tab or back online asks again in the background.
+  refetchOnFocus: true,
+  refetchOnReconnect: true,
   endpoints: () => ({}),
 });
 

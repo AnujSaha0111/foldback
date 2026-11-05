@@ -10,7 +10,7 @@ export const Column = styled("div")({
   width: "100%",
   maxWidth: "30rem",
   marginInline: "auto",
-  padding: "var(--s-4) var(--gutter)",
+  padding: "var(--s-4) var(--gutter-r) var(--s-4) var(--gutter-l)",
 });
 
 export const Band = styled("section")({
@@ -63,6 +63,7 @@ export const Row = styled("div")({
   gap: "var(--s-3)",
   paddingBlock: "var(--s-3)",
   fontWeight: 500,
+  fontVariantNumeric: "tabular-nums",
   "& + &": { borderTop: "1px solid var(--line)" },
   "& > span:first-of-type": { display: "inline-flex", alignItems: "center", gap: "var(--s-3)" },
 });

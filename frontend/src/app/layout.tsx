@@ -25,6 +25,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  // The page may draw under a notch; Inner, the footer and the sign-in and pay columns keep their content clear of it.
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
     { media: "(prefers-color-scheme: dark)", color: "#161616" },

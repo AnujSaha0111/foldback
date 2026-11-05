@@ -6,13 +6,13 @@ import { Badge } from "@/components/Badge";
 import { DataTable } from "@/components/DataTable";
 import { FormError } from "@/components/FormError";
 import { Mono } from "@/components/Money/styled";
-import { Loading } from "@/components/Spinner";
+import { Bone, Skeleton } from "@/components/Skeleton";
+import { Frame } from "@/components/DataTable/styled";
 import { StatusTag } from "@/components/StatusTag";
 import { formatMoment, formatMoney } from "@/lib/format";
-import { CONTRACT_STATUS_VIEW } from "@/lib/status";
+import { CONTRACT_STATUS_VIEW, DRAFT_STATUSES } from "@/lib/status";
 import type { ContractSummary } from "@/types/generated/api-types";
-import type { ContractStatus } from "@/types/generated/statuses";
-import { Go, Head, Holds, Root, Sub } from "./styled";
+import { Go, Head, Holds, Line, Root, Sub } from "./styled";
 
 // Older API responses have no plan time zone: the viewer's own zone, named, is still correct.
 const zoneOf = (plan: ContractSummary) => plan.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -71,16 +71,24 @@ const columns = [
   },
 ];
 
-/** A reading nobody has confirmed is not a plan yet: it has no people, no holds and no board to open. */
-const DRAFTS: ReadonlySet<ContractStatus> = new Set([
-  "extracting",
-  "needs_clarification",
-  "awaiting_confirmation",
-]);
+/** Three rows in the table's frame, at the table's row height. */
+const PlansSkeleton = () => (
+  <Skeleton label="Loading your plans…">
+    <Frame>
+      {[0, 1, 2].map((row) => (
+        <Line key={row}>
+          <Bone $w="14rem" />
+          <Bone $w="5rem" $h="1.25rem" />
+          <Bone $w="7rem" />
+        </Line>
+      ))}
+    </Frame>
+  </Skeleton>
+);
 
 export function PlansList() {
   const { data, error } = useGetContractsQuery();
-  const plans = data?.filter((plan) => !DRAFTS.has(plan.status));
+  const plans = data?.filter((plan) => !DRAFT_STATUSES.has(plan.status));
   return (
     <Root aria-labelledby="plans-title">
       <Head>
@@ -89,7 +97,7 @@ export function PlansList() {
       </Head>
       <FormError error={error} />
       {plans ? <DataTable columns={columns} rows={plans} rowKey={(plan) => plan.id} /> : null}
-      {plans || error ? null : <Loading label="Loading your plans…" />}
+      {plans || error ? null : <PlansSkeleton />}
     </Root>
   );
 }

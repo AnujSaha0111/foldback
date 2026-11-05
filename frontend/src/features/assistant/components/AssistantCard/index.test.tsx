@@ -145,4 +145,13 @@ describe("AssistantCard", () => {
     await screen.findByText("Here is what happens.");
     expect(box).toHaveValue("");
   });
+
+  it("puts a failed question back in the box, so it can be sent again", async () => {
+    ask.mockResolvedValue({ error: { status: 503 } });
+    mount();
+    const box = screen.getByRole("textbox", { name: "Ask about this plan" });
+    fireEvent.change(box, { target: { value: "Who is left?" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ask" }));
+    await waitFor(() => expect(box).toHaveValue("Who is left?"));
+  });
 });

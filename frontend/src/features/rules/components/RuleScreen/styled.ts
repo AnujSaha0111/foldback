@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import { SHIMMER } from "@/components/Skeleton/styled";
 import { HOVER } from "@/theme/media";
 
 export const Head = styled("div")({
@@ -68,6 +69,7 @@ export const Tools = styled("div")({
 });
 
 export const SampleLink = styled("button")({
+  position: "relative",
   padding: "1px 0",
   border: 0,
   background: "linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat",
@@ -78,10 +80,13 @@ export const SampleLink = styled("button")({
   cursor: "pointer",
   transition: "background-size var(--d-3) var(--ease-out-quart)",
   [HOVER]: { "&:hover": { backgroundSize: "100% 1px" } },
+  // The text is 24 px tall; the target reaches 44 px without moving the underline.
+  "&::after": { content: '""', position: "absolute", inset: "-10px -4px" },
 });
 
 export const Count = styled("span")({
   fontFamily: "var(--font-mono)",
+  fontVariantNumeric: "tabular-nums",
   fontSize: "0.75rem",
   color: "var(--text-3)",
 });
@@ -116,9 +121,7 @@ export const Skeleton = styled("div")({
     display: "block",
     height: "12px",
     borderRadius: "2px",
-    background:
-      "linear-gradient(90deg, var(--layer) 0%, var(--layer-hover) 40%, var(--layer) 80%) 0 0 / 300% 100%",
-    animation: "fb-shimmer 1.4s linear infinite",
+    ...SHIMMER,
   },
   "& i:nth-of-type(odd)": { width: "70%" },
   "& i:nth-of-type(3n)": { width: "45%", height: "18px" },

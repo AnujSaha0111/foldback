@@ -29,7 +29,8 @@ export const Inner = styled("div")({
   width: "100%",
   maxWidth: "80rem",
   marginInline: "auto",
-  paddingInline: "var(--gutter)",
+  paddingLeft: "var(--gutter-l)",
+  paddingRight: "var(--gutter-r)",
 });
 
 /**

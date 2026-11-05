@@ -12,6 +12,7 @@ import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Header } from "@/components/Header";
 import { NavMenu } from "@/components/NavMenu";
+import { CommandMenu } from "@/features/command/components/CommandMenu";
 import { daysUntil } from "@/lib/format";
 import { useAppDispatch } from "@/store/hooks";
 import { Crumb, Tagline, User } from "./styled";
@@ -81,6 +82,7 @@ export function AppHeader() {
         ]}
         actions={
           <>
+            <CommandMenu onReset={() => setResetting(true)} onSignOut={() => void signOut()} />
             {user ? (
               <User>
                 <Avatar name={user.display_name} />

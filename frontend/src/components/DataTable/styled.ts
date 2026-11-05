@@ -18,6 +18,7 @@ export const Table = styled("table")({
   width: "100%",
   borderCollapse: "collapse",
   fontSize: "0.9375rem",
+  fontVariantNumeric: "tabular-nums",
   "& th": {
     padding: "var(--s-3) var(--s-4)",
     background: "var(--bg-subtle)",

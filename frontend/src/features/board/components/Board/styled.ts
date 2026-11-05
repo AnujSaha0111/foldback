@@ -20,6 +20,7 @@ export const Stats = styled("section")({
   borderRadius: "var(--r-panel)",
   background: "var(--bg)",
   boxShadow: "var(--shadow-2)",
+  fontVariantNumeric: "tabular-nums",
   "@media (min-width: 900px)": { gridTemplateColumns: "1.1fr 1.3fr 1fr 1fr" },
 });
 
