@@ -65,7 +65,54 @@ _Pending._
 
 ## Independent Evaluation by Ravi
 
-_Pending._
+Evaluated on 8 November 2026 from `main` at `196f4f9`, the spec in `docs/spec/`, the AI and misc reviews in `review/ai/` and `review/misc/`, and the live app at https://app.foldback.tech. Live: I tried it as a guest, opened the Cabin weekend sample board, asked the assistant two questions ("What happens if Maya Shah doesn't pay?" and "Move to the deadline"), and opened Maya's pay link on a phone-sized screen. I read the hold, resolve and sync code paths and ran the test suites (500 backend tests against a throwaway database, 215 frontend tests, all passing). The README judge guide and the video do not exist yet, so Presentation reflects today, not the planned submission.
+
+**1. Role and perspective.** CEO of Bryntum. The lens: product vision, innovation, originality, execution quality, business potential, market relevance and usability, and specifically how well the Bryntum Scheduler is used.
+
+**2. Overall impression.** A distinctive idea executed with care, and a sensible, restrained use of the Bryntum Scheduler: one row per person across the plan's days, status bars, and Now, Deadline and Grace markers, updated live. The scheduler is used as a read-only status timeline rather than an editing tool, which suits the product but shows only a small part of what Bryntum can do.
+
+**3. Strongest aspects.**
+- Authorization holds used for what they are for: one order and one authorization per friend, captured all together or voided all together, each call with its own idempotency key (`fb-order-…`, `fb-auth-…`, `fb-capture-…`, `fb-void-…`).
+- Money calls are written down before they are sent and settled after, so a lost PayPal reply becomes an explicit "unknown" that pauses the plan until a sync, instead of a guess.
+- The AI is bounded by code: the server validator can only clear fields, prices need a quoted dollar figure, and the assistant's five tools only read, simulate or propose. In my live test, the clock move stayed a proposal with Approve and Dismiss.
+- The Bryntum board carries the product's key idea visually: who is in, the deadline in orange, the grace window, and the demo clock's "Now" line moving when it advances.
+- Live updates over Socket.IO with a polling fallback (FE-011) make the board feel alive when a friend pays on their phone.
+
+**4. Weaknesses and shortcomings.**
+- Bryntum is used read-only, with drag, resize and create disabled by design, so the integration does not show interaction.
+- The board is the heaviest route; the Bryntum chunk stays on it (FE-062), and no performance numbers exist yet (MI-016).
+- The licence situation (trial package under an MIT repo) is not stated (MI-031).
+
+**5. Technical implementation concerns.**
+- Hour ticks across a seven-day view are dense on a laptop screen; zoom presets per plan length would help.
+
+**6. Product and user-experience concerns.**
+- The "Proposed" marker for an assistant's pending clock move (described in the spec) is a good place to show the scheduler responding to the AI; I did not see it in my live run.
+
+**7. Questions this judge might reasonably ask.**
+- Why use a scheduler for this rather than a simple table?
+- Which Bryntum features did you try and leave out, and why?
+- How does the board behave with many plans or longer deadlines?
+
+**8. Potential reasons the project could lose points.** If the video shows the board only as a static picture, its value over a plain list is not visible.
+
+**9. Specific improvements that would increase competitiveness.**
+- J-RAVI-008: in the video, show the board updating live as a friend holds on a phone, the Now line jumping to the deadline, and the dashed Proposed marker appearing when the assistant proposes a move.
+- State the Bryntum licence in the README (MI-031) and the reasoning for read-only use (it is a display of server truth, so editing would bypass the rules).
+
+**10. Score (shared rubric).**
+
+| Criterion | Score | Evidence |
+|---|---|---|
+| Technological Implementation | 4 | Solid execution, including a well-configured Bryntum timeline with live updates; the scheduler's interactive features are deliberately unused. |
+| Design | 4 | Consistent, readable design with status words everywhere and a calm pay page that puts "This is a hold, not a charge." above the fold on a phone; small gaps such as the default 404 page and the assistant's "prop_1" (MI-013, AI-010). |
+| Potential Impact | 3 | A real pain (the organizer fronting money), but sandbox only, capped at four payers, and captured money goes to Foldback's sandbox merchant rather than the organizer. |
+| Innovation/Idea | 4 | All-or-nothing group commitment through PayPal authorization holds, set up from a pasted chat with quoted evidence, is uncommon and fits PayPal's own primitives. |
+| Presentation | 2 | The README is nine lines and still names the hackathon (MI-025), there is no video yet, and the live app has no social preview card (MI-011). |
+
+Average: 3.4.
+
+**11. Most important changes to prioritise.** J-RAVI-008 (show the live board and the Proposed marker in the video), then the README Bryntum note.
 
 ## Consolidated Observations
 

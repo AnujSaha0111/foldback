@@ -68,7 +68,57 @@ _Pending._
 
 ## Independent Evaluation by Ravi
 
-_Pending._
+Evaluated on 8 November 2026 from `main` at `196f4f9`, the spec in `docs/spec/`, the AI and misc reviews in `review/ai/` and `review/misc/`, and the live app at https://app.foldback.tech. Live: I tried it as a guest, opened the Cabin weekend sample board, asked the assistant two questions ("What happens if Maya Shah doesn't pay?" and "Move to the deadline"), and opened Maya's pay link on a phone-sized screen. I read the hold, resolve and sync code paths and ran the test suites (500 backend tests against a throwaway database, 215 frontend tests, all passing). The README judge guide and the video do not exist yet, so Presentation reflects today, not the planned submission.
+
+**1. Role and perspective.** Developer Advocate at PayPal with an open-source and community lens: could another developer clone, run, understand and contribute to this; is the setup easy and the documentation good; would a community form around it?
+
+**2. Overall impression.** The codebase is clean, consistent and heavily tested, which is a good base for an open-source project. The surrounding open-source experience is missing: the README is a stub, setup needs steps that are not written down, and there is nothing for a first-time contributor.
+
+**3. Strongest aspects.**
+- Authorization holds used for what they are for: one order and one authorization per friend, captured all together or voided all together, each call with its own idempotency key (`fb-order-…`, `fb-auth-…`, `fb-capture-…`, `fb-void-…`).
+- Money calls are written down before they are sent and settled after, so a lost PayPal reply becomes an explicit "unknown" that pauses the plan until a sync, instead of a guess.
+- The AI is bounded by code: the server validator can only clear fields, prices need a quoted dollar figure, and the assistant's five tools only read, simulate or propose. In my live test, the clock move stayed a proposal with Approve and Dismiss.
+- MIT licence in place (MI-031), CI with lint, typecheck, tests, a whole-history secret scan and a dependency audit, and no secrets in the history (MI-030).
+- Consistent conventions (one `baseApi`, a styled file per component, a layered backend) that a contributor can learn from one folder.
+
+**4. Weaknesses and shortcomings.**
+- README stub (MI-025); no CONTRIBUTING file or issue templates.
+- Running locally needs undocumented steps: no backend `dev` script, a required secret left empty, and fixed ports 5432 and 5433 (MI-026).
+- Integration tests wipe whatever database the test URL points at; on my machine they hit another project's database and were stopped only by a wrong password (MI-028).
+
+**5. Technical implementation concerns.**
+- `.env.example` omits `LLM_CHAIN` and four other keys, so the free-models-only option is invisible (MI-027).
+- The Bryntum Scheduler is a commercial trial package, so a contributor cannot build the board without accepting its licence; this needs a README line (MI-031).
+
+**6. Product and user-experience concerns.**
+- The guest flow is a great zero-friction entry for anyone curious; keep it prominent.
+
+**7. Questions this judge might reasonably ask.**
+- How long does it take a new developer to run it locally?
+- Can I run it with only free AI models?
+- What is the licence situation for the Bryntum board?
+- Where would a contributor start?
+
+**8. Potential reasons the project could lose points.** An open-source-minded judge who clones the repo and cannot run it in ten minutes will mark down Presentation and doubt adoption potential.
+
+**9. Specific improvements that would increase competitiveness.**
+- J-RAVI-002: a backend `dev` script and a five-command quick start in the README that works on a clean machine, with a note on overriding ports (MI-026).
+- J-RAVI-003: after the repo goes public, a short CONTRIBUTING.md and three "good first issue" tickets taken from this audit's Low findings (for example MI-013, MI-014, AI-010).
+- A test-database guard, so a contributor's own Postgres can never be wiped (MI-028).
+
+**10. Score (shared rubric).**
+
+| Criterion | Score | Evidence |
+|---|---|---|
+| Technological Implementation | 4 | Clean layered code, typed shared contracts between backend and frontend, and 715 passing tests, with CI gates a contributor can trust. |
+| Design | 4 | Consistent, readable design with status words everywhere and a calm pay page that puts "This is a hold, not a charge." above the fold on a phone; small gaps such as the default 404 page and the assistant's "prop_1" (MI-013, AI-010). |
+| Potential Impact | 3 | A real pain (the organizer fronting money), but sandbox only, capped at four payers, and captured money goes to Foldback's sandbox merchant rather than the organizer. |
+| Innovation/Idea | 4 | All-or-nothing group commitment through PayPal authorization holds, set up from a pasted chat with quoted evidence, is uncommon and fits PayPal's own primitives. |
+| Presentation | 2 | The README is nine lines and still names the hackathon (MI-025), there is no video yet, and the live app has no social preview card (MI-011). |
+
+Average: 3.4.
+
+**11. Most important changes to prioritise.** J-RAVI-002 (quick start that works), MI-028 (test-database guard), then J-RAVI-003 once public.
 
 ## Consolidated Observations
 

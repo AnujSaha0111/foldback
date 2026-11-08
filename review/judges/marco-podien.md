@@ -67,7 +67,56 @@ _Pending._
 
 ## Independent Evaluation by Ravi
 
-_Pending._
+Evaluated on 8 November 2026 from `main` at `196f4f9`, the spec in `docs/spec/`, the AI and misc reviews in `review/ai/` and `review/misc/`, and the live app at https://app.foldback.tech. Live: I tried it as a guest, opened the Cabin weekend sample board, asked the assistant two questions ("What happens if Maya Shah doesn't pay?" and "Move to the deadline"), and opened Maya's pay link on a phone-sized screen. I read the hold, resolve and sync code paths and ran the test suites (500 backend tests against a throwaway database, 215 frontend tests, all passing). The README judge guide and the video do not exist yet, so Presentation reflects today, not the planned submission.
+
+**1. Role and perspective.** Developer Advocate at PayPal with a lens on technical implementation quality, integration quality, and how easy the product is to demonstrate and adopt.
+
+**2. Overall impression.** Strong integration quality and a very demo-friendly product: guest mode, sample plans and a demo clock make the whole hold-then-capture-or-release story fit in a minute. What is missing is the packaging that lets a judge see it without being walked through.
+
+**3. Strongest aspects.**
+- Authorization holds used for what they are for: one order and one authorization per friend, captured all together or voided all together, each call with its own idempotency key (`fb-order-…`, `fb-auth-…`, `fb-capture-…`, `fb-void-…`).
+- Money calls are written down before they are sent and settled after, so a lost PayPal reply becomes an explicit "unknown" that pauses the plan until a sync, instead of a guess.
+- The AI is bounded by code: the server validator can only clear fields, prices need a quoted dollar figure, and the assistant's five tools only read, simulate or propose. In my live test, the clock move stayed a proposal with Approve and Dismiss.
+- Demo-ability: "Try it as a guest" lands on two sample plans, the board's demo clock jumps to the deadline or grace end, and the assistant proposes the move with a preview.
+- The pay page is mobile-first and states the condition plainly, which is exactly what a payer needs.
+
+**4. Weaknesses and shortcomings.**
+- Presentation assets are missing (README, video, preview card).
+- The demo-wide cap of 200 user-made plans can be filled cheaply, which would block the real sandbox-hold path in the judge guide (MI-020).
+- The assistant can return "busy" when three people use it in the same minute (AI-027).
+
+**5. Technical implementation concerns.**
+- Per-IP limits depend on the real client IP surviving the Cloudflare tunnel, which is unverified (AI-030).
+- No Lighthouse numbers exist yet (MI-016, FE-064).
+
+**6. Product and user-experience concerns.**
+- The real-PayPal step (paste, confirm, pay link, sandbox login) depends on judges finding sandbox buyer credentials, which are not published yet (MI-006).
+
+**7. Questions this judge might reasonably ask.**
+- Can I see a real sandbox hold and capture end to end?
+- What happens if two people resolve at once?
+- How do you demo the failure cases?
+
+**8. Potential reasons the project could lose points.** If the judge guide's real-PayPal step fails (demo full, assistant busy, or credentials not listed), the most PayPal-specific part of the demo is lost.
+
+**9. Specific improvements that would increase competitiveness.**
+- J-RAVI-004: a two-minute video script that names each PayPal call on screen (hold, the clock to the deadline, capture, then the release case) and shows one unknown-result pause and recovery.
+- Fix MI-020 (count only confirmed plans towards the cap) and raise `AI_GLOBAL_PER_MIN` (AI-027) before 1 December.
+- Publish a judge-only sandbox buyer account (MI-006).
+
+**10. Score (shared rubric).**
+
+| Criterion | Score | Evidence |
+|---|---|---|
+| Technological Implementation | 4 | Careful integration: server-created orders, full-page approval redirect, return handling that is safe under React StrictMode, sync on unknown, and capture or void replays checked before acting. |
+| Design | 4 | Consistent, readable design with status words everywhere and a calm pay page that puts "This is a hold, not a charge." above the fold on a phone; small gaps such as the default 404 page and the assistant's "prop_1" (MI-013, AI-010). |
+| Potential Impact | 3 | A real pain (the organizer fronting money), but sandbox only, capped at four payers, and captured money goes to Foldback's sandbox merchant rather than the organizer. |
+| Innovation/Idea | 4 | All-or-nothing group commitment through PayPal authorization holds, set up from a pasted chat with quoted evidence, is uncommon and fits PayPal's own primitives. |
+| Presentation | 2 | The README is nine lines and still names the hackathon (MI-025), there is no video yet, and the live app has no social preview card (MI-011). |
+
+Average: 3.4.
+
+**11. Most important changes to prioritise.** J-RAVI-004 (video script), then MI-020 and AI-027 so the demo cannot block itself during judging.
 
 ## Consolidated Observations
 
