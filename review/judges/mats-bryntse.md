@@ -61,7 +61,53 @@ Average: 3.4.
 
 ## Independent Evaluation by Manveer
 
-_Pending._
+Evaluated on 10 November 2026 from the deployed board (the Cabin weekend sample plan in an 800 px-wide browser pane), the backend projection that feeds it (`backend/src/domain/projection.ts`, `GET /api/contracts/:id/scheduler`), the rest of the live app, and the backend as a whole.
+
+**1. Role and perspective.** CEO of Bryntum. The lens: product vision, innovation, originality, technical execution, business potential, differentiation, market relevance, quality of execution, usability, scalability and overall product value, plus how well the Bryntum Scheduler is used.
+
+**2. Overall impression.** An original product idea with a clear use for a scheduler: each person is a row, each bar is that person's money status across the deadline, and markers show Now, the Deadline and the end of Grace. The backend computes the rows, bars and markers itself, so the board shows exactly what the server decided and cannot drift from the rule. On the deployed site the board loaded after a short "Loading the board…" state and rendered cleanly; at 800 px the timeline needs horizontal scrolling. The Scheduler is used read-only.
+
+**3. Strongest aspects.**
+- A purposeful mapping: time is the axis the product is about (deadline, grace), and every bar carries its status word.
+- Server-side projection: one endpoint returns resources, events and time ranges, and unclear money states come back as red bars ("Capture unknown", "Release unknown"), so the board shows the project's most distinctive safety state.
+- Live updates over sockets, and the heavy Scheduler chunk is loaded only on the board route (FE-062).
+
+**4. Weaknesses and shortcomings.**
+- Read-only: nothing on the timeline can be dragged or edited (J-NISHIT-014 proposes one interaction).
+- Four rows and one plan at a time use little of the Scheduler's strength with many resources and long ranges.
+- The trial license must stay valid through 15 December (J-NISHIT-010).
+- Narrow widths are cramped (FE-051).
+
+**5. Technical implementation concerns.** The board is only as live as production: a deploy during judging that stops a wave halfway shows red "unknown" bars until someone checks payment (BE-010), and after the rename deploys may stop (BE-021).
+
+**6. Product and user-experience concerns.** The business potential is real (group trips, gifts, bulk orders), but groups stop at 4 and money goes to a sandbox merchant account.
+
+**7. Questions this judge might reasonably ask.**
+- Why a scheduler for a 4-row view, and what would it look like with 50 people or 20 plans?
+- What would the organizer do on the timeline if it were editable?
+- How does the board behave on a phone?
+
+**8. Potential reasons the project could lose points.** For "Best Use of Bryntum", a clean but read-only, four-row use may look modest next to entries that use editing, dependencies or large data sets.
+
+**9. Specific improvements that would increase competitiveness.**
+- J-NISHIT-014: one drag interaction (the Now line) that goes through the existing clock route and its confirmation.
+- J-MANVEER-009: show the paused state on the board in the video: a red "Capture unknown" bar, Check payment, then green "Kept". It is the moment where the Scheduler shows something no spreadsheet would.
+- As "what's next": an organizer view with one row per plan across weeks, which plays to the Scheduler's strength with many resources.
+- J-NISHIT-010: renew the trial key and check the deployed board on 1 December.
+
+**10. Score (shared rubric).**
+
+| Criterion | Score | Evidence |
+|---|---|---|
+| Technological Implementation | 4 | A server-driven projection into the Scheduler with live updates, on top of a careful money backend; the Scheduler itself is used read-only. |
+| Design | 4 | A clear, status-labelled timeline with Now, Deadline and Grace markers; cramped at narrow widths. |
+| Potential Impact | 3 | A broad set of group-purchase uses, limited today by group size and sandbox only. |
+| Innovation/Idea | 4 | Using a scheduler to show money held against a deadline is an original application. |
+| Presentation | 3 | The landing page and board present the idea well; the README and video are not ready. |
+
+Average: 3.6.
+
+**11. The most important changes to prioritize.** Keep the board alive and current through judging (J-NISHIT-010, J-MANVEER-002), add one timeline interaction (J-NISHIT-014), and show the paused-to-kept moment in the video (J-MANVEER-009).
 
 ## Independent Evaluation by Ravi
 

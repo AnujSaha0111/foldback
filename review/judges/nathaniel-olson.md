@@ -57,7 +57,55 @@ Average: 3.4.
 
 ## Independent Evaluation by Manveer
 
-_Pending._
+Evaluated on 10 November 2026 from the live app (landing page, guest session, the Cabin weekend board, one assistant question, Maya's pay link), the product and API specs, and the backend rules that decide what the product can and cannot do.
+
+**1. Role and perspective.** Senior Product Manager at PayPal. The lens: problem identification, target audience, product-market relevance, user needs, usefulness, differentiation, user experience, business value, product completeness, real-world applicability and adoption potential.
+
+**2. Overall impression.** The problem is clear and relatable: someone fronts the money for a group trip and then chases everyone. The mechanism is easy to grasp ("a hold, not a charge; captured only if everyone's in"), and the rule reader removes most of the setup work. As a product for real use it is still narrow: sandbox only, captured money goes to Foldback's own merchant account rather than to the organizer, groups are 2 to 4 people, and the deadline is a demo clock that the organizer moves.
+
+**3. Strongest aspects.**
+- The landing page frames the pain in money terms ("One person fronts the whole $320.00").
+- The pay page is a friend's whole experience in one screen: their amount, the deadline, who else is in, and that it is a hold.
+- The named grace person handles a real social situation ("Maya gets until Monday").
+- The assistant suggests and simulates, and the organizer approves every move.
+
+**4. Weaknesses and shortcomings.**
+- No payout to the organizer, so the loop does not close for a real trip (J-NISHIT-003).
+- At most 4 people per plan (a database rule), which excludes many group purchases.
+- Plans resolve only when someone presses a button or moves the clock; nothing happens on its own at the real deadline (BE-005).
+- If PayPal refuses one capture partway through, the plan stops half kept and the other holds stay live with no way to release them (BE-002), which contradicts "Kept or released. Never in between."
+- A guest sees sample plans only; the real PayPal moment needs a sandbox buyer login.
+
+**5. Technical implementation concerns.** For real use, BE-001 and BE-002 would become support cases with real money held. Both are fixable.
+
+**6. Product and user-experience concerns.** Friends receive their links only if the organizer copies and sends them; there is no built-in notification, although the assistant drafts reminders. The "Paused" states are honest but need clearer next steps (FE-033).
+
+**7. Questions this judge might reasonably ask.**
+- Who receives the money when the group makes it?
+- Why at most four people?
+- How is this different from Splitwise or a shared pool?
+- What is the business model?
+
+**8. Potential reasons the project could lose points.** Potential Impact is capped while the money ends at a sandbox merchant account and groups stop at four.
+
+**9. Specific improvements that would increase competitiveness.**
+- J-NISHIT-003, J-NISHIT-012, J-NISHIT-013: where the money goes, who it is for, and a business model, in the README and the first 20 seconds of the video.
+- J-MANVEER-008: one honest "limits and what's next" list: payouts to the organizer, larger groups, a scheduled resolver at the real deadline, and webhooks.
+- J-MANVEER-006: a judge path that ends in a real sandbox hold and capture.
+
+**10. Score (shared rubric).**
+
+| Criterion | Score | Evidence |
+|---|---|---|
+| Technological Implementation | 4 | The product behaves as promised in every path I tried, and the backend is built so nobody is charged by mistake. |
+| Design | 4 | A friend understands their share and the rule in one screen; the organizer's board and controls are clear. |
+| Potential Impact | 3 | A real, common problem, limited today by no payout, 4-person groups and sandbox only. |
+| Innovation/Idea | 4 | "Nobody pays unless the group makes it" is a distinct and memorable take on group payments. |
+| Presentation | 3 | The landing page tells the product story well; the README and video, where judges usually start, are not ready. |
+
+Average: 3.6.
+
+**11. The most important changes to prioritize.** Say where the money goes and what is next (J-NISHIT-003, J-MANVEER-008), then give judges a path to a real hold (J-MANVEER-006).
 
 ## Independent Evaluation by Ravi
 

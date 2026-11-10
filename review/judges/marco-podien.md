@@ -63,7 +63,53 @@ Average: 3.6.
 
 ## Independent Evaluation by Manveer
 
-_Pending._
+Evaluated on 10 November 2026 from the backend and PayPal integration code, the test run (500 tests green, plus temporary probes), the deploy setup, and the live app (guest session, Cabin weekend board, one assistant question, one pay link).
+
+**1. Role and perspective.** Developer Advocate at PayPal. The lens: quality of the technical implementation, developer usability, integration quality, product accessibility, technical documentation, how easy the product is to demonstrate, practical adoption potential and overall developer experience.
+
+**2. Overall impression.** The integration is deep and careful. Four PayPal calls (create order, authorize, capture, void) plus two reads, each write recorded before it is sent with a key derived from the PayPal object, and every unclear reply turned into a paused plan instead of a guess. The demo clock ("Advance to deadline", "Advance to grace end", "Resolve now") makes a product about deadlines demonstrable in two minutes. How well it demonstrates now depends on the video and on a judge path that reaches a real sandbox hold.
+
+**3. Strongest aspects.**
+- Integration quality: a 2xx that does not match the documented shape counts as unknown, never success; a `PAYER_ACTION_REQUIRED` order is accepted with either link shape; buyer details are stripped before storage.
+- The demo clock buttons on the board, each with a one-line note of what it will do.
+- Live updates: the board refreshes from a socket "changed" event and refetches the read model, so it never shows state the server did not confirm (FE-030).
+- The assistant's answer cited two simulations of the real rule.
+
+**4. Weaknesses and shortcomings.**
+- A guest's two plans are samples and can never reach PayPal. To see a real hold, a judge must create a plan and pay with a sandbox buyer login, and nothing tells them how yet.
+- Every merge to `main` redeploys production within five minutes. A deploy during a live demo can stop a capture wave halfway (it pauses safely, but visibly; BE-010).
+- After the 11 November rename, merges may stop reaching production at all (BE-021).
+
+**5. Technical implementation concerns.** BE-001 (a 429 or 401 on capture becomes a permanent refusal, proven with the project's own fake), BE-022 (a rollback after a migration cannot start the old backend), and no metrics (BE-008).
+
+**6. Product and user-experience concerns.** Resolve now acts without a preview (FE-032); the Paused banner hides a failed check (FE-033).
+
+**7. Questions this judge might reasonably ask.**
+- Show me a capture whose reply is lost, and how the plan recovers.
+- What does a friend see if PayPal refuses the hold?
+- Why a demo clock instead of real time?
+
+**8. Potential reasons the project could lose points.** If the video does not show a real sandbox hold and capture, or if a judge opens a stale or paused demo, the strongest part of the work is not seen.
+
+**9. Specific improvements that would increase competitiveness.**
+- J-NISHIT-002: the video, naming each PayPal call on screen.
+- J-MANVEER-006: the judge path to a real sandbox hold in the README.
+- J-MANVEER-005: show one lost-reply recovery in 20 seconds of the video (the red "Capture unknown" bar, Check payment, then Kept).
+- J-MANVEER-002: pin the image before the rename, and pin `BACKEND_TAG` to a fixed commit from 1 to 15 December so nothing redeploys mid-demo.
+
+**10. Score (shared rubric).**
+
+| Criterion | Score | Evidence |
+|---|---|---|
+| Technological Implementation | 4 | A deep, defensive PayPal integration with idempotency, an unknown-result model and real concurrency tests; BE-001 and the missing metrics are the gaps. |
+| Design | 4 | The board, the clock controls and the pay page make the flow easy to follow. |
+| Potential Impact | 3 | Practical for small groups in sandbox; payouts and larger groups are not there yet. |
+| Innovation/Idea | 4 | Authorizations as a group commitment, with an assistant that simulates the real rule. |
+| Presentation | 2 | Easy to demonstrate in principle, but there is no README guide or video yet, and the guest path never reaches PayPal. |
+
+Average: 3.4.
+
+**11. The most important changes to prioritize.** The video with a real hold and a recovery (J-NISHIT-002, J-MANVEER-005), the README judge path (J-MANVEER-006), and a frozen, correctly named production image for judging (J-MANVEER-002).
 
 ## Independent Evaluation by Ravi
 
