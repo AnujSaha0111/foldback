@@ -8,8 +8,9 @@ services:
       POSTGRES_USER: foldback
       POSTGRES_PASSWORD: foldback
       POSTGRES_DB: foldback
+    # Override when the port is taken: FOLDBACK_DEV_PG_PORT=55432 docker compose ... up -d
     ports:
-      - "5432:5432"
+      - "${FOLDBACK_DEV_PG_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./dev-init.sql:/docker-entrypoint-initdb.d/10-app-role.sql:ro
@@ -27,7 +28,7 @@ services:
       POSTGRES_PASSWORD: foldback
       POSTGRES_DB: foldback_test
     ports:
-      - "5433:5432"
+      - "${FOLDBACK_TEST_PG_PORT:-5433}:5432"
     tmpfs:
       - /var/lib/postgresql/data
     command: ["postgres", "-c", "fsync=off", "-c", "synchronous_commit=off", "-c", "full_page_writes=off"]

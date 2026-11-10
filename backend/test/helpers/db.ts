@@ -33,8 +33,39 @@ export function createPools(): Pools {
   };
 }
 
+/** Everything the Foldback schema creates. Any other table means this is someone else's database. */
+const OWN_TABLES = new Set([
+  "users",
+  "contracts",
+  "shares",
+  "paypal_operations",
+  "events",
+  "ai_usage",
+  "contract_transitions",
+  "share_transitions",
+  "schema_migrations",
+]);
+
+/** Refuses to wipe anything that is not an empty or Foldback-only `*_test` database. */
+async function assertTestDatabase(owner: Pool): Promise<void> {
+  const name = new URL(TEST_DATABASE_URL).pathname.slice(1);
+  if (!name.endsWith("_test")) {
+    throw new Error(`TEST_DATABASE_URL must name a *_test database, not "${name}". Nothing was dropped.`);
+  }
+  const { rows } = await owner.query<{ tablename: string }>(
+    "SELECT tablename FROM pg_tables WHERE schemaname = 'public'",
+  );
+  const foreign = rows.map((row) => row.tablename).filter((table) => !OWN_TABLES.has(table));
+  if (foreign.length > 0) {
+    throw new Error(
+      `TEST_DATABASE_URL does not point at the Foldback test database (found ${foreign.join(", ")}). Nothing was dropped.`,
+    );
+  }
+}
+
 /** Creates the app role, rebuilds the schema from the migration files, and returns what was applied. */
 export async function prepareDatabase(owner: Pool): Promise<{ applied: string[] }> {
+  await assertTestDatabase(owner);
   await owner.query(`
     DO $$ BEGIN
       IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${APP_ROLE}') THEN
