@@ -106,7 +106,7 @@ Confirmation is required before any pay link works. After confirmation, capture 
 
 Reset deletes local rows. It does not void holds that already exist in PayPal. `demo.md` tells the operator to release leftover sandbox holds before reset.
 
-## Success for the hackathon
+## Success criteria
 
 Judges score five equally weighted criteria. Each one maps to something the build must show:
 

@@ -80,4 +80,4 @@ In production the database is the `postgres` service in `deploy/compose.yml`, an
 
 Domain: `api.foldback.tech` (the frontend will be `app.foldback.tech` on Vercel). Cloudflare Tunnel from the Mac mini, run by Manveer.
 
-CI run URL: https://github.com/AnujSaha0111/PayPal-Hackathon/actions/runs/40939549867 (merge of the 3f deploy PR). `/api/health` on production reported commit `bc5aae5` on 30 Oct 2026. Manveer also tested rollback, backup and restore, three reboots, and a foreign-origin request (403).
+CI run URL: https://github.com/AnujSaha0111/foldback/actions/runs/40939549867 (merge of the 3f deploy PR). `/api/health` on production reported commit `bc5aae5` on 30 Oct 2026. Manveer also tested rollback, backup and restore, three reboots, and a foreign-origin request (403).

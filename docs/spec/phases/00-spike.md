@@ -72,11 +72,11 @@ Run `yarn spike:llm`, which:
 Send the email below to Bryntum, or post the same text in the PayPal Discord's Bryntum channel. Record the date and the answer in `plan.md`.
 
 ```text
-Subject: PayPal AI hackathon: Bryntum trial through 15 December 2026
+Subject: Foldback: Bryntum trial through 15 December 2026
 
 Hello,
 
-We are building Foldback for the PayPal AI Hackathon (paypalaihackathon.devpost.com). Bryntum Scheduler is the live board where each friend's PayPal hold moves from waiting, to held, to kept or released.
+We are building Foldback, a group-payment demo on PayPal. Bryntum Scheduler is the live board where each friend's PayPal hold moves from waiting, to held, to kept or released.
 
 Judging runs until 15 December 2026, and our 45-day trial started on 28 October ends a few days before that. Could you confirm that our team, and judges opening our hosted demo or installing @bryntum/scheduler-trial from npm, may use Scheduler for this project through 15 December 2026?
 

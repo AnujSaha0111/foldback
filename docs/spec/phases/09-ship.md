@@ -4,7 +4,7 @@ Budget: 13 hours. Hats: Product and Ops. Depends on phase 8. Dates: 9–11 Novem
 
 ## Read
 
-`demo.md`, `product.md` (Claims we will not make, Success for the hackathon), `deploy.md` (Operations), `scheduler.md` (License gate), and `test.md`.
+`demo.md`, `product.md` (Claims we will not make, Success criteria), `deploy.md` (Operations), `scheduler.md` (License gate), and `test.md`.
 
 ## Goal
 

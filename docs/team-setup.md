@@ -41,7 +41,7 @@ Using your own sandbox accounts means nobody needs to share PayPal credentials. 
 
 ```bash
 git clone <repo url>
-cd PayPal-Hackathon
+cd foldback
 git checkout -b phaseN-yourtopic
 
 docker compose -f deploy/compose.dev.yml up -d --wait

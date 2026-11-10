@@ -4,9 +4,9 @@
 
 Foldback collects equal shares for a group plan through PayPal. Each share is placed on hold (a PayPal authorization) instead of being charged. If the confirmed headcount is met by the deadline, Foldback captures every hold. If it is not, Foldback voids every hold, so no money leaves anyone's account.
 
-Hackathon: [Build What's Next with PayPal and AI](https://paypalaihackathon.devpost.com/). Hard deadline Thursday 12 November 2026, 12:00 Pacific. Target submission 11 November. Judging runs 1 to 15 December 2026.
+Timeline: hard deadline Thursday 12 November 2026, 12:00 Pacific. Target submission 11 November. Judging runs 1 to 15 December 2026.
 
-**Two goals, equal weight:** win the hackathon, and ship a production-grade system. Production grade here means:
+**Two goals, equal weight:** a strong submission, and a production-grade system. Production grade here means:
 
 - strict TypeScript
 - a constraint-heavy Postgres schema
@@ -17,7 +17,7 @@ Hackathon: [Build What's Next with PayPal and AI](https://paypalaihackathon.devp
 - Docker images
 - HTTPS on a real, always-on server
 
-Most hackathon entries skip these, and judges notice.
+Most demo projects skip these, and judges notice.
 
 - **PayPal:** sandbox Orders v2 with `intent: AUTHORIZE`, then Payments v2 authorizations (capture, void, get).
 - **AI:** free hosted models, DeepSeek (`deepseek-flash`, $2 prepaid) first, then free Groq (`gpt-oss-120b`) and Gemini Flash-Lite as fallbacks, read a pasted group chat into a fixed schema. An organizer agent answers questions, simulates outcomes, drafts reminders, and proposes clock moves. The model never sets amounts and never calls PayPal.
@@ -83,7 +83,7 @@ Start at [phases/00-spike.md](phases/00-spike.md).
 ## Repository layout
 
 ```text
-PayPal-Hackathon/
+foldback/
   README.md                  judge-facing (final version in phase 9)
   LICENSE                    MIT (phase 9)
   .github/workflows/ci.yml
