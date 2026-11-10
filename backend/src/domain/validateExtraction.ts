@@ -33,12 +33,17 @@ export function validateExtraction(raw: Extraction, context: ValidationContext):
     ...raw,
     title: raw.title?.trim() || null,
     people: raw.people.map((name) => name.trim()).filter((name) => name !== ""),
-    evidence: raw.evidence.filter((item) => item.quote !== "" && context.ruleText.includes(item.quote)),
+    evidence: raw.evidence.filter(
+      (item) =>
+        item.quote !== "" &&
+        context.ruleText.includes(item.quote) &&
+        (EXTRACTION_FIELDS as readonly string[]).includes(item.field),
+    ),
   };
   const missing: Missing = new Set(EXTRACTION_FIELDS.filter((field) => raw.missing.includes(field)));
 
   checkTitle(out, missing);
-  checkHeadcountAndPeople(out, missing);
+  checkHeadcountAndPeople(out, missing, context.ruleText);
   checkMoney(out, missing);
   const times = checkTimes(out, missing, context.referenceAt);
   checkGrace(out, missing, times);
@@ -69,19 +74,34 @@ function clear(out: Extraction, missing: Missing, ...fields: Exclude<ExtractionF
   }
 }
 
+/** Control characters and our own prompt tags, which a pasted chat could plant in the title the assistant later reads. */
+const UNSAFE_IN_TITLE = /[\u0000-\u001f\u007f]|<\/?(?:group_text|tool_result|organizer_answer)[^>]*>/gi;
+
 /** The limits the database enforces, so a stored plan can never be refused later at confirm. */
 function checkTitle(out: Extraction, missing: Missing): void {
+  if (out.title !== null) out.title = out.title.replace(UNSAFE_IN_TITLE, "").trim() || null;
   if (out.title !== null && out.title.length > MAX_TITLE_CHARS) clear(out, missing, "title");
 }
 
-function checkHeadcountAndPeople(out: Extraction, missing: Missing): void {
+/** Each word of a name appears somewhere in the pasted text (any case). A name the model made up never does. */
+function inText(name: string, text: string): boolean {
+  const haystack = text.toLowerCase();
+  return name
+    .toLowerCase()
+    .split(/\s+/)
+    .every((word) => haystack.includes(word));
+}
+
+function checkHeadcountAndPeople(out: Extraction, missing: Missing, ruleText: string): void {
   if (out.headcount !== null && (out.headcount < MIN_HEADCOUNT || out.headcount > MAX_HEADCOUNT)) {
     clear(out, missing, "headcount");
   }
   const names = new Set(out.people.map((name) => name.toLowerCase()));
   const duplicated = names.size !== out.people.length;
   const tooLong = out.people.some((name) => name.length > MAX_NAME_CHARS);
-  if (duplicated || tooLong || (out.headcount !== null && out.people.length !== out.headcount)) {
+  const invented = out.people.some((name) => !inText(name, ruleText));
+  const wrongCount = out.headcount !== null && out.people.length !== out.headcount;
+  if (duplicated || tooLong || invented || wrongCount) {
     missing.add("people");
   }
 }
@@ -136,11 +156,31 @@ function checkTimes(out: Extraction, missing: Missing, referenceAt: Date): Resol
   }
   const reference = referenceAt.getTime();
   const parsed = out.deadline_at === null ? null : resolveLocalTime(out.deadline_at, zone);
-  const deadline = parsed !== null && parsed.toMillis() > reference && parsed <= windowEnd ? parsed : null;
-  const grace = out.grace_until === null ? null : resolveLocalTime(out.grace_until, zone);
+  const inWindow = parsed !== null && parsed.toMillis() > reference && parsed <= windowEnd;
+  const deadline = inWindow && weekdayAgrees(quoteFor(out, "deadline_at"), parsed) ? parsed : null;
+  const graceParsed = out.grace_until === null ? null : resolveLocalTime(out.grace_until, zone);
+  const grace =
+    graceParsed !== null && weekdayAgrees(quoteFor(out, "grace_until"), graceParsed) ? graceParsed : null;
   settle(out, missing, "deadline_at", deadline);
   settle(out, missing, "grace_until", grace);
   return { deadline, grace, windowEnd };
+}
+
+const WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+const WEEKDAY_WORD = new RegExp(`\\b(${WEEKDAYS.join("|")})\\b`, "gi");
+
+function quoteFor(out: Extraction, field: ExtractionField): string | undefined {
+  return out.evidence.find((item) => item.field === field)?.quote;
+}
+
+/**
+ * When the quote a time came from names one weekday ("Friday 6pm"), the resolved date must fall on it. A model that
+ * picks the wrong Friday is caught here; abbreviations are not checked, so "each friend" never reads as Friday.
+ */
+function weekdayAgrees(quote: string | undefined, at: DateTime<true>): boolean {
+  const named = new Set((quote?.match(WEEKDAY_WORD) ?? []).map((word) => word.toLowerCase()));
+  if (named.size !== 1) return true;
+  return named.has(WEEKDAYS[at.weekday - 1] ?? "");
 }
 
 /** A time that resolved is stored with its computed offset. One that did not is cleared. */
