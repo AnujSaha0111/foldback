@@ -213,8 +213,10 @@ async function readAndStore(
 }
 
 async function enforcePlanCaps(pool: Pool, who: Requester): Promise<void> {
-  const most = who.kind === "guest" ? MAX_PLANS_PER_GUEST : MAX_CONTRACTS_PER_USER;
-  if ((await countOwnPlans(pool, who.userId)) >= most) {
+  // A guest's drafts do not count: one who tries several pastes must not be locked out. The AI limits bound drafts.
+  const guest = who.kind === "guest";
+  const most = guest ? MAX_PLANS_PER_GUEST : MAX_CONTRACTS_PER_USER;
+  if ((await countOwnPlans(pool, who.userId, guest)) >= most) {
     throw new AppError("rate_limited", `You can have up to ${most} plans. Use an existing one.`);
   }
   if ((await countConfirmedPlans(pool)) >= MAX_DEMO_CONTRACTS) {

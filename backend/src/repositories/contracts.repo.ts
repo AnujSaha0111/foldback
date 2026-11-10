@@ -312,11 +312,12 @@ function toDraft(row: RawDraftRow | undefined): DraftContract | null {
   };
 }
 
-/** Plans the owner created themselves, not the two samples, drafts included. */
-export async function countOwnPlans(db: Db, ownerId: string): Promise<number> {
+/** Plans the owner created themselves, not the two samples. Drafts count unless `confirmedOnly`. */
+export async function countOwnPlans(db: Db, ownerId: string, confirmedOnly = false): Promise<number> {
   const result = await db.query<{ count: string }>(
-    "SELECT count(*)::text AS count FROM contracts WHERE seed_key IS NULL AND owner_id = $1",
-    [ownerId],
+    `SELECT count(*)::text AS count FROM contracts
+      WHERE seed_key IS NULL AND owner_id = $1 AND (NOT $2 OR confirmed_at IS NOT NULL)`,
+    [ownerId, confirmedOnly],
   );
   return Number(result.rows[0]?.count ?? 0);
 }

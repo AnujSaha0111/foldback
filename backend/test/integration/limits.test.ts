@@ -265,13 +265,19 @@ describe("contract caps (L9)", () => {
     return ids;
   }
 
-  it("refuses a guest's sixth plan with 429 rate_limited, and the stub is not called", async () => {
+  it("refuses a guest's sixth confirmed plan with 429 rate_limited, and the stub is not called", async () => {
     const { app, cookie, userId, calls } = await setup([says(CABIN_CHAT_READING)]);
-    await seedPlans(userId, MAX_PLANS_PER_GUEST, 0);
+    await seedConfirmedPlans(userId, MAX_PLANS_PER_GUEST, 0);
     const res = await create(app, cookie);
     expect(res.status).toBe(429);
     expect((res.body as { error: string }).error).toBe("rate_limited");
     expect(calls).toHaveLength(0);
+  });
+
+  it("does not count a guest's unconfirmed drafts, so trying several pastes still works", async () => {
+    const { app, cookie, userId } = await setup([says(CABIN_CHAT_READING)]);
+    await seedPlans(userId, MAX_PLANS_PER_GUEST, 0);
+    expect((await create(app, cookie)).status).toBe(200);
   });
 
   it("refuses with 429 demo_full when the demo is full of confirmed plans, even for a user with none", async () => {
