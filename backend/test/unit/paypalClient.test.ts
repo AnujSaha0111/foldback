@@ -184,10 +184,32 @@ describe("token", () => {
       { body: authorizedOrder() },
     ]);
     const first = await client.getOrder(getOrderRequest(ORDER_ID));
-    expect(first).toMatchObject({ outcome: "failed", status: 401, name: "AUTHENTICATION_FAILURE" });
+    expect(first).toMatchObject({
+      outcome: "failed",
+      status: 401,
+      name: "AUTHENTICATION_FAILURE",
+      processed: false,
+    });
     await client.getOrder(getOrderRequest(ORDER_ID));
     expect(paypal.tokenCalls()).toHaveLength(2);
   });
+
+  it.each<[number, string, boolean]>([
+    [401, "AUTHENTICATION_FAILURE", false],
+    [408, "REQUEST_TIMEOUT", false],
+    [429, "RATE_LIMIT_REACHED", false],
+    [400, "INVALID_REQUEST", true],
+    [422, "UNPROCESSABLE_ENTITY", true],
+  ])(
+    "a %i is a failure, and processed is %s only when PayPal acted on it",
+    async (status, name, processed) => {
+      const { client } = setup([{ status, body: refusal(name, name) }]);
+      const result = await client.captureAuthorization(
+        captureAuthorizationRequest({ authorizationId: HOLD_ID, shareId: SHARE_ID, amountCents: 8000 }),
+      );
+      expect(result).toMatchObject({ outcome: "failed", status, name, processed });
+    },
+  );
 
   it.each<[string, PayPalStep]>([
     ["a refusal", { status: 401, body: { error: "invalid_client" } }],
@@ -203,6 +225,7 @@ describe("token", () => {
       response: { error: "paypal_token_unavailable" },
       name: "paypal_token_unavailable",
       issue: null,
+      processed: false,
     });
     expect(paypal.apiCalls()).toHaveLength(0);
   });
