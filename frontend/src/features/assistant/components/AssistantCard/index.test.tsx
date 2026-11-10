@@ -45,6 +45,30 @@ function mount() {
 }
 
 describe("AssistantCard", () => {
+  it("brings back the conversation after a reload, without its old proposals", () => {
+    const kept = [
+      { role: "user", text: "Move to the deadline" },
+      {
+        role: "assistant",
+        text: "I can move the clock.",
+        tools: [],
+        drafts: [],
+        proposals: [
+          {
+            id: "prop_1",
+            kind: "move_clock",
+            label: "Advance to deadline",
+            demo_now: "2026-11-07T02:00:00.000Z",
+          },
+        ],
+      },
+    ];
+    sessionStorage.setItem("foldback:assistant:con_1", JSON.stringify(kept));
+    mount();
+    expect(screen.getByText("I can move the clock.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Approve/ })).not.toBeInTheDocument();
+  });
+
   it("offers the chips that apply, using the unpaid person's name", () => {
     mount();
     for (const name of [

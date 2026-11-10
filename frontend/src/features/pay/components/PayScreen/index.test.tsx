@@ -122,7 +122,7 @@ describe("PayScreen", () => {
     render(<PayScreen shareId="shr_1" />);
     pressHold();
     await waitFor(() => expect(checkout).toHaveBeenCalled());
-    expect(screen.getByRole("alert")).toHaveTextContent("Too late.");
+    expect(screen.getByText("Too late.")).toHaveAttribute("role", "alert");
     expect(leaveFor).not.toHaveBeenCalled();
   });
 
@@ -207,7 +207,7 @@ describe("PayScreen", () => {
       });
       render(<PayScreen shareId="shr_1" returned={{ orderId: "O1", cancelled: false }} />);
 
-      expect(await screen.findByRole("alert")).toHaveTextContent("PayPal did not approve this hold.");
+      expect(await screen.findByText("PayPal did not approve this hold.")).toHaveAttribute("role", "alert");
       expect(screen.getByRole("button", { name: /Continue in PayPal/ })).toBeInTheDocument();
       expect(window.location.search).toBe("");
     });
@@ -217,7 +217,7 @@ describe("PayScreen", () => {
       authorize.mockResolvedValue({ error: { status: "FETCH_ERROR", error: "failed" } });
       render(<PayScreen shareId="shr_1" returned={{ orderId: "O1", cancelled: false }} />);
 
-      await screen.findByRole("alert");
+      await screen.findByText(/could not be reached/);
       expect(window.location.search).toContain("token=O1");
     });
 
@@ -270,7 +270,7 @@ describe("PayScreen", () => {
 
         await advance(3_000);
         expect(screen.getByText("Hold HOLD1")).toBeInTheDocument();
-        expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+        expect(screen.queryAllByRole("alert").filter((alert) => alert.textContent)).toHaveLength(0);
       });
 
       it("gives up after 30 seconds, and keeps the token", async () => {
@@ -280,7 +280,7 @@ describe("PayScreen", () => {
 
         await advance(30_000);
         expect(authorize).toHaveBeenCalledTimes(11);
-        expect(screen.getByRole("alert")).toHaveTextContent("Busy.");
+        expect(screen.getByText("Busy.")).toHaveAttribute("role", "alert");
         expect(window.location.search).toContain("token=O1");
       });
     });
@@ -310,6 +310,6 @@ describe("PayScreen", () => {
   it("shows the API's sentence for a bad link", () => {
     answer({ error: { status: 404, data: { error: "not_found", message: "That link does not exist." } } });
     render(<PayScreen shareId="shr_1" />);
-    expect(screen.getByRole("alert")).toHaveTextContent("That link does not exist.");
+    expect(screen.getByText("That link does not exist.")).toHaveAttribute("role", "alert");
   });
 });

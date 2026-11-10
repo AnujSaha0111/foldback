@@ -73,6 +73,19 @@ describe("Controls", () => {
     expect(sync.mock.calls).toEqual([[{ shareId: "s2" }], [{ shareId: "s3" }]]);
   });
 
+  it("stops at a check PayPal could not answer, says why, and does not resolve", async () => {
+    sync.mockResolvedValueOnce({
+      error: { status: 502, data: { error: "x", message: "PayPal did not answer." } },
+    });
+    const shares = [share("s2", "capture_unknown"), share("s3", "void_unknown")];
+    render(<Controls contract={contract({ status: "blocked" })} shares={shares} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Check payment" }));
+    expect(await screen.findByText("PayPal did not answer.")).toHaveAttribute("role", "alert");
+    expect(sync).toHaveBeenCalledTimes(1);
+    expect(resolvePlan).not.toHaveBeenCalled();
+  });
+
   it("shows the plan's own reason when nothing is unknown, and still offers a retry", () => {
     const reason = "PayPal refused to release A's hold, so Foldback paused.";
     render(

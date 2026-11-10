@@ -30,7 +30,7 @@ type DetailsProps = Pick<PersonCardProps, "timeZone" | "graceUntil"> & { share: 
 /** The selected share: who, how much, its status, and the PayPal facts behind it. */
 export function PersonCard({ share, shares, onSelect, timeZone, graceUntil, onClose }: PersonCardProps) {
   return (
-    <Root aria-labelledby="person-title" aria-live="polite">
+    <Root aria-label={share ? share.display_name : "Person"}>
       <Head>
         <h2 id="person-title">Person</h2>
         <Picker
@@ -74,7 +74,9 @@ function Details({ share, timeZone, graceUntil }: DetailsProps) {
         <Name>
           <strong>{share.display_name}</strong>
           <div>
-            <StatusTag view={SHARE_STATUS_VIEW[share.status]} />
+            <span role="status">
+              <StatusTag view={SHARE_STATUS_VIEW[share.status]} />
+            </span>
             <Badge>{share.sample_label ?? (sandbox ? "Sandbox" : "Sample")}</Badge>
           </div>
         </Name>

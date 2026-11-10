@@ -153,12 +153,12 @@ describe("RuleScreen", () => {
 
   it("does not show a question as an error", () => {
     setup({ readState: { error: questionError } });
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryAllByRole("alert").filter((alert) => alert.textContent)).toHaveLength(0);
   });
 
   it("shows the API's sentence for a real failure", () => {
     setup({ readState: { error: { status: 429, data: { error: "x", message: "Please wait a minute." } } } });
-    expect(screen.getByRole("alert")).toHaveTextContent("Please wait a minute.");
+    expect(screen.getByText("Please wait a minute.")).toHaveAttribute("role", "alert");
   });
 
   it("shows that it is reading and disables the button", () => {
