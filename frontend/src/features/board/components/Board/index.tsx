@@ -1,6 +1,7 @@
 "use client";
 
 import Dialog from "@mui/material/Dialog";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import type { CSSProperties } from "react";
 import { useGetContractQuery } from "@/api/contractsApi";
@@ -16,12 +17,23 @@ import { CONTRACT_STATUS_VIEW } from "@/lib/status";
 import { useContractLive } from "@/sockets/useContractLive";
 import type { ApiContract, ApiShare } from "@/types/generated/api-types";
 import { HOLDING_SHARE_STATUSES } from "@/types/generated/statuses";
-import { AssistantCard } from "@/features/assistant/components/AssistantCard";
 import { Controls } from "../Controls";
 import { PersonCard } from "../PersonCard";
 import { Picker } from "../PersonCard/styled";
 import { SchedulerPanel } from "../SchedulerPanel";
 import { Back, Head, Layout, Meter, Pick, Reason, Stat, Stats, Urgent } from "./styled";
+
+// The assistant sits below the fold, so it loads as its own chunk after the board (quality.md section 4).
+const AssistantCard = dynamic(
+  () => import("@/features/assistant/components/AssistantCard").then((module) => module.AssistantCard),
+  {
+    loading: () => (
+      <Skeleton label="Loading the assistant…">
+        <Bone $w="12rem" />
+      </Skeleton>
+    ),
+  },
+);
 
 const HOUR_MS = 3_600_000;
 
