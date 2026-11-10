@@ -9,9 +9,40 @@ if (process.env.NODE_ENV === "production" && !process.env.NEXT_PUBLIC_API_URL) {
   );
 }
 
+const api = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8787";
+const sockets = api.replace(/^http/, "ws");
+
+// Report-only first: Next.js, Emotion and Bryntum inject inline styles and scripts, so the policy is watched in the
+// console on a preview deploy before it is enforced. The other headers are safe to send now.
+const CSP = [
+  "default-src 'self'",
+  `connect-src 'self' ${api} ${sockets}`,
+  "img-src 'self' data:",
+  "style-src 'self' 'unsafe-inline'",
+  "script-src 'self' 'unsafe-inline'",
+  "frame-ancestors 'none'",
+].join("; ");
+
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  headers() {
+    return Promise.resolve([
+      {
+        source: "/(.*)",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
+          { key: "Content-Security-Policy-Report-Only", value: CSP },
+        ],
+      },
+      // Pay links are capabilities: never indexed, whatever the page or response.
+      { source: "/pay/(.*)", headers: [{ key: "X-Robots-Tag", value: "noindex" }] },
+    ]);
+  },
 };
 
 export default config;
