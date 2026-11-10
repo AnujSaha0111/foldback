@@ -10,6 +10,7 @@ import { BryntumScheduler } from "@bryntum/scheduler-react";
 import type { BryntumSchedulerProps } from "@bryntum/scheduler-react";
 import GlobalStyles from "@mui/material/GlobalStyles";
 import { useCallback, useMemo } from "react";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { copyText } from "@/lib/copyText";
 import { SHARE_STATUS_VIEW } from "@/lib/status";
 import type { SchedulerProjection } from "@/types/generated/api-types";
@@ -59,6 +60,12 @@ const COLUMNS = [
   { text: "Person", field: "name", width: 180 },
   { text: "Pay link", field: "badge", width: 220, renderer: renderLinks },
 ];
+/** Under 600 px the timeline needs the room. The person popup has the same Copy and Open buttons. */
+const NARROW_COLUMNS = [
+  { text: "Person", field: "name", width: 120 },
+  { text: "Pay link", field: "badge", width: 220, renderer: renderLinks, hidden: true },
+];
+const NARROW = "(max-width: 599px)";
 const TIME_RANGES_FEATURE = { showHeaderElements: true };
 const TOOLTIP_FEATURE = {
   template: ({ eventRecord }: { eventRecord: EventModel }) => {
@@ -92,6 +99,7 @@ interface FoldbackSchedulerProps {
  * Dragging, resizing, creating and editing are all off, so selecting can never move money.
  */
 export default function FoldbackScheduler({ projection, onSelect, proposedAt }: FoldbackSchedulerProps) {
+  const narrow = useMediaQuery(NARROW);
   const resources = useMemo(
     () => projection.resources.map((resource) => ({ ...resource })),
     [projection.resources],
@@ -161,7 +169,7 @@ export default function FoldbackScheduler({ projection, onSelect, proposedAt }: 
         zoomOnMouseWheel={false}
         rowHeight={ROW_HEIGHT}
         autoHeight
-        columns={COLUMNS}
+        columns={narrow ? NARROW_COLUMNS : COLUMNS}
         eventEditFeature={false}
         eventDragFeature={false}
         eventResizeFeature={false}
