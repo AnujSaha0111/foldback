@@ -16,8 +16,8 @@ Foldback is a Next.js frontend on Vercel and an Express API in a container on a 
 | Auth | JWT (`jsonwebtoken`) in an httpOnly cookie, bcrypt password hashing, email login, guest demo accounts |
 | Security | helmet, cors allow-list (`CORS_ORIGINS`), express-rate-limit per IP and per user, `TRUST_PROXY`, Origin check on mutations |
 | Logging | winston, JSON in production, child logger per module, correlation id per request via AsyncLocalStorage |
-| Observability | prom-client `/metrics`, `/health/live`, `/health/ready`. OpenTelemetry (sdk-node, OTLP http, express/http/pg instrumentation), on only when `OTEL_EXPORTER_OTLP_ENDPOINT` is set |
-| AI | Plain `fetch` to free OpenAI-compatible APIs: Gemini Flash models first, then Groq `gpt-oss-120b` and `gpt-oss-20b`, then OpenRouter free. No LLM SDK. See `ai.md` |
+| Observability | `/health/live`, `/health/ready`, structured logs. prom-client `/metrics` and OpenTelemetry are future work: not built yet |
+| AI | Plain `fetch` to OpenAI-compatible APIs: prepaid DeepSeek first, then free Groq `gpt-oss-120b` and Gemini Flash-Lite. No LLM SDK. See `ai.md` |
 | PayPal | REST with `fetch` to `https://api-m.sandbox.paypal.com`. No SDK. See `paypal.md` |
 | Dates | luxon (backend). `Intl` on the frontend |
 | Frontend | Next.js 16 App Router, React 19.2, MUI 7 + Emotion (`@mui/material-nextjs` for App Router SSR), design tokens in `src/theme`. **Dev and build use webpack:** the scripts are `next dev --webpack` and `next build --webpack`, because Turbopack's dev server dies while compiling the Bryntum package (found in phase 0, on a laptop and in Codespaces) |
@@ -46,7 +46,7 @@ Not used, even though our previous project had them: worker_threads, Groq, marke
                                   same host)
 ```
 
-The frontend and the API are two subdomains of one registered domain, so they are the **same site**. The session cookie is set for the parent domain (`COOKIE_DOMAIN`), `SameSite=Lax` still applies, and the browser sends it to `api.` on credentialed requests. Those requests are cross-origin, so CORS allows exactly `CORS_ORIGINS` with credentials, and the Origin check guards every mutation. The tunnel forwards every path on `api.<domain>` to the backend, with no proxy in between to hide a route, so `/metrics` must answer only with `METRICS_TOKEN` (it is not built yet).
+The frontend and the API are two subdomains of one registered domain, so they are the **same site**. The session cookie is set for the parent domain (`COOKIE_DOMAIN`), `SameSite=Lax` still applies, and the browser sends it to `api.` on credentialed requests. Those requests are cross-origin, so CORS allows exactly `CORS_ORIGINS` with credentials, and the Origin check guards every mutation. The tunnel forwards every path on `api.<domain>` to the backend, with no proxy in between to hide a route, so a future `/metrics` must answer only with `METRICS_TOKEN`. It is not built, so nothing is exposed today.
 
 The database is a separate container, reached only through `DATABASE_URL`, so the backend container is stateless and can be replaced or duplicated. We still run **one** backend instance for now. Running more needs two small changes, both behind existing interfaces: a shared store for rate-limit counters, and a Redis adapter for Socket.IO rooms. Everything that must be correct across instances is already in Postgres (advisory locks, unique indexes, the guard triggers). Housekeeping jobs (guest cleanup) are safe on every instance because they are idempotent.
 
@@ -63,16 +63,16 @@ backend/
     server.ts                      boot: env → otel → pool → migrations check → http + io → graceful shutdown
     app.ts                         express app factory (tests mount it without listening)
     config/env.ts                  zod-validated env, fail fast
-    observability/                 logger.ts, requestContext.ts, metrics.ts, otel.ts
+    observability/                 logger.ts, requestContext.ts (metrics.ts and otel.ts are future work)
     db/                            pool.ts, tx.ts (withTransaction, withContractLock), migrator.ts (used by cli/migrate.ts and /health/ready)
     http/                          errors.ts (AppError), middleware/ (requestId, auth, originCheck, rateLimit, validate, errorHandler)
-    routes/                        health, auth, contracts, shares, agent, demo (*.routes.ts: paths + middleware only)
+    routes/                        health, auth, contracts (also the agent route), shares, demo (*.routes.ts: paths + middleware only)
     controllers/                   parse validated input, call one service, shape the response
     services/                      business logic and transactions (auth, contracts, extract, confirm, holds, resolve, sync, agent, seed, aiBudget, projection)
     repositories/                  SQL only (users, contracts, shares, operations, events, aiUsage)
     domain/                        PURE code: statuses, decide, payable, reason, money, time, validateExtraction
     integrations/paypal/           client.ts (token cache, request + classification), keys.ts
-    integrations/llm/              client.ts, extractPrompt.ts, agentTools.ts, agentRunner.ts
+    integrations/llm/              client.ts, extractPrompt.ts, agentPrompt.ts, agentRunner.ts (the tools are services/agentTools.ts)
     realtime/                      io.ts (auth handshake, rooms), notify.ts (emit after commit)
     shared/                        api-types.ts, statuses.ts. Source of truth for the frontend copy
   test/unit/  test/integration/  test/fixtures/
@@ -249,7 +249,7 @@ Otherwise the route returns `409 share_not_payable` (or the more specific `contr
 
 ## Security
 
-- **Auth.** The JWT (HS256, `JWT_SECRET` of at least 32 bytes, 7-day expiry, claims `sub` and `kind`) is set as an httpOnly, `Secure`, `SameSite=Lax` cookie named `fb_session`. It is never in localStorage. Passwords use bcrypt cost 12, with a minimum length of 10 characters. Login and signup error messages never reveal whether an email exists.
+- **Auth.** The JWT (HS256, `JWT_SECRET` of at least 32 bytes, 7-day expiry, claims `sub` and `kind`) is set as an httpOnly, `Secure`, `SameSite=Lax` cookie named `fb_session`. It is never in localStorage. Passwords use bcrypt cost 12, with a minimum length of 10 characters. Login never reveals whether an email exists. Signup answers `409 email_taken` for a taken email (`api.md`): an accepted trade-off while there are no real users.
 - **CSRF.** `SameSite=Lax`, plus an Origin/Referer check on every non-GET request against `CORS_ORIGINS`. Public pay routes are covered by the same check.
 - **Headers.** helmet defaults, plus a CSP set by Next.js for the frontend. The API returns JSON only.
 - **CORS.** Allow-list from `CORS_ORIGINS`, credentials on. In production that is only the app's own origin.
@@ -261,7 +261,7 @@ Otherwise the route returns `409 share_not_payable` (or the more specific `contr
 
 ## Abuse and cost limits
 
-Mounted in `http/middleware/rateLimit.ts`. In-memory stores behind an interface. Keys are the user id when signed in and `req.ip` otherwise (`TRUST_PROXY=1` behind the tunnel client).
+Mounted in `http/middleware/rateLimit.ts`. In-memory stores behind an interface, so every limit, the per-day ones included, restarts with the process (each deploy). The global daily AI cap and the guest and plan ceilings are counted in Postgres and survive. Keys are the user id when signed in and `req.ip` otherwise (`TRUST_PROXY=1` behind the tunnel client).
 
 | Routes | Limit |
 |---|---|
@@ -281,9 +281,9 @@ Also: `express.json({ limit: "32kb" })`, the global daily AI call cap stored in 
 ## Observability
 
 - **Logs.** winston JSON in production and pretty output in dev. Every line carries `requestId`, `userId` (when known), and `module`. `X-Request-Id` is accepted from the proxy or generated, and echoed in the response. PayPal and LLM calls log kind, duration, outcome, and `paypal-debug-id`, never bodies with secrets.
-- **Metrics** (`/metrics`, prom-client): `http_request_duration_seconds{route,method,status}`, `paypal_calls_total{kind,outcome}`, `paypal_call_duration_seconds{kind}`, `ai_calls_total{route,provider,model,result}`, `ai_fallbacks_total{from,to}`, `resolve_outcomes_total{outcome}`, `socket_connections`, plus Node defaults (event-loop lag, heap).
+- **Metrics** (future work, not built yet) (`/metrics`, prom-client): `http_request_duration_seconds{route,method,status}`, `paypal_calls_total{kind,outcome}`, `paypal_call_duration_seconds{kind}`, `ai_calls_total{route,provider,model,result}`, `ai_fallbacks_total{from,to}`, `resolve_outcomes_total{outcome}`, `socket_connections`, plus Node defaults (event-loop lag, heap).
 - **Health.** `/health/live` returns 200 if the process is up. `/health/ready` returns 200 only when Postgres answers `SELECT 1` and the migrations are current. Compose health checks and `smoke.sh` use them.
-- **Tracing.** OpenTelemetry auto-instrumentation for http, express, and pg, enabled only when `OTEL_EXPORTER_OTLP_ENDPOINT` is set (for example, a free Grafana Cloud stack). No code path depends on it.
+- **Tracing** (future work, not built yet). OpenTelemetry auto-instrumentation for http, express, and pg, enabled only when `OTEL_EXPORTER_OTLP_ENDPOINT` is set (for example, a free Grafana Cloud stack). No code path depends on it.
 - **Graceful shutdown.** On SIGTERM: stop accepting connections, close Socket.IO, wait up to 10 seconds for in-flight requests, then `pool.end()`.
 
 ## Failure behavior

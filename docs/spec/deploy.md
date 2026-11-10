@@ -207,9 +207,10 @@ Runs on every pull request and on pushes to `main`:
 - **Status:** `cd ~/foldback && docker compose ps`
 - **Logs:** `docker compose logs -f --tail 100 backend` (JSON lines with `requestId`); job logs in `~/Library/Logs/foldback-*.log`
 - **Health:** `curl -s http://127.0.0.1:8787/health/ready`
-- **Metrics:** `curl -H "Authorization: Bearer $METRICS_TOKEN" http://127.0.0.1:8787/metrics` on the Mac
+- **Metrics:** not built yet. Use the request log (`ms`, `status`) and `/health/ready`
 - **Deploy now:** `scripts/deploy.sh --force`
 - **Rollback:** set `BACKEND_TAG=sha-<commit>` in `.env`, run `scripts/deploy.sh --force`. Set it back to `latest` to follow `main` again
+- **A plan paused after a refused capture** (`capture_failed`, other shares still held): Foldback has no button for this yet. In the PayPal sandbox dashboard, void the authorizations of the shares still held, then tell the organizer. The plan stays paused in Foldback.
 - **Kill switches:** set `AI_ENABLED=false` or `SIGNUPS_ENABLED=false` in `.env`, then `docker compose up -d backend`
 - **After a power cut:** the Mac restarts, auto-logs in as `foldback`, Colima and the stack start, Tailscale and the tunnel reconnect. Check with `docker compose ps` and the smoke test
 - **macOS updates:** never remotely. Do them with someone at home on the line, at a quiet time, and tell the team. Turn off automatic installation of macOS updates (System Settings → General → Software Update → Automatic Updates) so a surprise restart cannot take the demo down

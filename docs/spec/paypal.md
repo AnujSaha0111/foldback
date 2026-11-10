@@ -155,6 +155,7 @@ On cancel, PayPal redirects to `cancel_url`. The Pay screen calls sync with `{ "
 | `authorize_unknown` | order `CREATED` / `PAYER_ACTION_REQUIRED` / `VOIDED` | share `checkout_open` / `checkout_open` / `declined` |
 | `capture_unknown` | authorization `CAPTURED` (or `PARTIALLY_CAPTURED`) | GET order, store `capture_id`, share `kept` |
 | `capture_unknown` | authorization `CREATED` | share `held`. Direction stays `keep`; the next resolve captures once with the same key |
+| `capture_unknown` | authorization `VOIDED`, `EXPIRED`, `DENIED` or `PENDING` | share `held` again, so the plan can end: the next capture, with the same key, is refused and the share ends `capture_failed`. Nothing was captured |
 | `void_unknown` | authorization `VOIDED` or `EXPIRED` | share `released` |
 | `void_unknown` | authorization `CREATED` | share `held`. Direction stays `release`; the next resolve voids once with the same key |
 | any | GET fails or is unknown | stay unknown |

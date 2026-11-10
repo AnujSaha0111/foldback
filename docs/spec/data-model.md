@@ -377,3 +377,5 @@ On boot and every 6 hours, delete expired guests **who have no live money** (que
   - `reset` drops and recreates the schema, and refuses when `NODE_ENV=production`.
 - An edited, already-applied file (checksum mismatch) fails `migrate` and `/health/ready`.
 - In production, a one-shot `migrate` container runs before `backend` starts (see `deploy.md`).
+
+Note on `paypal_operations`: when a capture or void is refused but the read that follows shows it already happened (a replay), the write row is settled `failed` while the share moves to `kept` or `released`. The `get_order` or `get_authorization` row written next to it is the proof. The `failed` outcome keeps the key free.

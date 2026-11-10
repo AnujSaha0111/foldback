@@ -104,7 +104,7 @@ How we stay inside the budgets:
 
 ## 5. Backend performance and reliability
 
-- **p95 latency** < 150 ms for read routes and < 300 ms for non-PayPal/AI writes (measured from the `http_request_duration_seconds` histogram).
+- **p95 latency** < 150 ms for read routes and < 300 ms for non-PayPal/AI writes. To be measured from the `http_request_duration_seconds` histogram once `/metrics` exists (future work); today the request log's `ms` field is the only source.
 - **No N+1 queries:** read models load shares and counts with one query per table (`= ANY($1)`). Every query in a hot path uses an index (checked with `EXPLAIN` in phase 1 for the listed queries).
 - **Pool size** 10. Statement timeout 5 s. Every outbound HTTP call (PayPal, LLM providers) has a timeout.
 - **Responses** contain only what the screen needs. No `SELECT *` in repositories.

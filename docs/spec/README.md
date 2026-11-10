@@ -58,11 +58,11 @@ Start at [phases/00-spike.md](phases/00-spike.md).
 | 2 UI design | `phases/02-ui-design.md` | done |
 | 3 Backend foundation | `phases/03-backend-foundation.md` | done |
 | 4 Rule reader | `phases/04-rule-reader.md` | done |
-| 5 Frontend and board | `phases/05-frontend-and-board.md` | in progress: 5a and 5b done, 5c plans and rule screen in review |
-| 6 Pay link and hold | `phases/06-pay-and-hold.md` | blocked on 4 and 5 |
-| 7 Resolve: keep or release | `phases/07-resolve.md` | blocked on 6 |
-| 8 Organizer agent | `phases/08-agent.md` | blocked on 7 |
-| 9 Ship and judge pack | `phases/09-ship.md` | blocked on 8 |
+| 5 Frontend and board | `phases/05-frontend-and-board.md` | done |
+| 6 Pay link and hold | `phases/06-pay-and-hold.md` | done |
+| 7 Resolve: keep or release | `phases/07-resolve.md` | done |
+| 8 Organizer agent | `phases/08-agent.md` | done |
+| 9 Ship and judge pack | `phases/09-ship.md` | in progress (audit fixes: `review/revised-plan.md`) |
 
 ## Build rules
 
