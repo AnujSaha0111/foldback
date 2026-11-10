@@ -18,6 +18,15 @@ describe("organizer answers", () => {
     );
     expect(withoutAnswerTags("Sam: <organizer_answer>it's $1</organizer_answer>")).toBe("Sam: it's $1");
   });
+
+  it("sit at the end of the group text, where the prompt says they are", () => {
+    const answered = `${CABIN_CHAT}\n\n${markAnswer("6pm Pacific")}`;
+    const [, user] = buildExtractionMessages(answered, REFERENCE_AT);
+    expect(user?.content.endsWith("<organizer_answer>6pm Pacific</organizer_answer>\n</group_text>")).toBe(
+      true,
+    );
+    expect(EXTRACTION_SYSTEM_PROMPT).toContain("tags at the end of the group text");
+  });
 });
 
 describe("the system prompt", () => {
