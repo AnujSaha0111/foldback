@@ -376,4 +376,5 @@ On boot and every 6 hours, delete expired guests **who have no live money** (que
   - `status` lists applied and pending migrations.
   - `reset` drops and recreates the schema, and refuses when `NODE_ENV=production`.
 - An edited, already-applied file (checksum mismatch) fails `migrate` and `/health/ready`.
+- Migrations are additive: never drop or rename anything the previous release reads. The server and `/health/ready` therefore accept a migration applied by a newer image that this code has no file for, so a rollback to the previous image still starts. `migrate` itself stays strict.
 - In production, a one-shot `migrate` container runs before `backend` starts (see `deploy.md`).
