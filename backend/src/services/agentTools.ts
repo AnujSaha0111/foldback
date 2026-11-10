@@ -279,7 +279,7 @@ function proposeTool(facts: AgentFacts, collected: Collected): AgentTool {
       collected.proposals.push(proposal);
       return Promise.resolve({
         ok: true,
-        result: { ok: true, proposal_id: proposal.id, preview },
+        result: { ok: true, preview },
         summary: `Proposed: ${label}`,
       });
     },

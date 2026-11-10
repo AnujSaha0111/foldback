@@ -50,7 +50,7 @@ describe("runAgent", () => {
     expect(runs).toEqual([{ text: "hi" }]);
     expect(recorded).toHaveLength(2);
     const second = JSON.stringify(calls[1]?.body);
-    expect(second).toContain("Result of echo");
+    expect(second).toContain('<tool_result name=\\"echo\\">');
     expect(second).toContain('\\"said\\"');
   });
 
@@ -68,12 +68,15 @@ describe("runAgent", () => {
 
   it("gives up after six steps without an answer", async () => {
     const loop = Array.from({ length: 7 }, () => callTool("echo", { text: "again" }));
-    const { deps, runs, tools } = setup(loop);
+    const { deps, calls, runs, tools } = setup(loop);
     expect(await runAgent(deps, "You help.", [{ role: "user", content: "x" }], tools)).toEqual({
       ok: false,
       reason: "unavailable",
     });
     expect(runs).toHaveLength(6);
+    // Only the last step is told to reply now (AI-012).
+    expect(JSON.stringify(calls[4]?.body)).not.toContain("one step left");
+    expect(JSON.stringify(calls[5]?.body)).toContain("You have one step left");
   });
 
   it("never forces a tool choice", async () => {

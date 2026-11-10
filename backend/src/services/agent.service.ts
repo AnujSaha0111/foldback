@@ -16,6 +16,7 @@ import type { Requester, RuleDeps } from "./extract.service";
 
 const EVENTS_FOR_AGENT = 20;
 const UNAVAILABLE = "The assistant is unavailable right now. The board and buttons still work.";
+const SALVAGED = "Here is what I prepared. Review it below.";
 
 /** The facts the tools work from, read once. Only a confirmed plan has an assistant. */
 async function factsFor(deps: RuleDeps, ownerId: string, contractId: string): Promise<AgentFacts> {
@@ -76,6 +77,11 @@ export async function askAgent(
     tools,
   );
   if (!result.ok) {
+    // The steps ran out after work the organizer can still use: show it instead of an error.
+    const salvaged = collected.drafts.length + collected.proposals.length > 0;
+    if (result.reason === "unavailable" && salvaged) {
+      return { reply: SALVAGED, tool_calls: [], proposals: collected.proposals, drafts: collected.drafts };
+    }
     throw result.reason === "unavailable"
       ? new AppError("agent_unavailable", UNAVAILABLE)
       : budgetError(result.reason);

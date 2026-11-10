@@ -290,7 +290,7 @@ Also: `express.json({ limit: "32kb" })`, the global daily AI call cap stored in 
 
 | Situation | Stored result | What the user sees |
 |---|---|---|
-| Model output fails schema twice | `needs_clarification` | "I could not read a complete rule. Restate the price, the people, and the deadline." |
+| Model output fails schema twice | `needs_clarification` | "I could not read a complete rule just now. Restate the price, the people, and the deadline, or try again in a minute." |
 | Buyer cancels at PayPal | share `declined` | "Checkout closed. Nothing was held." |
 | Authorize timeout | `authorize_unknown` | "PayPal did not return a clear result. This share stays reserved until it is checked." |
 | Authorize `COMPLETED` | `held` + authorization id | "Held. Not charged unless everyone pays by the deadline." |

@@ -143,7 +143,9 @@ describe("propose_action (tests 79 and 80)", () => {
     const f = facts();
     const { run, collected } = tool("propose_action", f);
     const outcome = await run({ kind: "move_clock", to: "grace_end", why: "Maya's grace ends then." });
-    expect(outcome).toMatchObject({ ok: true, result: { proposal_id: "prop_1" } });
+    expect(outcome).toMatchObject({ ok: true });
+    // The model never sees the id, so it cannot repeat it to the organizer (AI-010).
+    expect(JSON.stringify(outcome)).not.toContain("prop_1");
     const [proposal] = collected.proposals;
     expect(proposal).toMatchObject({
       id: "prop_1",

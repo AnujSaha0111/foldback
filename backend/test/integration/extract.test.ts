@@ -331,7 +331,9 @@ describe("asking and answering (tests 29 to 32, 35)", () => {
     expect(second.status).toBe(200);
     expect((second.body as Created).extraction.deadline_at).toBe("2026-11-06T18:00:00-08:00");
     const row = await stored(contractId);
-    expect(String(row["rule_text"]).endsWith("\n\nOrganizer: 6pm Pacific")).toBe(true);
+    expect(String(row["rule_text"]).endsWith("\n\n<organizer_answer>6pm Pacific</organizer_answer>")).toBe(
+      true,
+    );
     expect(row).toMatchObject({
       status: "awaiting_confirmation",
       clarify_rounds: 1,
@@ -343,7 +345,7 @@ describe("asking and answering (tests 29 to 32, 35)", () => {
       "rule_extracted",
     ]);
     expect(calls).toHaveLength(2);
-    expect(JSON.stringify(calls[1]?.body)).toContain("Organizer: 6pm Pacific");
+    expect(JSON.stringify(calls[1]?.body)).toContain("<organizer_answer>6pm Pacific</organizer_answer>");
     expect(notifier.contractEvents).toHaveLength(2);
   });
 
