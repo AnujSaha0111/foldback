@@ -43,9 +43,13 @@ export const MAX_SHARE_CENTS = 1_000_000;
 export const MAX_TITLE_CHARS = 60;
 export const MAX_NAME_CHARS = 80;
 
-/** One user may own this many plans of their own, and the demo holds this many in total (architecture.md). */
+/** One member may own this many plans of their own, a guest fewer (a judge needs one or two) (architecture.md). */
 export const MAX_CONTRACTS_PER_USER = 30;
-export const MAX_DEMO_CONTRACTS = 200;
+export const MAX_PLANS_PER_GUEST = 5;
+/** Confirmed plans across the whole demo. Drafts do not count: they hold no money and are swept after a day. */
+export const MAX_DEMO_CONTRACTS = 1000;
+/** New guests per day across the demo, so a per-IP limit loose enough for a shared office stays bounded. */
+export const MAX_GUESTS_PER_DAY = 500;
 
 export const CLARIFY_FALLBACK_QUESTION =
   "I could not read a complete rule. Restate the price, the people, and the deadline.";

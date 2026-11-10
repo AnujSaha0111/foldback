@@ -312,13 +312,33 @@ function toDraft(row: RawDraftRow | undefined): DraftContract | null {
   };
 }
 
-/** Plans the owner created themselves, not the two samples. With no owner, every user's plans: the whole-demo cap. */
-export async function countOwnPlans(db: Db, ownerId: string | null): Promise<number> {
+/** Plans the owner created themselves, not the two samples, drafts included. */
+export async function countOwnPlans(db: Db, ownerId: string): Promise<number> {
   const result = await db.query<{ count: string }>(
-    "SELECT count(*)::text AS count FROM contracts WHERE seed_key IS NULL AND ($1::text IS NULL OR owner_id = $1)",
+    "SELECT count(*)::text AS count FROM contracts WHERE seed_key IS NULL AND owner_id = $1",
     [ownerId],
   );
   return Number(result.rows[0]?.count ?? 0);
+}
+
+/** Confirmed plans across the demo: the whole-demo cap. Drafts hold no money and are swept, so they do not count. */
+export async function countConfirmedPlans(db: Db): Promise<number> {
+  const result = await db.query<{ count: string }>(
+    "SELECT count(*)::text AS count FROM contracts WHERE seed_key IS NULL AND confirmed_at IS NOT NULL",
+  );
+  return Number(result.rows[0]?.count ?? 0);
+}
+
+/** Drafts nobody confirmed within `hours`. They have no shares yet, so no money can be involved. */
+export async function deleteStaleDrafts(db: Db, hours: number): Promise<number> {
+  const result = await db.query(
+    `DELETE FROM contracts
+      WHERE seed_key IS NULL AND confirmed_at IS NULL
+        AND status IN ('needs_clarification', 'awaiting_confirmation')
+        AND updated_at < now() - make_interval(hours => $1)`,
+    [hours],
+  );
+  return result.rowCount ?? 0;
 }
 
 /** The newest stored reading of exactly this text and paste time, from anyone, no older than `hours`. */

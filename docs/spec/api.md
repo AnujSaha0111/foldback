@@ -45,7 +45,7 @@ Every non-GET request must carry an `Origin` (or `Referer`) header in `CORS_ORIG
 | 502 | `paypal_failed` | PayPal returned a definite 4xx business error. The share is unchanged except where `paypal.md` says otherwise |
 | 413 | `payload_too_large` | JSON body over 32 KB |
 | 429 | `rate_limited` | A per-IP or per-contract limit in `architecture.md` / `ai.md`. Includes `Retry-After` |
-| 429 | `demo_full` | 200 non-seed contracts already exist |
+| 429 | `demo_full` | 1000 confirmed non-seed contracts already exist (drafts do not count) |
 | 503 | `agent_unavailable` | All LLM providers failed, or no key, on the agent route |
 | 503 | `ai_budget_exhausted` | Daily AI call cap reached, or `AI_ENABLED=false` |
 | 503 | `paypal_disabled` | `PAYPAL_WRITES_ENABLED=false` on checkout or authorize |
@@ -165,7 +165,7 @@ Incomplete or inconsistent → status `needs_clarification`, response 422:
 
 Complete → status `awaiting_confirmation`, response 200 `{ "contract_id", "extraction" }`. No shares yet.
 
-No provider key in `LLM_CHAIN` → 500 `internal` with the message "No language model key is configured.". Do not silently skip extraction. If every model fails, the plan goes to `needs_clarification` with the question "I could not read a complete rule. Restate the price, the people, and the deadline." and `extraction: null`. A cap stops the call before any plan is created: `503 ai_budget_exhausted` (kill switch or daily cap) or `429 rate_limited` with `Retry-After: 60` (per-minute cap). A user with 30 plans of their own gets `429 rate_limited`, and a demo with 200 plans gets `429 demo_full`.
+No provider key in `LLM_CHAIN` → 500 `internal` with the message "No language model key is configured.". Do not silently skip extraction. If every model fails, the plan goes to `needs_clarification` with the question "I could not read a complete rule. Restate the price, the people, and the deadline." and `extraction: null`. A cap stops the call before any plan is created: `503 ai_budget_exhausted` (kill switch or daily cap) or `429 rate_limited` with `Retry-After: 60` (per-minute cap). A member with 30 plans of their own (a guest with 5) gets `429 rate_limited`, and a demo with 1000 confirmed plans gets `429 demo_full`. Drafts nobody confirms within 24 hours are deleted by the housekeeping sweep.
 
 ## Clarify
 

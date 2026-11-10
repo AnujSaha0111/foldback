@@ -117,6 +117,14 @@ export async function deleteExpiredGuestsWithoutLiveMoney(db: Db): Promise<numbe
   return result.rowCount ?? 0;
 }
 
+/** Guests created in the last 24 hours. A guest lives 7 days, so this reads the existing expiry index. */
+export async function countRecentGuests(db: Db): Promise<number> {
+  const result = await db.query<{ count: string }>(
+    "SELECT count(*)::text AS count FROM users WHERE kind = 'guest' AND expires_at > now() + interval '6 days'",
+  );
+  return Number(result.rows[0]?.count ?? 0);
+}
+
 /** Locks the user's row until the transaction ends, so two requests that rebuild one user's data run one after the other. */
 export async function lockUserRow(client: PoolClient, id: string): Promise<void> {
   await client.query("SELECT 1 FROM users WHERE id = $1 FOR UPDATE", [id]);

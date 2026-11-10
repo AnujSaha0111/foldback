@@ -1,4 +1,6 @@
 import request from "supertest";
+import { DEFAULT_LIMITS } from "../../src/http/middleware/rateLimit";
+import { MAX_GUESTS_PER_DAY } from "../../src/shared/rules";
 import { ORIGIN, buildApp, sessionCookie, setCookieLine } from "../helpers/app";
 import { count, createPools, prepareDatabase, truncateAll } from "../helpers/db";
 import type { Pools } from "../helpers/db";
@@ -253,7 +255,21 @@ describe("rate limits", () => {
 
   it("uses the default limits from the spec", async () => {
     const app = buildApp(pools, { realLimits: true });
-    for (let i = 0; i < 5; i += 1) expect((await post(app, "/api/auth/guest")).status).toBe(201);
+    for (let i = 0; i < DEFAULT_LIMITS.guest.limit; i += 1) {
+      expect((await post(app, "/api/auth/guest")).status).toBe(201);
+    }
     expect((await post(app, "/api/auth/guest")).status).toBe(429);
+  });
+
+  it("stops new guests across the demo at the daily ceiling, whatever the IP", async () => {
+    await pools.owner.query(
+      `INSERT INTO users (id, kind, display_name, expires_at)
+       SELECT 'usr_' || lpad(g::text, 22, '0'), 'guest', 'g', now() + interval '7 days'
+         FROM generate_series(1, $1) AS g`,
+      [MAX_GUESTS_PER_DAY],
+    );
+    const res = await post(buildApp(pools), "/api/auth/guest");
+    expect(res.status).toBe(429);
+    expect(res.headers["retry-after"]).toBe("3600");
   });
 });

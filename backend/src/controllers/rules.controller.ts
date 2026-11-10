@@ -42,6 +42,7 @@ function respond(res: Response, outcome: RuleOutcome): void {
 export function createRulesController(env: Env, pool: Pool, deps: RuleDeps & ConfirmDeps): RulesController {
   const requester = (req: Request, res: Response): Requester => ({
     userId: currentUser(res).id,
+    kind: currentUser(res).kind,
     ipHash: hashIp(env, req.ip ?? "unknown"),
   });
   return {

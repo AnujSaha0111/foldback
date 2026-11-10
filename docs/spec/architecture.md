@@ -268,9 +268,9 @@ Mounted in `http/middleware/rateLimit.ts`. In-memory stores behind an interface.
 | All `/api/*` | 120 per minute per IP |
 | `POST /api/auth/login` | 10 per 15 minutes per IP + email |
 | `POST /api/auth/signup` | 5 per hour per IP |
-| `POST /api/auth/guest` | 5 per day per IP |
+| `POST /api/auth/guest` | 50 per day per IP, and 500 new guests per day across the demo |
 | AI routes (create, clarify, agent) | as in `ai.md`, per user and per IP |
-| `POST /api/contracts` | 15 per day per user. A user may own at most 30 contracts |
+| `POST /api/contracts` | 15 per day per user. A member may own at most 30 contracts, a guest 5 |
 | `POST /api/shares/:id/checkout` | 10 per 10 minutes per IP |
 | `POST /api/shares/:id/authorize`, `/sync` | 20 per 10 minutes per IP |
 | clock, resolve | 30 per minute per user |

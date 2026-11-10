@@ -40,7 +40,8 @@ export const DEFAULT_LIMITS: Limits = {
   api: { limit: 120, windowMs: 60_000 },
   login: { limit: 10, windowMs: 15 * 60_000 },
   signup: { limit: 5, windowMs: 60 * 60_000 },
-  guest: { limit: 5, windowMs: 24 * 60 * 60_000 },
+  // Loose enough for a whole office behind one address; MAX_GUESTS_PER_DAY bounds the total.
+  guest: { limit: 50, windowMs: 24 * 60 * 60_000 },
   reset: { limit: 5, windowMs: 60 * 60_000 },
   aiUserMinute: { limit: 6, windowMs: MINUTE_MS },
   aiUserDay: { limit: 30, windowMs: DAY_MS },

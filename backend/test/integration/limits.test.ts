@@ -4,7 +4,8 @@ import type { Extraction } from "../../src/domain/extraction";
 import {
   CLARIFY_FALLBACK_QUESTION,
   FIXTURE_REFERENCE_AT,
-  MAX_CONTRACTS_PER_USER,
+  MAX_DEMO_CONTRACTS,
+  MAX_PLANS_PER_GUEST,
 } from "../../src/shared/rules";
 import { CABIN_CHAT_READING } from "../fixtures/llm";
 import { CREATED_ORDER, PAYPAL_KEYS, scriptedPayPal } from "../fixtures/paypal";
@@ -235,29 +236,59 @@ describe("contract caps (L9)", () => {
     );
   }
 
-  it("refuses a 31st plan with 429 rate_limited, and the stub is not called", async () => {
+  /** Confirmed plans, inserted directly: the guard triggers are skipped because these rows only need to be counted. */
+  async function seedConfirmedPlans(ownerId: string, count: number, offset: number): Promise<void> {
+    const client = await pools.owner.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query("SET LOCAL session_replication_role = replica");
+      await client.query(
+        `INSERT INTO contracts (id, owner_id, rule_text, rule_hash, reference_at, status, money_source, title,
+           currency, total_cents, share_cents, headcount, deadline_at, timezone, demo_now, confirmed_at)
+         SELECT 'con_' || lpad((g + $3)::text, 22, '0'), $1, 'x', 'h', now(), 'active', 'sandbox', 'Plan',
+           'USD', 16000, 8000, 2, now() + interval '1 day', 'UTC', now(), now()
+           FROM generate_series(1, $2) AS g`,
+        [ownerId, count, offset],
+      );
+      await client.query("COMMIT");
+    } finally {
+      client.release();
+    }
+  }
+
+  async function guests(n: number): Promise<string[]> {
+    const ids = Array.from({ length: n }, (_, i) => `usr_${String(i + 1).padStart(22, "0")}`);
+    await pools.owner.query(
+      "INSERT INTO users (id, kind, display_name, expires_at) SELECT unnest($1::text[]), 'guest', 'g', now() + interval '1 day'",
+      [ids],
+    );
+    return ids;
+  }
+
+  it("refuses a guest's sixth plan with 429 rate_limited, and the stub is not called", async () => {
     const { app, cookie, userId, calls } = await setup([says(CABIN_CHAT_READING)]);
-    await seedPlans(userId, MAX_CONTRACTS_PER_USER, 0);
+    await seedPlans(userId, MAX_PLANS_PER_GUEST, 0);
     const res = await create(app, cookie);
     expect(res.status).toBe(429);
     expect((res.body as { error: string }).error).toBe("rate_limited");
     expect(calls).toHaveLength(0);
   });
 
-  it("refuses with 429 demo_full when 200 plans already exist, even for a user with none", async () => {
+  it("refuses with 429 demo_full when the demo is full of confirmed plans, even for a user with none", async () => {
     const { app, cookie, calls } = await setup([says(CABIN_CHAT_READING)]);
-    for (let i = 0; i < 20; i += 1) {
-      const id = `usr_${String(i + 1).padStart(22, "0")}`;
-      await pools.owner.query(
-        "INSERT INTO users (id, kind, display_name, expires_at) VALUES ($1, 'guest', 'g', now() + interval '1 day')",
-        [id],
-      );
-      await seedPlans(id, 10, 1000 * (i + 1));
-    }
+    const owners = await guests(MAX_DEMO_CONTRACTS / 50);
+    for (const [i, id] of owners.entries()) await seedConfirmedPlans(id, 50, 10_000 * (i + 1));
     const res = await create(app, cookie);
     expect(res.status).toBe(429);
     expect((res.body as { error: string }).error).toBe("demo_full");
     expect(calls).toHaveLength(0);
+  });
+
+  it("does not count drafts toward the demo-wide cap", async () => {
+    const { app, cookie } = await setup([says(CABIN_CHAT_READING)]);
+    const owners = await guests(MAX_DEMO_CONTRACTS / 50);
+    for (const [i, id] of owners.entries()) await seedPlans(id, 50, 10_000 * (i + 1));
+    expect((await create(app, cookie)).status).toBe(200);
   });
 });
 

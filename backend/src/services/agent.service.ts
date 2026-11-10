@@ -15,6 +15,8 @@ import { budgetError } from "./extract.service";
 import type { Requester, RuleDeps } from "./extract.service";
 
 const EVENTS_FOR_AGENT = 20;
+/** A turn usually takes two or three model steps; reserve them so it does not stop halfway. */
+const AGENT_TURN_SLOTS = 3;
 const UNAVAILABLE = "The assistant is unavailable right now. The board and buttons still work.";
 
 /** The facts the tools work from, read once. Only a confirmed plan has an assistant. */
@@ -49,7 +51,7 @@ export async function askAgent(
   conversation: ChatMessage[],
 ): Promise<AgentResponse> {
   const facts = await factsFor(deps, who.userId, contractId);
-  const allowance = await deps.budget.allow();
+  const allowance = await deps.budget.allow(AGENT_TURN_SLOTS);
   if (allowance !== "ok") throw budgetError(allowance);
   if (!hasUsableModel(deps.env)) throw new AppError("agent_unavailable", UNAVAILABLE);
 

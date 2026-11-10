@@ -15,6 +15,7 @@ import {
 import type { Logger } from "../observability/logger";
 import type { Notifier } from "../realtime/notify";
 import {
+  countConfirmedPlans,
   countOwnPlans,
   deleteDraft,
   findCachedExtraction,
@@ -35,6 +36,7 @@ import {
   MAX_CLARIFY_ROUNDS,
   MAX_CONTRACTS_PER_USER,
   MAX_DEMO_CONTRACTS,
+  MAX_PLANS_PER_GUEST,
 } from "../shared/rules";
 import type { AiBudget, Allowance, UsageContext } from "./aiBudget.service";
 
@@ -52,6 +54,7 @@ export interface RuleDeps {
 
 export interface Requester {
   userId: string;
+  kind: "member" | "guest";
   ipHash: string;
 }
 
@@ -77,7 +80,8 @@ const CACHE_HOURS = 24;
 const MAX_STORED_EVENT_DETAIL = 500;
 const EXHAUSTED_MESSAGE =
   "Today's free AI quota for this demo is used up. Try the sample plans, the board, and pay links. They still work.";
-const BUSY_MESSAGE = "Too many requests from your connection. Wait a minute and try again.";
+const BUSY_MESSAGE =
+  "The demo's AI is busy for a moment. Try again in a minute. The board and pay links still work.";
 const MAX_REPLY_TOKENS = 2000;
 
 /** sha256(rule_text || reference_at): the key of the repeat-paste cache and the value stored in rule_hash. */
@@ -208,14 +212,12 @@ async function readAndStore(
   }
 }
 
-async function enforcePlanCaps(pool: Pool, userId: string): Promise<void> {
-  if ((await countOwnPlans(pool, userId)) >= MAX_CONTRACTS_PER_USER) {
-    throw new AppError(
-      "rate_limited",
-      `You can have up to ${MAX_CONTRACTS_PER_USER} plans. Use an existing one.`,
-    );
+async function enforcePlanCaps(pool: Pool, who: Requester): Promise<void> {
+  const most = who.kind === "guest" ? MAX_PLANS_PER_GUEST : MAX_CONTRACTS_PER_USER;
+  if ((await countOwnPlans(pool, who.userId)) >= most) {
+    throw new AppError("rate_limited", `You can have up to ${most} plans. Use an existing one.`);
   }
-  if ((await countOwnPlans(pool, null)) >= MAX_DEMO_CONTRACTS) {
+  if ((await countConfirmedPlans(pool)) >= MAX_DEMO_CONTRACTS) {
     throw new AppError("demo_full", "The demo is full right now. Try the sample plans.");
   }
 }
@@ -226,7 +228,7 @@ export async function createContract(
   who: Requester,
   input: { ruleText: string; useFixtureTime: boolean },
 ): Promise<RuleOutcome> {
-  await enforcePlanCaps(deps.pool, who.userId);
+  await enforcePlanCaps(deps.pool, who);
   const useFixture = input.useFixtureTime && FIXTURE_TEXTS.includes(input.ruleText);
   const referenceAt = useFixture ? new Date(FIXTURE_REFERENCE_AT) : (deps.now ?? (() => new Date()))();
   const cached = await cachedReading(deps, ruleHash(input.ruleText, referenceAt));

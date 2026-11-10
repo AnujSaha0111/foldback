@@ -22,7 +22,8 @@ export interface UsedAttempt {
 }
 
 export interface AiBudget {
-  allow(): Promise<Allowance>;
+  /** `slots`: attempts the caller is about to spend, so a multi-step turn does not stop halfway. */
+  allow(slots?: number): Promise<Allowance>;
   record(context: UsageContext, attempt: UsedAttempt): Promise<void>;
   /** A cache hit: shown in the table under the model that would have answered, but it counts toward no cap. */
   recordCacheHit(context: UsageContext, served: { provider: string; model: string }): Promise<void>;
@@ -31,10 +32,10 @@ export interface AiBudget {
 /** The free quota is shared by every visitor, so the caps protect the live demo (docs/spec/ai.md, cost and abuse). */
 export function createAiBudget(env: Env, pool: Pool): AiBudget {
   return {
-    async allow() {
+    async allow(slots = 1) {
       if (!env.AI_ENABLED) return "disabled";
       if ((await countCallsToday(pool)) >= env.AI_DAILY_CALLS) return "daily";
-      if ((await countAttemptsSince(pool, 60)) >= env.AI_GLOBAL_PER_MIN) return "busy";
+      if ((await countAttemptsSince(pool, 60)) + slots > env.AI_GLOBAL_PER_MIN) return "busy";
       return "ok";
     },
     async record(context, attempt) {
