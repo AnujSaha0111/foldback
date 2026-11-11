@@ -1,4 +1,6 @@
-import { Count, Empty, Flow, Glyph, Loader, Muted, SampleLink, Skeleton, Tools } from "./styled";
+import { VOICE_NOTE } from "@/features/legal/copy";
+import type { useSpeech } from "../../useSpeech";
+import { Count, Empty, Flow, Glyph, Heard, Loader, Muted, SampleLink, Skeleton, Tools, Ways } from "./styled";
 
 const STEPS = ["Paste", "Read", "Confirm", "Share links"];
 
@@ -61,13 +63,34 @@ export function NothingRead() {
 }
 
 /** Under the text box: the sample chat on the left, a live character count on the right. */
-export function TextTools({ count, onSample }: { count: number; onSample: () => void }) {
+interface TextToolsProps {
+  count: number;
+  onSample: () => void;
+  speech: ReturnType<typeof useSpeech>;
+}
+
+export function TextTools({ count, onSample, speech }: TextToolsProps) {
   return (
-    <Tools>
-      <SampleLink type="button" onClick={onSample}>
-        Use the sample cabin chat
-      </SampleLink>
-      <Count>{count} characters</Count>
-    </Tools>
+    <>
+      <Tools>
+        <Ways>
+          <SampleLink type="button" onClick={onSample}>
+            Use the sample cabin chat
+          </SampleLink>
+          {speech.supported ? (
+            <SampleLink type="button" aria-pressed={speech.listening} onClick={speech.toggle}>
+              {speech.listening ? "Stop listening" : "Speak the plan"}
+            </SampleLink>
+          ) : null}
+        </Ways>
+        <Count>{count} characters</Count>
+      </Tools>
+      {/* Rendered empty first, so screen readers hear the change when listening starts. */}
+      <Heard aria-live="polite">
+        {speech.listening
+          ? `Listening. Say who is in, the price and the deadline, then stop. ${VOICE_NOTE}`
+          : speech.problem}
+      </Heard>
+    </>
   );
 }

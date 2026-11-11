@@ -1,4 +1,4 @@
-import { AI_TEXT_NOTE } from "../../copy";
+import { AI_TEXT_NOTE, VOICE_NOTE } from "../../copy";
 import { Article } from "./styled";
 
 /** What Foldback stores, where pasted text goes, and how long anything is kept. Plain facts, no legal claims. */
@@ -31,6 +31,7 @@ export function PrivacyNotice() {
 
       <h2>AI providers</h2>
       <p>{AI_TEXT_NOTE}</p>
+      <p>{VOICE_NOTE}</p>
       <p>
         The assistant on a plan&apos;s board reads that plan&apos;s title, names, status and history. It
         cannot move money or change a plan; you approve every action it proposes.
