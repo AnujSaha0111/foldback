@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import Link from "next/link";
 
 /** The one warm band: the sun gradient with a little grain, black text in both themes. */
 export const Root = styled("footer")({
@@ -23,3 +24,5 @@ export const Row = styled("div")({
 });
 
 export const Note = styled("span")({ flex: "1 1 12rem" });
+
+export const FooterLink = styled(Link)({ color: "inherit", textUnderlineOffset: "0.2em" });

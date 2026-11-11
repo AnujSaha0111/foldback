@@ -11,6 +11,7 @@ import {
 } from "@/api/contractsApi";
 import { Button } from "@/components/Button";
 import { TextAreaField } from "@/components/Field";
+import { AI_TEXT_NOTE } from "@/features/legal/copy";
 import { FormError } from "@/components/FormError";
 import {
   CABIN_CHAT_TEXT,
@@ -48,6 +49,14 @@ export function RuleScreen() {
 }
 
 /** Paste, read, answer if asked, confirm. Nothing is active until the organizer confirms. */
+/** The paste box's fixed settings. The notice says where the text goes before anything is confirmed. */
+const TEXT_BOX = {
+  rows: 10,
+  maxLength: MAX_RULE_TEXT_CHARS,
+  placeholder: CABIN_RULE_TEXT,
+  help: AI_TEXT_NOTE,
+};
+
 function RuleFlow() {
   const [text, setText, forgetDraft] = useDraft(DRAFT_KEY);
   const [reading, setReading] = useState<Reading>({ kind: "none" });
@@ -104,9 +113,7 @@ function RuleFlow() {
               label="Paste the group chat or describe the plan"
               value={text}
               onChange={(event) => setText(event.target.value)}
-              rows={10}
-              maxLength={MAX_RULE_TEXT_CHARS}
-              placeholder={CABIN_RULE_TEXT}
+              {...TEXT_BOX}
               required
             />
             <TextTools count={text.length} onSample={() => setText(CABIN_CHAT_TEXT)} />
