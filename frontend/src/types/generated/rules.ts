@@ -43,7 +43,7 @@ export const MAX_SHARE_CENTS = 1_000_000;
 export const MAX_TITLE_CHARS = 60;
 export const MAX_NAME_CHARS = 80;
 
-/** One member may own this many plans of their own, a guest fewer (a judge needs one or two) (architecture.md). */
+/** One member may own this many plans of their own, a guest fewer (a visitor needs one or two) (architecture.md). */
 export const MAX_CONTRACTS_PER_USER = 30;
 export const MAX_PLANS_PER_GUEST = 5;
 /** Confirmed plans across the whole demo. Drafts do not count: they hold no money and are swept after a day. */
