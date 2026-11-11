@@ -11,6 +11,8 @@ import {
   buildExtractionMessages,
   EXTRACTION_JSON_SCHEMA,
   parseExtractionReply,
+  markAnswer,
+  withoutAnswerTags,
 } from "../integrations/llm/extractPrompt";
 import type { Logger } from "../observability/logger";
 import type { Notifier } from "../realtime/notify";
@@ -231,17 +233,18 @@ export async function createContract(
   input: { ruleText: string; useFixtureTime: boolean },
 ): Promise<RuleOutcome> {
   await enforcePlanCaps(deps.pool, who);
-  const useFixture = input.useFixtureTime && FIXTURE_TEXTS.includes(input.ruleText);
+  const ruleText = withoutAnswerTags(input.ruleText);
+  const useFixture = input.useFixtureTime && FIXTURE_TEXTS.includes(ruleText);
   const referenceAt = useFixture ? new Date(FIXTURE_REFERENCE_AT) : (deps.now ?? (() => new Date()))();
-  const cached = await cachedReading(deps, ruleHash(input.ruleText, referenceAt));
+  const cached = await cachedReading(deps, ruleHash(ruleText, referenceAt));
   if (!cached) await requireModel(deps);
   const id = await insertDraft(deps.pool, {
     ownerId: who.userId,
-    ruleText: input.ruleText,
-    ruleHash: ruleHash(input.ruleText, referenceAt),
+    ruleText,
+    ruleHash: ruleHash(ruleText, referenceAt),
     referenceAt,
   });
-  return readAndStore(deps, who, { id, ruleText: input.ruleText, referenceAt, isNew: true }, cached);
+  return readAndStore(deps, who, { id, ruleText, referenceAt, isNew: true }, cached);
 }
 
 function assertCanClarify(contract: DraftContract): void {
@@ -268,7 +271,7 @@ export async function clarifyContract(
   const seen = await findOwnedDraft(deps.pool, who.userId, contractId);
   if (!seen) throw new AppError("not_found", "That plan does not exist.");
   assertCanClarify(seen);
-  const ruleText = `${seen.ruleText}\n\nOrganizer: ${answer}`;
+  const ruleText = `${seen.ruleText}\n\n${markAnswer(answer)}`;
   const hash = ruleHash(ruleText, seen.referenceAt);
   const cached = await cachedReading(deps, hash);
   if (!cached) await requireModel(deps);

@@ -68,7 +68,7 @@ export const NO_TIME_ANSWERED_READING: Extraction = {
   evidence: [
     { field: "total_cents", quote: "4 people at $80 each" },
     { field: "share_cents", quote: "$80 each" },
-    { field: "deadline_at", quote: "Organizer: 6pm Pacific" },
+    { field: "deadline_at", quote: "6pm Pacific" },
   ],
 };
 

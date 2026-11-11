@@ -8,6 +8,8 @@ import type { ChatMessage, LlmDeps, LlmResult } from "./client";
 
 /** At most this many steps, tool calls and the answer together. */
 const MAX_STEPS = 6;
+/** Said before the last step, so a long chain of tool calls ends in a reply instead of "unavailable". */
+const LAST_STEP = "You have one step left. Reply to the organizer now with what you have.";
 const MAX_REPLY_TOKENS = 1500;
 
 export type ToolOutcome = { ok: true; result: unknown; summary: string } | { ok: false; error: string };
@@ -100,6 +102,7 @@ export async function runAgent(
   ];
   const toolCalls: AgentAnswer["toolCalls"] = [];
   for (let step = 0; step < MAX_STEPS; step += 1) {
+    if (step === MAX_STEPS - 1) messages.push({ role: "user", content: LAST_STEP });
     const result = await callChain(
       deps,
       { messages, schemaName: "agent_step", jsonSchema: stepJsonSchema(tools), maxTokens: MAX_REPLY_TOKENS },
@@ -116,7 +119,7 @@ export async function runAgent(
       { role: "assistant", content: JSON.stringify(value) },
       {
         role: "user",
-        content: `Result of ${value.tool}: ${JSON.stringify(outcome.ok ? outcome.result : outcome)}`,
+        content: `<tool_result name="${value.tool}">${JSON.stringify(outcome.ok ? outcome.result : outcome)}</tool_result>`,
       },
     );
   }

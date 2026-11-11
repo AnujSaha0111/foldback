@@ -165,7 +165,7 @@ Incomplete or inconsistent → status `needs_clarification`, response 422:
 
 Complete → status `awaiting_confirmation`, response 200 `{ "contract_id", "extraction" }`. No shares yet.
 
-No provider key in `LLM_CHAIN` → 500 `internal` with the message "No language model key is configured.". Do not silently skip extraction. If every model fails, the plan goes to `needs_clarification` with the question "I could not read a complete rule. Restate the price, the people, and the deadline." and `extraction: null`. A cap stops the call before any plan is created: `503 ai_budget_exhausted` (kill switch or daily cap) or `429 rate_limited` with `Retry-After: 60` (per-minute cap). A member with 30 plans of their own (a guest with 5 confirmed plans; a guest's drafts do not count) gets `429 rate_limited`, and a demo with 1000 confirmed plans gets `429 demo_full`. Drafts nobody confirms within 24 hours are deleted by the housekeeping sweep.
+No provider key in `LLM_CHAIN` → 500 `internal` with the message "No language model key is configured.". Do not silently skip extraction. If every model fails, the plan goes to `needs_clarification` with the question "I could not read a complete rule just now. Restate the price, the people, and the deadline, or try again in a minute." and `extraction: null`. A cap stops the call before any plan is created: `503 ai_budget_exhausted` (kill switch or daily cap) or `429 rate_limited` with `Retry-After: 60` (per-minute cap). A member with 30 plans of their own (a guest with 5 confirmed plans; a guest's drafts do not count) gets `429 rate_limited`, and a demo with 1000 confirmed plans gets `429 demo_full`. Drafts nobody confirms within 24 hours are deleted by the housekeeping sweep.
 
 ## Clarify
 
@@ -175,7 +175,7 @@ No provider key in `LLM_CHAIN` → 500 `internal` with the message "No language 
 { "answer": "1 to 500 chars" }
 ```
 
-Appends `\n\nOrganizer: {answer}` to `rule_text`, writes `clarification_answered`, sets status `extracting`, and re-runs the rule reader on the full text. Same responses as create. At most 3 clarify rounds per contract; a fourth returns 422 with the message "Start a new rule with all the details in one message."
+Appends `\n\n<organizer_answer>{answer}</organizer_answer>` to `rule_text` (the tag is stripped from pasted text and from the answer itself, so a chat line cannot pose as the organizer), writes `clarification_answered`, sets status `extracting`, and re-runs the rule reader on the full text. Same responses as create. At most 3 clarify rounds per contract; a fourth returns 422 with the message "Start a new rule with all the details in one message."
 
 ## Confirm
 

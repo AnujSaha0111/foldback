@@ -51,7 +51,7 @@ export const MAX_DEMO_CONTRACTS = 1000;
 export const MAX_GUESTS_PER_DAY = 500;
 
 export const CLARIFY_FALLBACK_QUESTION =
-  "I could not read a complete rule. Restate the price, the people, and the deadline.";
+  "I could not read a complete rule just now. Restate the price, the people, and the deadline, or try again in a minute.";
 export const CLARIFY_LIMIT_MESSAGE = "Start a new rule with all the details in one message.";
 
 /** Said on the pay page and in the API's refusal while a share's PayPal result is unknown. */
