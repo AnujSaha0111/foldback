@@ -94,9 +94,9 @@ Templates: `backend/.env.example` (dev) and `deploy/env.production.example` (pro
 
 `backend/Dockerfile` is multi-stage (`build`, `prod-deps`, `runtime`). The runtime stage uses `node:24-bookworm-slim`, runs as the non-root `node` user under `tini`, has production dependencies only, and has a `HEALTHCHECK` on `/health/live`. The server runs `node dist/server.js`; the same image runs `node dist/cli/migrate.js migrate` and `node dist/cli/housekeeping.js`.
 
-CI builds it for `linux/arm64` (the Mac mini) and `linux/amd64`, and pushes `ghcr.io/anujsaha0111/paypal-hackathon/backend` with two tags: `:latest` (newest `main`) and `:sha-<full commit>` (for pinning and rollback).
+CI builds it for `linux/arm64` (the Mac mini) and `linux/amd64`, and pushes `ghcr.io/anujsaha0111/foldback/backend` with two tags: `:latest` (newest `main`) and `:sha-<full commit>` (for pinning and rollback).
 
-**The image** holds the compiled backend code (readable, with comments) and the schema, but no secrets: every secret enters at runtime through the env file. Never build a secret, key, or real URL into the image. The Mac pulls it with a **classic GitHub token from the Mac owner's account that has only the `read:packages` scope** (fine-grained tokens cannot read packages), set to expire within 90 days. It was entered once with `docker login ghcr.io` as `foldback`, and lives only in `~foldback/.docker/config.json` (mode 600). If it leaks, delete it on GitHub (Settings → Developer settings → Tokens (classic)) and log in again with a new one. The package can be made public (GitHub profile → Packages → the backend package → Package settings → Change visibility).
+**The image** holds the compiled backend code (readable, with comments) and the schema, but no secrets: every secret enters at runtime through the env file. Never build a secret, key, or real URL into the image. The Mac pulls it with a **classic GitHub token from the Mac owner's account that has only the `read:packages` scope** (fine-grained tokens cannot read packages), set to expire within 90 days. It was entered once with `docker login ghcr.io` as `foldback`, and lives only in `~foldback/.docker/config.json` (mode 600). If it leaks, delete it on GitHub (Settings → Developer settings → Tokens (classic)) and log in again with a new one. The package can be made public (GitHub profile → Packages → `foldback/backend` → Package settings → Change visibility).
 
 Only CI-built images reach production. Never `docker build` on the Mac for production.
 
@@ -201,6 +201,15 @@ Runs on every pull request and on pushes to `main`:
 **Deploys are pull-based.** There is no deploy job and no self-hosted runner: the repository is public, and a self-hosted runner on a public repository can run a stranger's pull request on the Mac. The Mac's `com.foldback.deploy` job pulls each new `:latest` within five minutes.
 
 `.github/dependabot.yml` opens weekly updates for `backend/` (npm and its Docker base image) and GitHub Actions.
+
+### Renaming the repository
+
+CI publishes to the fixed name `ghcr.io/anujsaha0111/foldback/backend` (set in `ci.yml`), so a repository rename does not move the image. The first time this name is used, or whenever it changes:
+
+1. Set `BACKEND_IMAGE=ghcr.io/anujsaha0111/foldback/backend` in `~/foldback/.env`, and copy the new `compose.yml` and `scripts/` to `~/foldback`.
+2. Wait for CI on `main` to publish the image, then run `scripts/deploy.sh --force`. If the pull is refused, grant the Mac's token access in the package settings, or make the package public.
+3. Check that `curl -s https://api.<domain>/api/health` reports the newest `main` commit as `version`.
+4. Only then rename the repository, merge one small change, and check `version` again within ten minutes.
 
 ## Operations
 

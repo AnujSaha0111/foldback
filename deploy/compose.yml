@@ -4,7 +4,7 @@
 # the variables it needs, so the backend never sees the owner role or its password.
 name: foldback
 
-x-backend-image: &backend-image ${BACKEND_IMAGE:-ghcr.io/anujsaha0111/paypal-hackathon/backend}:${BACKEND_TAG:-latest}
+x-backend-image: &backend-image ${BACKEND_IMAGE:-ghcr.io/anujsaha0111/foldback/backend}:${BACKEND_TAG:-latest}
 
 x-logging: &logging
   driver: json-file

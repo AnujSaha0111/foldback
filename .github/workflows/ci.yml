@@ -130,7 +130,8 @@ jobs:
       - id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
-          images: ghcr.io/${{ github.repository }}/backend
+          # Fixed, not derived from the repository name, so a rename never moves the image the Mac pulls.
+          images: ghcr.io/anujsaha0111/foldback/backend
           tags: |
             type=sha,format=long
             type=raw,value=latest,enable={{is_default_branch}}

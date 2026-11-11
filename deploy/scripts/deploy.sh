@@ -12,7 +12,7 @@ load_env
 wait_for_docker
 
 force="${1:-}"
-image="${BACKEND_IMAGE:-ghcr.io/anujsaha0111/paypal-hackathon/backend}:${BACKEND_TAG:-latest}"
+image="${BACKEND_IMAGE:-ghcr.io/anujsaha0111/foldback/backend}:${BACKEND_TAG:-latest}"
 
 docker pull -q "$image" >/dev/null || die "could not pull $image (is the package public? docker pull it by hand)"
 new_id="$(docker image inspect -f '{{.Id}}' "$image")"
