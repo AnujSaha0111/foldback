@@ -22,6 +22,47 @@ function reading(overrides: Partial<Extraction>): Extraction {
 }
 const NO_GRACE = { grace_person_name: null, grace_until: null };
 
+describe("what the text does not support (AI-018, AI-019, AI-021)", () => {
+  it("flags a name that is not in the pasted text, and changes nothing else", () => {
+    const people = ["Alex Chen", "Sam Ortiz", "Jordan Lee", "Priya Rao"];
+    const { extraction, complete } = check(reading({ people }), CABIN_CHAT);
+    expect(complete).toBe(false);
+    expect(extraction.missing).toContain("people");
+    expect(extraction.people).toEqual(people);
+  });
+
+  it("accepts names written in another case", () => {
+    const people = CABIN_CHAT_READING.people.map((name) => name.toUpperCase());
+    expect(
+      check(reading({ people, grace_person_name: "MAYA SHAH" }), CABIN_CHAT).extraction.missing,
+    ).not.toContain("people");
+  });
+
+  it("clears a deadline whose quote names a different weekday", () => {
+    const evidence = [{ field: "deadline_at", quote: "Saturday" }];
+    const text = `${CABIN_CHAT}\nSaturday`;
+    const { extraction } = check(reading({ evidence }), text);
+    expect(extraction.deadline_at).toBeNull();
+    expect(extraction.missing).toContain("deadline_at");
+  });
+
+  it("does not read 'friend' as Friday", () => {
+    const evidence = [{ field: "deadline_at", quote: "each friend" }];
+    const { extraction } = check(reading({ evidence }), `${CABIN_CHAT}\neach friend`);
+    expect(extraction.deadline_at).toBe("2026-11-06T18:00:00-08:00");
+  });
+
+  it("strips control characters and prompt tags from the title", () => {
+    const { extraction } = check(reading({ title: "Cabin<group_text>\u0007 weekend" }), CABIN_CHAT);
+    expect(extraction.title).toBe("Cabin weekend");
+  });
+
+  it("drops evidence for a field that does not exist", () => {
+    const evidence = [...CABIN_CHAT_READING.evidence, { field: "bank_details", quote: "Maya" }];
+    expect(check(reading({ evidence }), CABIN_CHAT).extraction.evidence).toHaveLength(4);
+  });
+});
+
 describe("complete readings", () => {
   it("accepts the cabin chat unchanged", () => {
     const { extraction, complete } = check(CABIN_CHAT_READING, CABIN_CHAT);
@@ -279,7 +320,8 @@ describe("times", () => {
 
   it("accepts the last moment of the 29-day window", () => {
     const { extraction } = check(
-      reading({ ...NO_GRACE, deadline_at: "2026-11-30T12:00:00-08:00" }),
+      // No quote: the cabin quote says Friday, and 30 November is a Monday. This case is only about the window.
+      reading({ ...NO_GRACE, deadline_at: "2026-11-30T12:00:00-08:00", evidence: [] }),
       CABIN_CHAT,
     );
     expect(extraction.deadline_at).toBe("2026-11-30T12:00:00-08:00");

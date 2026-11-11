@@ -56,6 +56,36 @@ describe("health (test 16)", () => {
     await dead.end();
   });
 
+  it("an API route answers 503 unavailable, with Retry-After, when the database is down", async () => {
+    const dead = new Pool({
+      connectionString: "postgres://x:x@127.0.0.1:1/none",
+      connectionTimeoutMillis: 300,
+    });
+    const res = await request(
+      createApp({ env: testEnv(), pool: dead, logger, notifier: recordingNotifier() }),
+    ).get("/api/shares/shr_aaaaaaaaaaaaaaaaaaaaaa");
+    expect(res.status).toBe(503);
+    expect((res.body as { error: string }).error).toBe("unavailable");
+    expect(res.headers["retry-after"]).toBe("30");
+    await dead.end();
+  });
+
+  it("logs the route pattern, never a pay-link id", async () => {
+    const stream = new PassThrough();
+    let logged = "";
+    stream.on("data", (chunk: Buffer) => {
+      logged += chunk.toString();
+    });
+    const verbose = createLogger({ level: "info", json: true, stream });
+    const shareId = "shr_aaaaaaaaaaaaaaaaaaaaaa";
+    await request(
+      createApp({ env: testEnv(), pool: pools.app, logger: verbose, notifier: recordingNotifier() }),
+    ).get(`/api/shares/${shareId}`);
+    await new Promise((resolve) => setImmediate(resolve));
+    expect(logged).toContain('"path":"/api/shares/:id"');
+    expect(logged).not.toContain(shareId);
+  });
+
   it("/api/health reports the version, sandbox, and the AI calls left", async () => {
     const env = testEnv({ GIT_SHA: "abc1234", AI_DAILY_CALLS: "600", GROQ_API_KEY: "gsk_test" });
     const res = await request(createApp({ env, pool: pools.app, logger, notifier: recordingNotifier() })).get(

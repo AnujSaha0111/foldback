@@ -187,9 +187,9 @@ The hosted demo is public and has no login, so someone could script requests to 
 
 Other rules:
 
-- **Cache repeated pastes.** If a contract with the exact same `rule_text` and `reference_at` was extracted in the last 24 hours, copy its `extraction_json` instead of calling the model. Judges who all press "Use the sample cabin chat" cost one call, not hundreds. This counts against nothing.
-- **Count first, then call.** The guard counts today's `ai_usage` attempts. A new attempt is allowed only while the count is under `AI_DAILY_CALLS`. The free quota is shared by every visitor, so the cap also protects the live demo for the judges.
-- **Provider backstop.** Each provider enforces its own free limits (Groq per organization, OpenRouter per key). Use keys dedicated to this project, so a leaked key cannot affect anything else, and rotate them after judging.
+- **Cache repeated pastes.** If a contract with the exact same `rule_text` and `reference_at` was extracted in the last 24 hours, copy its `extraction_json` instead of calling the model. Visitors who all press "Use the sample cabin chat" cost one call, not hundreds. This counts against nothing.
+- **Count first, then call.** The guard counts today's `ai_usage` attempts. A new attempt is allowed only while the count is under `AI_DAILY_CALLS`. The free quota is shared by every visitor, so the cap also protects the live demo for everyone.
+- **Provider backstop.** Each provider enforces its own free limits (Groq per organization, OpenRouter per key). Use keys dedicated to this project, so a leaked key cannot affect anything else, and rotate them regularly.
 - **No AI in hot paths.** Pay pages, checkout, authorize, resolve, and the scheduler never call the model, so heavy traffic there uses no quota.
 
 Exhausted-budget copy: "Today's free AI quota for this demo is used up. Try the sample plans, the board, and pay links. They still work."

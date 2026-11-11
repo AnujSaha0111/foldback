@@ -100,6 +100,22 @@ describe("simulate_outcome (tests 76 and 77)", () => {
     });
   });
 
+  it("counts a person assumed not to pay as unpaid, even if they hold today", async () => {
+    const { run } = tool("simulate_outcome");
+    const outcome = await run({ at: "deadline", assume_held: [], assume_not_paying: ["alex chen"] });
+    expect(outcome).toMatchObject({ ok: true, result: { decision: "release", paypal_calls: { voids: 2 } } });
+  });
+
+  it("refuses a person assumed both to pay and not to pay", async () => {
+    const { run } = tool("simulate_outcome");
+    const outcome = await run({
+      at: "deadline",
+      assume_held: ["maya shah"],
+      assume_not_paying: ["maya shah"],
+    });
+    expect(outcome).toMatchObject({ ok: false });
+  });
+
   it("enters grace at the deadline, and calls nothing on a sample plan", () => {
     const sample = facts({ contract: { ...facts().contract, moneySource: "sample" } });
     expect(simulate(sample, DEADLINE, [])).toMatchObject({

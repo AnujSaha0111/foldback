@@ -30,7 +30,7 @@ Flow: create an order with `intent: AUTHORIZE` → buyer approves in PayPal → 
 
 Server, auth, and observability variables (`NODE_ENV`, `JWT_SECRET`, `CORS_ORIGINS`, `TRUST_PROXY`, `LOG_LEVEL`, `METRICS_TOKEN`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `SIGNUPS_ENABLED`) are listed in `deploy.md`. `backend/.env.example` and `deploy/env.production.example` list every key with empty secrets. All are parsed by the zod env module, so a missing or invalid value stops boot with a clear message. `.env` files are gitignored.
 
-In the PayPal developer dashboard, use the default sandbox accounts or create two: a **business** account (merchant; the REST app belongs to it) and a **personal** account (buyer). The buyer logs in inside the PayPal window. The README gives judges the personal sandbox login, which is test-only data.
+In the PayPal developer dashboard, use the default sandbox accounts or create two: a **business** account (merchant; the REST app belongs to it) and a **personal** account (buyer). The buyer logs in inside the PayPal window. The README gives visitors the personal sandbox login, which is test-only data.
 
 ## OAuth
 
@@ -43,7 +43,7 @@ In the PayPal developer dashboard, use the default sandbox accounts or create tw
 - Store the `paypal-debug-id` response header on the operation row. It is what PayPal support asks for.
 - Classify each response as one of:
   - **completed**: the documented success status.
-  - **definite failure**: HTTP 4xx with a parseable JSON body. Record `name` and `details[0].issue`. A call that never left because no token could be had is also a definite failure: nothing reached PayPal.
+  - **definite failure**: HTTP 4xx with a parseable JSON body. Record `name` and `details[0].issue`. A call that never left because no token could be had is also a definite failure: nothing reached PayPal. HTTP 401, 408 and 429 are definite failures that PayPal did not process (`processed: false`): for a capture or void they are handled like a call that never left (share `held` again, plan paused, the next resolve sends the same key), never as a refusal.
   - **unknown**: abort, network error, HTTP 5xx, an unparseable body, a 2xx body missing what this file promises, or `RESOURCE_CONFLICT` (issue `PREVIOUS_REQUEST_IN_PROGRESS`), which means an earlier request with this key is still running.
 - A stored response drops `payer`, `payment_source`, and `purchase_units[].shipping`, all of which carry the buyer's details.
 

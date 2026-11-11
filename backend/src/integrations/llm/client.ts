@@ -111,6 +111,8 @@ function buildBody(entry: ChainEntry, request: JsonRequest): Record<string, unkn
   const config = PROVIDERS[entry.provider];
   const strict = config.strictSchema;
   const [system, ...rest] = request.messages;
+  // Providers without a strict schema get it inside the system prompt; without one, the schema would be lost silently.
+  if (!strict && system?.role !== "system") throw new Error("The first message must be the system prompt.");
   const messages =
     strict || system === undefined
       ? request.messages

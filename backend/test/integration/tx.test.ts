@@ -92,6 +92,26 @@ describe("withContractLock", () => {
     await expect(first).resolves.toBe("first");
   });
 
+  it("lets at most five requests hold locks at once, and refuses a sixth at once", async () => {
+    let open!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      open = resolve;
+    });
+    const holders = ["con_a", "con_b", "con_c", "con_d", "con_e"].map((id) =>
+      withContractLock(pools.app, id, async () => {
+        await gate;
+        return id;
+      }),
+    );
+    await expect(withContractLock(pools.app, "con_f", () => Promise.resolve("f"))).rejects.toMatchObject({
+      code: "resolve_in_progress",
+      status: 409,
+    });
+    open();
+    await expect(Promise.all(holders)).resolves.toHaveLength(5);
+    await expect(withContractLock(pools.app, "con_f", () => Promise.resolve("f"))).resolves.toBe("f");
+  });
+
   it("does not block a different contract", async () => {
     let open!: () => void;
     const gate = new Promise<void>((resolve) => {

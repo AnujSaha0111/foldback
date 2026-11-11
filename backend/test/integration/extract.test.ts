@@ -512,4 +512,30 @@ describe("plans left unfinished by a restart", () => {
     ]);
     expect(statuses.rows.map((r) => r.id)).toContain(asking);
   });
+
+  it("deletes a draft nobody confirmed within a day, and keeps a recent one", async () => {
+    const { app, user } = await setup([says(NO_TIME_READING)]);
+    const recent = ((await create(app, user, NO_TIME)).body as { contract_id: string }).contract_id;
+    const old = `con_${"4".padStart(22, "0")}`;
+    await pools.owner.query(
+      `INSERT INTO contracts (id, owner_id, rule_text, rule_hash, reference_at, status, money_source, updated_at)
+       VALUES ($1, $2, 'x', 'h', now(), 'extracting', 'sandbox', now())`,
+      [old, user.id],
+    );
+    await pools.owner.query("UPDATE contracts SET status = 'needs_clarification' WHERE id = $1", [old]);
+    // The touch trigger would reset updated_at, so it is paused while the draft is aged.
+    await pools.owner.query("ALTER TABLE contracts DISABLE TRIGGER contracts_touch");
+    try {
+      await pools.owner.query("UPDATE contracts SET updated_at = now() - interval '25 hours' WHERE id = $1", [
+        old,
+      ]);
+    } finally {
+      await pools.owner.query("ALTER TABLE contracts ENABLE TRIGGER contracts_touch");
+    }
+
+    const logger = createLogger({ level: "error", json: true, stream: new PassThrough() });
+    expect(await sweepStaleDrafts(pools.app, logger)).toBe(1);
+    const left = await pools.owner.query<{ id: string }>("SELECT id FROM contracts WHERE seed_key IS NULL");
+    expect(left.rows.map((r) => r.id)).toEqual([recent]);
+  });
 });

@@ -100,16 +100,21 @@ function sentence(facts: AgentFacts, decision: Decision, at: Date, held: number)
   }
 }
 
-/** Runs the real rule on an in-memory copy, with the people the organizer assumes will pay counted as held. */
-export function simulate(facts: AgentFacts, at: Date, assumeHeld: ShareRow[]): Simulation {
-  const shares = facts.shares.map((share) => ({
-    ...share,
-    status:
-      assumeHeld.includes(share) && OPEN_SHARE_STATUSES.includes(share.status)
-        ? ("held" as const)
-        : share.status,
-    openCall: false,
-  }));
+/**
+ * Runs the real rule on an in-memory copy: the people the organizer assumes will pay count as held, and the people
+ * assumed not to pay count as waiting, even if they hold today.
+ */
+export function simulate(
+  facts: AgentFacts,
+  at: Date,
+  assumeHeld: ShareRow[],
+  assumeNotPaying: ShareRow[] = [],
+): Simulation {
+  const statusOf = (share: ShareRow): ShareRow["status"] => {
+    if (assumeNotPaying.includes(share)) return "waiting";
+    return assumeHeld.includes(share) && OPEN_SHARE_STATUSES.includes(share.status) ? "held" : share.status;
+  };
+  const shares = facts.shares.map((share) => ({ ...share, status: statusOf(share), openCall: false }));
   const decision = decide({ ...facts.contract, demoNow: at } as typeof facts.contract, shares, at);
   const held = shares.filter((share) => share.status === "held").length;
   const real = facts.contract.moneySource === "sandbox";
@@ -190,7 +195,7 @@ function simulateTool(facts: AgentFacts): AgentTool {
   return {
     name: "simulate_outcome",
     description:
-      'What the rule would do at a time ("deadline", "grace_end", or an ISO time), counting assume_held as held. Moves nothing.',
+      'What the rule would do at a time ("deadline", "grace_end", or an ISO time), counting assume_held as held and assume_not_paying as unpaid. Moves nothing.',
     input: z.strictObject({
       at: TimeInput,
       assume_held: z.array(z.string()).max(4),
@@ -208,9 +213,12 @@ function simulateTool(facts: AgentFacts): AgentTool {
       const notPaying = people(facts, assume_not_paying);
       if (typeof held === "string") return Promise.resolve(fail(held));
       if (typeof notPaying === "string") return Promise.resolve(fail(notPaying));
+      if (notPaying.some((share) => held.includes(share))) {
+        return Promise.resolve(fail("A person cannot be both assumed to pay and assumed not to pay."));
+      }
       const unpaid = notPaying.map((share) => share.displayName).join(", ");
       const summary = `Simulated ${when(time, facts.contract.timezone)}${unpaid ? ` with ${unpaid} unpaid` : ""}`;
-      return Promise.resolve({ ok: true, result: simulate(facts, time, held), summary });
+      return Promise.resolve({ ok: true, result: simulate(facts, time, held, notPaying), summary });
     },
   };
 }

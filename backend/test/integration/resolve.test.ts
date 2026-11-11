@@ -13,7 +13,15 @@ import {
 } from "../fixtures/paypal";
 import type { PayPalStep } from "../fixtures/paypal";
 import { ORIGIN, buildApp, recordingNotifier, sessionCookie } from "../helpers/app";
-import { confirmed, createPools, hold, insertOperation, prepareDatabase, truncateAll } from "../helpers/db";
+import {
+  confirmed,
+  createPools,
+  draft,
+  hold,
+  insertOperation,
+  prepareDatabase,
+  truncateAll,
+} from "../helpers/db";
 import type { Pools } from "../helpers/db";
 
 let pools: Pools;
@@ -233,6 +241,36 @@ describe("release", () => {
     expect(calls("void")).toHaveLength(3);
     expect(paypal.apiCalls().filter((call) => call.method === "GET")).toHaveLength(1);
   });
+
+  it("keeps a hold PayPal refused to void while it is still live, and voids it on the next resolve", async () => {
+    const { clock, resolve, calls, plan } = await setup(
+      [
+        VOIDED_STEP,
+        { status: 422, body: refusal("UNPROCESSABLE_ENTITY", "AUTHORIZATION_ALREADY_VOIDED") },
+        { body: { id: "AUTH2", status: "CREATED" } },
+        VOIDED_STEP,
+        VOIDED_STEP,
+      ],
+      { held: 3 },
+    );
+    const stopped = await clock(later(plan.graceUntil ?? plan.deadline));
+    expect(stopped.status).toBe(502);
+    expect(errorOf(stopped)).toBe("paypal_failed");
+    expect(await state(plan.contractId)).toMatchObject({
+      status: "blocked",
+      direction: "release",
+      shares: { A: "released", B: "held", C: "held" },
+    });
+
+    expect((await resolve()).status).toBe(200);
+    expect(await state(plan.contractId)).toMatchObject({ status: "released", shares: { B: "released" } });
+    expect(calls("void").map((call) => call.headers["paypal-request-id"])).toEqual([
+      "fb-void-AUTH1",
+      "fb-void-AUTH2",
+      "fb-void-AUTH2",
+      "fb-void-AUTH3",
+    ]);
+  });
 });
 
 describe("keep", () => {
@@ -329,6 +367,40 @@ describe("keep", () => {
     expect(calls("capture").map((call) => call.headers["paypal-request-id"])).toEqual([
       "fb-capture-AUTH1",
       "fb-capture-AUTH2",
+      "fb-capture-AUTH2",
+      "fb-capture-AUTH3",
+      "fb-capture-AUTH4",
+    ]);
+  });
+
+  it("settles a lost capture that PayPal completed, and never captures it again", async () => {
+    const { resolve, sync, calls, plan } = await setup(
+      [
+        capture(1),
+        { fail: "timeout" },
+        { body: { id: "AUTH2", status: "CAPTURED" } },
+        {
+          body: {
+            id: "ORD2",
+            status: "COMPLETED",
+            purchase_units: [{ payments: { captures: [{ id: "TESTCAPTURE00002", status: "COMPLETED" }] } }],
+          },
+        },
+        capture(3),
+        capture(4),
+      ],
+      { held: 4, grace: null },
+    );
+    expect(errorOf(await resolve())).toBe("money_unknown");
+    await sync(plan.shareIds[1] ?? "");
+    expect(await state(plan.contractId)).toMatchObject({ status: "blocked", shares: { B: "kept" } });
+
+    expect((await resolve()).status).toBe(200);
+    const after = await state(plan.contractId);
+    expect(after).toMatchObject({ status: "kept" });
+    expect(after.captures).toContain("TESTCAPTURE00002");
+    expect(calls("capture").map((call) => call.headers["paypal-request-id"])).toEqual([
+      "fb-capture-AUTH1",
       "fb-capture-AUTH2",
       "fb-capture-AUTH3",
       "fb-capture-AUTH4",
@@ -435,6 +507,48 @@ describe("clock", () => {
     expect(errorOf(res)).toBe("bad_clock");
   });
 
+  it("returns a paused plan to collecting when the clock moves back before the deadline", async () => {
+    const { clock, plan } = await setup([], { held: 0 });
+    const shareId = plan.shareIds[0] ?? "";
+    await db.query(
+      "UPDATE shares SET status = 'checkout_open', order_id = 'ORDX', checkout_attempt = 1 WHERE id = $1",
+      [shareId],
+    );
+    await db.query("UPDATE shares SET status = 'authorize_unknown' WHERE id = $1", [shareId]);
+
+    expect(errorOf(await clock(later(plan.deadline)))).toBe("money_unknown");
+    expect(await state(plan.contractId)).toMatchObject({ status: "blocked", direction: null });
+
+    expect((await clock(new Date(plan.deadline.getTime() - 3_600_000))).status).toBe(200);
+    expect(await state(plan.contractId)).toMatchObject({ status: "active", resolution_reason: null });
+  });
+
+  it("refuses a plan that is already decided", async () => {
+    const { clock, resolve, plan } = await setup([capture(1), capture(2), capture(3), capture(4)], {
+      held: 4,
+      grace: null,
+    });
+    expect((await resolve()).status).toBe(200);
+    const res = await clock(later(plan.deadline));
+    expect(res.status).toBe(409);
+    expect(errorOf(res)).toBe("contract_closed");
+  });
+
+  it("refuses a plan that is not confirmed yet", async () => {
+    const { app, cookie, plan } = await setup([]);
+    const owner = await db.query<{ owner_id: string }>("SELECT owner_id FROM contracts WHERE id = $1", [
+      plan.contractId,
+    ]);
+    const unconfirmed = await draft(db, owner.rows[0]?.owner_id ?? "");
+    const res = await request(app)
+      .post(`/api/contracts/${unconfirmed}/clock`)
+      .set("Origin", ORIGIN)
+      .set("Cookie", cookie)
+      .send({ demo_now: new Date().toISOString() });
+    expect(res.status).toBe(409);
+    expect(errorOf(res)).toBe("not_confirmed");
+  });
+
   it("refuses a time that is not a full timestamp", async () => {
     const { app, cookie, plan } = await setup([]);
     const res = await request(app)
@@ -506,6 +620,58 @@ describe("when PayPal cannot be reached", () => {
       .send({});
     expect(res.status).toBe(200);
     expect(await state(down.plan.contractId)).toMatchObject({ status: "kept" });
+  });
+
+  it.each<[number, string]>([
+    [429, "RATE_LIMIT_REACHED"],
+    [401, "AUTHENTICATION_FAILURE"],
+  ])(
+    "pauses on a %i capture without refusing it, and the next resolve uses the same key",
+    async (status, name) => {
+      const { resolve, calls, paypal, plan } = await setup(
+        [{ status, body: refusal(name, name) }, capture(1), capture(2), capture(3), capture(4)],
+        { held: 4, grace: null },
+      );
+      const first = await resolve();
+      expect(first.status).toBe(502);
+      expect(errorOf(first)).toBe("paypal_failed");
+      expect(await state(plan.contractId)).toMatchObject({
+        status: "blocked",
+        direction: "keep",
+        shares: { A: "held", B: "held", C: "held", D: "held" },
+      });
+
+      expect((await resolve()).status).toBe(200);
+      expect(await state(plan.contractId)).toMatchObject({ status: "kept" });
+      const keys = calls("capture").map((call) => call.headers["paypal-request-id"]);
+      expect(keys.slice(0, 2)).toEqual(["fb-capture-AUTH1", "fb-capture-AUTH1"]);
+      // An unprocessed call is not a refusal, so no order is read to check for a capture.
+      expect(paypal.apiCalls().filter((call) => call.method === "GET")).toHaveLength(0);
+    },
+  );
+
+  it("pauses on a 429 void without reading the authorization, and voids with the same key next time", async () => {
+    const { clock, resolve, calls, paypal, plan } = await setup(
+      [
+        { status: 429, body: refusal("RATE_LIMIT_REACHED", "RATE_LIMIT_REACHED") },
+        VOIDED_STEP,
+        VOIDED_STEP,
+        VOIDED_STEP,
+      ],
+      { held: 3 },
+    );
+    const stopped = await clock(later(plan.graceUntil ?? plan.deadline));
+    expect(stopped.status).toBe(502);
+    expect(await state(plan.contractId)).toMatchObject({ status: "blocked", shares: { A: "held" } });
+    expect(paypal.apiCalls().filter((call) => call.method === "GET")).toHaveLength(0);
+
+    expect((await resolve()).status).toBe(200);
+    expect(await state(plan.contractId)).toMatchObject({ status: "released" });
+    expect(
+      calls("void")
+        .map((call) => call.headers["paypal-request-id"])
+        .slice(0, 2),
+    ).toEqual(["fb-void-AUTH1", "fb-void-AUTH1"]);
   });
 
   it("sends nothing while the kill switch is on", async () => {

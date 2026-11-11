@@ -75,6 +75,14 @@ describe("allow", () => {
     expect(await budget.allow()).toBe("ok");
   });
 
+  it("reserves several slots for a multi-step turn", async () => {
+    const budget = createAiBudget(testEnv({ AI_GLOBAL_PER_MIN: "5", AI_DAILY_CALLS: "100" }), pools.app);
+    await seed(3, { agoSeconds: 5 });
+    expect(await budget.allow()).toBe("ok");
+    expect(await budget.allow(3)).toBe("busy");
+    expect(await budget.allow(2)).toBe("ok");
+  });
+
   it("reports the daily cap before the per-minute cap", async () => {
     const budget = createAiBudget(testEnv({ AI_DAILY_CALLS: "1", AI_GLOBAL_PER_MIN: "1" }), pools.app);
     await seed(1);
@@ -122,7 +130,7 @@ describe("record", () => {
   it("refuses a paid OpenRouter model, because the database enforces the free-only rule", async () => {
     const budget = createAiBudget(testEnv(), pools.app);
     await expect(
-      budget.record(CONTEXT, { ...ATTEMPT, provider: "openrouter", model: "anthropic/claude-3.5-sonnet" }),
+      budget.record(CONTEXT, { ...ATTEMPT, provider: "openrouter", model: "openai/gpt-4o" }),
     ).rejects.toMatchObject({ code: "23514" });
     await budget.record(CONTEXT, { ...ATTEMPT, provider: "openrouter", model: "openrouter/free" });
     await budget.record(CONTEXT, { ...ATTEMPT, provider: "openrouter", model: "vendor/model:free" });

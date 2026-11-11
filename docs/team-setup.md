@@ -41,7 +41,7 @@ Using your own sandbox accounts means nobody needs to share PayPal credentials. 
 
 ```bash
 git clone <repo url>
-cd PayPal-Hackathon
+cd foldback
 git checkout -b phaseN-yourtopic
 
 docker compose -f deploy/compose.dev.yml up -d --wait
@@ -53,6 +53,12 @@ corepack yarn hooks          # once per clone: pre-commit checks and the commit 
 corepack yarn migrate
 corepack yarn test
 ```
+
+Start the app on top of that: `corepack yarn dev` in `backend/` (the API on http://localhost:8787), then `corepack yarn dev` in `frontend/` and open http://localhost:3000. Node 24 is required (`.nvmrc`).
+
+Only want the tests? Start just the test database: `docker compose -f deploy/compose.dev.yml up -d postgres-test`. The tests need no PayPal or AI keys. They refuse to run against any database whose name does not end in `_test`, or that holds tables Foldback did not create, so a stray `TEST_DATABASE_URL` cannot wipe another project.
+
+Port 5432 or 5433 already taken by another Postgres? Set `FOLDBACK_DEV_PG_PORT` or `FOLDBACK_TEST_PG_PORT` before `docker compose ... up`, and change the port in `DATABASE_URL`, `MIGRATE_DATABASE_URL` or `TEST_DATABASE_URL` in `backend/.env` to match.
 
 Everything in `.env.example` already works for the Docker databases (ports 5432 and 5433). The compose file also creates the `foldback_app` role. The app connects as that role and migrations run as the owner (`MIGRATE_DATABASE_URL`), exactly like production. Add your own AI and PayPal keys to `.env` when a phase needs them.
 
@@ -71,7 +77,7 @@ corepack yarn dup
 corepack yarn test
 ```
 
-CI runs the same gates plus the build, the shared-types check, a secret scan, and a dependency audit. Bundle budgets arrive with the frontend. The pre-commit hook (installed by `corepack yarn hooks`) already runs Prettier, ESLint, and typecheck on what you stage, and rejects a commit message that carries an AI attribution line. The rules are in [quality.md](spec/quality.md). The short version:
+CI runs the same gates plus the build, the shared-types check, a secret scan, and a dependency audit. Bundle budgets arrive with the frontend. The pre-commit hook (installed by `corepack yarn hooks`) already runs Prettier, ESLint, and typecheck on what you stage, and rejects a commit message that carries a co-author or generator trailer. The rules are in [quality.md](spec/quality.md). The short version:
 
 - Search the code before writing a new function, type, or component. Reuse it.
 - Never edit a migration that is already merged. Add `NNNN_name.sql`.

@@ -165,6 +165,8 @@ interface Ending {
   read: { request: PayPalRequest; result: OperationResult } | null;
   /** The order can never succeed, so the friend needs a new one. */
   orderDead?: boolean;
+  /** PayPal turned the call away unprocessed (401, 408, 429): not a refusal, the friend can simply retry. */
+  busy?: boolean;
 }
 
 /**
@@ -202,7 +204,8 @@ async function placeHold(deps: HoldDeps, orderId: string, request: PayPalRequest
   }
   if (result.outcome === "unknown" || result.issue !== "ORDER_ALREADY_AUTHORIZED") {
     const orderDead = result.outcome === "failed" && REFUSED_HOLD_ISSUES.includes(result.issue ?? "");
-    return { outcome: result.outcome, hold: null, operation: result, read: null, orderDead };
+    const busy = result.outcome === "failed" && !result.processed;
+    return { outcome: result.outcome, hold: null, operation: result, read: null, orderDead, busy };
   }
 
   const readRequest = getOrderRequest(orderId);
@@ -284,7 +287,14 @@ export async function authorizeShare(
     deps.notifier.contractChanged(begun.contractId, version);
     deps.notifier.shareChanged(shareId, begun.contractId);
 
-    if (ending.outcome === "failed") throw new AppError("paypal_failed", "PayPal did not approve this hold.");
+    if (ending.outcome === "failed") {
+      throw new AppError(
+        "paypal_failed",
+        ending.busy
+          ? "PayPal is busy. Try again in a moment. Nothing was held."
+          : "PayPal did not approve this hold.",
+      );
+    }
     // The hold that completes the group resolves here, under the lock this request already holds.
     if (ending.outcome === "completed") await resolveAfterHold(deps, begun.contractId);
     return authorizeReply(deps, shareId, ending.outcome, ending.hold?.authorizationId ?? null);

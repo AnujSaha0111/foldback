@@ -1,5 +1,8 @@
 import type { Pool } from "pg";
-import { applyMigrations, migrationStatus } from "../../src/db/migrator";
+import { mkdtemp, cp, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { applyMigrations, migrationStatus, migrationsCurrent } from "../../src/db/migrator";
 import {
   addShares,
   confirmed,
@@ -52,6 +55,24 @@ const NEW_CONTRACT_SQL = `INSERT INTO contracts (id, owner_id, rule_text, rule_h
   total_cents, share_cents, headcount) VALUES ($1, $2, 'x', 'h', now(), 'extracting', 'sandbox', $3, $4, $5)`;
 
 describe("migrations", () => {
+  it("still count as current when a newer image applied one this code does not know (rollback)", async () => {
+    await owner.query(
+      "INSERT INTO schema_migrations (version, name, checksum) VALUES ('9999', 'newer', 'x')",
+    );
+    try {
+      expect(await migrationsCurrent(app)).toBe(true);
+    } finally {
+      await owner.query("DELETE FROM schema_migrations WHERE version = '9999'");
+    }
+  });
+
+  it("are not current while a file of this code is still pending", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "migrations-"));
+    await cp(path.resolve(__dirname, "../../migrations"), dir, { recursive: true });
+    await writeFile(path.join(dir, "9998_pending.sql"), "SELECT 1;");
+    expect(await migrationsCurrent(app, dir)).toBe(false);
+  });
+
   it("1. apply once and are idempotent", async () => {
     expect(firstRun.applied).toEqual(["0001", "0002"]);
     expect((await applyMigrations(owner)).applied).toEqual([]);

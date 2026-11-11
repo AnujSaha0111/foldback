@@ -222,8 +222,9 @@ async function pauseOnUnknown(
 }
 
 /**
- * The call never reached PayPal (no token, no keys, the kill switch). Nothing happened, so the share is held again and
- * the plan pauses. It is never a refusal: that would mark a capture failed for good.
+ * The call never reached PayPal (no token, no keys, the kill switch), or PayPal turned it away unprocessed (401, 408,
+ * 429). Nothing happened, so the share is held again and the plan pauses; the next resolve sends the same key. It is
+ * never a refusal: that would mark a capture failed for good.
  */
 async function pauseUnsent(
   deps: HoldDeps,
@@ -283,7 +284,7 @@ async function captureOne(deps: HoldDeps, contractId: string, share: ShareRow): 
   }
   if (result.outcome === "unknown")
     return pauseOnUnknown(deps, contractId, share, { operationId, result }, "capture_unknown");
-  if (result.status === null) return pauseUnsent(deps, contractId, share, { operationId, result });
+  if (!result.processed) return pauseUnsent(deps, contractId, share, { operationId, result });
 
   const readRequest = getOrderRequest(share.orderId ?? "");
   const fact = await deps.paypal.getOrder(readRequest);
@@ -329,7 +330,7 @@ async function releaseOne(deps: HoldDeps, contractId: string, share: ShareRow): 
     return finishCall(deps, contractId, share, { operationId, result, read: null }, release);
   if (result.outcome === "unknown")
     return pauseOnUnknown(deps, contractId, share, { operationId, result }, "release_unknown");
-  if (result.status === null) return pauseUnsent(deps, contractId, share, { operationId, result });
+  if (!result.processed) return pauseUnsent(deps, contractId, share, { operationId, result });
 
   const readRequest = getAuthorizationRequest(authorizationId);
   const fact = await deps.paypal.getAuthorization(readRequest);

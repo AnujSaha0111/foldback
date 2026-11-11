@@ -7,6 +7,16 @@ interface BodyParserError extends Error {
   type?: string;
 }
 
+const DOWN_CODES = new Set(["ECONNREFUSED", "ECONNRESET", "ETIMEDOUT", "ENOTFOUND"]);
+
+/** Postgres is unreachable or shutting down (SQLSTATE 08 or 57P): a retryable 503, not a bug. */
+function databaseDown(err: unknown): boolean {
+  const { code, message } = (err ?? {}) as { code?: unknown; message?: unknown };
+  const c = typeof code === "string" ? code : "";
+  if (DOWN_CODES.has(c) || c.startsWith("08") || c.startsWith("57P")) return true;
+  return typeof message === "string" && message.includes("timeout exceeded when trying to connect");
+}
+
 /** Turns anything thrown into the API's error JSON. Only AppError messages reach the client. */
 function toAppError(err: unknown): AppError {
   if (err instanceof AppError) return err;
@@ -21,6 +31,11 @@ function toAppError(err: unknown): AppError {
   if (type === "entity.too.large") return new AppError("payload_too_large", "The request body is too large.");
   if (type === "entity.parse.failed")
     return new AppError("bad_request", "The request body is not valid JSON.");
+  if (databaseDown(err)) {
+    return new AppError("unavailable", "Foldback is temporarily unavailable.", undefined, {
+      "Retry-After": "30",
+    });
+  }
   return new AppError("internal", "Something went wrong on our side.");
 }
 
@@ -36,7 +51,8 @@ export function errorHandler(logger: Logger): ErrorRequestHandler {
       return;
     }
     const appError = toAppError(err);
-    if (appError.status >= 500) log.error("unhandled error", { err });
+    if (appError.code === "unavailable") log.warn("database unavailable", { err });
+    else if (appError.status >= 500) log.error("unhandled error", { err });
     for (const [name, value] of Object.entries(appError.headers)) res.setHeader(name, value);
     const body: Record<string, unknown> = {
       error: appError.code,
