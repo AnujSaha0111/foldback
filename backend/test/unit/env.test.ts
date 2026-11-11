@@ -77,7 +77,7 @@ describe("env fails fast (test 15)", () => {
   });
 
   it("refuses a paid model in the LLM chain (L1)", () => {
-    expect(failure({ LLM_CHAIN: "openrouter:anthropic/claude-3.5-sonnet" }).variables).toContain("LLM_CHAIN");
+    expect(failure({ LLM_CHAIN: "openrouter:openai/gpt-4o" }).variables).toContain("LLM_CHAIN");
   });
 
   it("accepts a DeepSeek entry, with the key optional", () => {
