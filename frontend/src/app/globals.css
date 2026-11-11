@@ -186,6 +186,14 @@ select {
   }
 }
 
+/* fb-rise without the fade, for a page's main content: an element that first paints at opacity 0 never counts as
+   the largest contentful paint, so the page gets no LCP at all. */
+@keyframes fb-lift {
+  from {
+    transform: translateY(8px);
+  }
+}
+
 @keyframes fb-word {
   from {
     opacity: 0;
