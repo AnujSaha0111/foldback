@@ -4,7 +4,6 @@
 
 Foldback collects equal shares for a group plan through PayPal. Each share is placed on hold (a PayPal authorization) instead of being charged. If the confirmed headcount is met by the deadline, Foldback captures every hold. If it is not, Foldback voids every hold, so no money leaves anyone's account.
 
-
 **The goal:** a production-grade system. Production grade here means:
 
 - strict TypeScript
