@@ -50,7 +50,7 @@ What is set up, and why. All of it was done over SSH, from a Windows laptop.
 | Firewall | macOS application firewall on | Nothing needs to come in: the tunnel and Tailscale are outbound-only |
 | Tailscale | The **Homebrew `tailscaled` system daemon** (`/Library/LaunchDaemons/com.tailscale.tailscaled.plist`), not the menu-bar app | The app's tunnel drops whenever the app is not running in a logged-in session. The daemon connects at boot, before any login. Key expiry is disabled for the Mac in the Tailscale admin console |
 | Docker | **Colima** (Homebrew `colima`, `docker`, `docker-compose`), 4 CPUs, 6 GB, 60 GB disk, under `foldback` | Installs and runs entirely from the command line, so no GUI step is needed on a machine far away. Started at login by `deploy/launchd/com.foldback.colima.plist` |
-| Tunnel client | Homebrew `cloudflared`, a locally managed tunnel run by a launch daemon at boot (see Cloudflare Tunnel) | Runs on the host, not as a container: only images from `ghcr.io/anujsaha0111` and the official `postgres:16` run on the Mac |
+| Tunnel client | Homebrew `cloudflared`, a locally managed tunnel run by a launch daemon at boot (see Cloudflare Tunnel) | Runs on the host, not as a container: only images from `ghcr.io/nishitvsp` and the official `postgres:16` run on the Mac |
 | Code | No git clone with credentials on the Mac | The repository is private, so files reach the Mac by `git archive | ssh`. Production needs only the `deploy/` folder, copied to `~foldback/foldback` |
 
 Gotcha: saving **System Settings → General → Sharing → Remote Login** rewrites the SSH allow-list from what that window shows, which drops `foldback`. Add Foldback there with **+**, or run `sudo dseditgroup -o edit -a foldback -t user com.apple.access_ssh`.
@@ -94,7 +94,7 @@ Templates: `backend/.env.example` (dev) and `deploy/env.production.example` (pro
 
 `backend/Dockerfile` is multi-stage (`build`, `prod-deps`, `runtime`). The runtime stage uses `node:24-bookworm-slim`, runs as the non-root `node` user under `tini`, has production dependencies only, and has a `HEALTHCHECK` on `/health/live`. The server runs `node dist/server.js`; the same image runs `node dist/cli/migrate.js migrate` and `node dist/cli/housekeeping.js`.
 
-CI builds it for `linux/arm64` (the Mac mini) and `linux/amd64`, and pushes `ghcr.io/anujsaha0111/foldback/backend` with two tags: `:latest` (newest `main`) and `:sha-<full commit>` (for pinning and rollback).
+CI builds it for `linux/arm64` (the Mac mini) and `linux/amd64`, and pushes `ghcr.io/nishitvsp/foldback/backend` with two tags: `:latest` (newest `main`) and `:sha-<full commit>` (for pinning and rollback).
 
 **The image** holds the compiled backend code (readable, with comments) and the schema, but no secrets: every secret enters at runtime through the env file. Never build a secret, key, or real URL into the image. The Mac pulls it with a **classic GitHub token from the Mac owner's account that has only the `read:packages` scope** (fine-grained tokens cannot read packages), set to expire within 90 days. It was entered once with `docker login ghcr.io` as `foldback`, and lives only in `~foldback/.docker/config.json` (mode 600). If it leaks, delete it on GitHub (Settings → Developer settings → Tokens (classic)) and log in again with a new one. The package can be made public (GitHub profile → Packages → `foldback/backend` → Package settings → Change visibility).
 
@@ -204,9 +204,9 @@ Runs on every pull request and on pushes to `main`:
 
 ### Renaming the repository
 
-CI publishes to the fixed name `ghcr.io/anujsaha0111/foldback/backend` (set in `ci.yml`), so a repository rename does not move the image. The first time this name is used, or whenever it changes:
+CI publishes to the fixed name `ghcr.io/nishitvsp/foldback/backend` (set in `ci.yml`), so a repository rename does not move the image. A transfer to another owner does: the CI token can only publish under the repository's owner, so change this name in `ci.yml`, `compose.yml` and `scripts/deploy.sh`. The first time this name is used, or whenever it changes:
 
-1. Set `BACKEND_IMAGE=ghcr.io/anujsaha0111/foldback/backend` in `~/foldback/.env`, and copy the new `compose.yml` and `scripts/` to `~/foldback`.
+1. Set `BACKEND_IMAGE=ghcr.io/nishitvsp/foldback/backend` in `~/foldback/.env`, and copy the new `compose.yml` and `scripts/` to `~/foldback`.
 2. Wait for CI on `main` to publish the image, then run `scripts/deploy.sh --force`. If the pull is refused, grant the Mac's token access in the package settings, or make the package public.
 3. Check that `curl -s https://api.<domain>/api/health` reports the newest `main` commit as `version`.
 4. Only then rename the repository, merge one small change, and check `version` again within ten minutes.
