@@ -167,7 +167,7 @@ const resume = process.argv[3] ? extractOrderId(process.argv[3]) : undefined;
 try {
   if (mode === "keep" || mode === "both") await keepPath(mode === "keep" ? resume : undefined);
   if (mode === "release" || mode === "both") await releasePath(mode === "release" ? resume : undefined);
-  console.log("\nDone. Copy the ids above into docs/spec/phases/00-spike.md (exit note). Do not paste any token.");
+  console.log("\nDone. Note the ids above. Do not paste any token.");
 } finally {
   rl.close();
 }

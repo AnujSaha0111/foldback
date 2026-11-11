@@ -1,6 +1,6 @@
 # Deploy and infrastructure
 
-The backend and its Postgres database run on **one Mac mini** (Apple M4) owned by a team member, under Docker Compose. The frontend runs on **Vercel**. Public traffic reaches the Mac through a **Cloudflare Tunnel**, so the home router opens no ports. Admin access is SSH over **Tailscale**. Everything is on free tiers and stays up through judging (1 to 15 December 2026).
+The backend and its Postgres database run on **one Mac mini** (Apple M4) owned by a team member, under Docker Compose. The frontend runs on **Vercel**. Public traffic reaches the Mac through a **Cloudflare Tunnel**, so the home router opens no ports. Admin access is SSH over **Tailscale**. Everything is on free tiers.
 
 The plan changed on 29 October 2026: the earlier Azure plan (VM, managed Postgres, Caddy, three student accounts) was dropped because the free cloud options did not work out.
 
@@ -35,7 +35,7 @@ The plan changed on 29 October 2026: the earlier Azure plan (VM, managed Postgre
 | Mac mini, its macOS admin account, the Tailscale network it is on, server operations | Manveer | The Mac also holds the owner's personal data, so the owner is the only operator (see Remote access) |
 | The domain, the Cloudflare account, the tunnel | Manveer | Creates the tunnel himself, so its token never leaves the Mac owner. Adds the DNS record Vercel asks for |
 | Vercel project | Nishit | His Hobby account, deployed from the CLI (`frontend/`), no Git integration |
-| GitHub repository and the ghcr.io package | Anuj | The package stays private until submission (see Docker image) |
+| GitHub repository and the ghcr.io package | Anuj | See Docker image |
 
 ## The Mac mini host
 
@@ -58,10 +58,10 @@ Gotcha: saving **System Settings → General → Sharing → Remote Login** rewr
 ## Remote access
 
 - **Owner only.** The Mac is reachable for administration only from the owner's own devices on the owner's Tailscale network, with SSH keys. Nobody else has an account, a key, or a Tailscale share. The team does not need one: merging to `main` deploys by itself (CI/CD below), and server problems go to the owner.
-- **Public traffic never uses Tailscale.** Users, PayPal returns, and judges reach only `api.<domain>`, through the Cloudflare Tunnel, which forwards to the backend on `127.0.0.1:8787` and nothing else. Postgres, SSH, and the rest of the Mac are not reachable through it.
+- **Public traffic never uses Tailscale.** Users and PayPal returns reach only `api.<domain>`, through the Cloudflare Tunnel, which forwards to the backend on `127.0.0.1:8787` and nothing else. Postgres, SSH, and the rest of the Mac are not reachable through it.
 - **No inbound ports.** Port 22 and the app are never forwarded on the home router.
 - **If another operator is ever needed:** share only the Mac in the Tailscale admin console (Machines → the Mac → Share; node sharing exposes that one machine), and append their SSH **public** key to `~foldback/.ssh/authorized_keys`. They get `foldback`, never admin.
-- The owner keeps a private operations runbook with hostnames and commands. It is never committed, because the repository is public at submission and the runbook names hosts and accounts.
+- The owner keeps a private operations runbook with hostnames and commands. It is never committed, because the repository is public and the runbook names hosts and accounts.
 
 ## Environment variables (backend)
 
@@ -96,7 +96,7 @@ Templates: `backend/.env.example` (dev) and `deploy/env.production.example` (pro
 
 CI builds it for `linux/arm64` (the Mac mini) and `linux/amd64`, and pushes `ghcr.io/anujsaha0111/foldback/backend` with two tags: `:latest` (newest `main`) and `:sha-<full commit>` (for pinning and rollback).
 
-**The image stays private until submission.** It holds the compiled backend code (readable, with comments) and the schema, but no secrets: every secret enters at runtime through the env file. Never build a secret, key, or real URL into the image. The Mac pulls it with a **classic GitHub token from the Mac owner's account that has only the `read:packages` scope** (fine-grained tokens cannot read packages), set to expire after judging. It was entered once with `docker login ghcr.io` as `foldback`, and lives only in `~foldback/.docker/config.json` (mode 600). If it leaks, delete it on GitHub (Settings → Developer settings → Tokens (classic)) and log in again with a new one. At submission the repository becomes public, as the rules require; the package can be made public then (GitHub profile → Packages → `foldback/backend` → Package settings → Change visibility).
+**The image** holds the compiled backend code (readable, with comments) and the schema, but no secrets: every secret enters at runtime through the env file. Never build a secret, key, or real URL into the image. The Mac pulls it with a **classic GitHub token from the Mac owner's account that has only the `read:packages` scope** (fine-grained tokens cannot read packages), set to expire within 90 days. It was entered once with `docker login ghcr.io` as `foldback`, and lives only in `~foldback/.docker/config.json` (mode 600). If it leaks, delete it on GitHub (Settings → Developer settings → Tokens (classic)) and log in again with a new one. The package can be made public (GitHub profile → Packages → `foldback/backend` → Package settings → Change visibility).
 
 Only CI-built images reach production. Never `docker build` on the Mac for production.
 
@@ -198,7 +198,7 @@ Runs on every pull request and on pushes to `main`:
 3. **image** (after 1 and 2): builds the backend image and checks that its modules load. On pushes to `main` it publishes `linux/amd64` and `linux/arm64` to ghcr.io.
 4. **frontend** (phase 5): every `quality.md` §7 gate plus Lighthouse CI. A later job deploys the frontend with the Vercel CLI (see Frontend on Vercel).
 
-**Deploys are pull-based.** There is no deploy job and no self-hosted runner: the repository is public at submission, and a self-hosted runner on a public repository can run a stranger's pull request on the Mac. The Mac's `com.foldback.deploy` job pulls each new `:latest` within five minutes.
+**Deploys are pull-based.** There is no deploy job and no self-hosted runner: the repository is public, and a self-hosted runner on a public repository can run a stranger's pull request on the Mac. The Mac's `com.foldback.deploy` job pulls each new `:latest` within five minutes.
 
 `.github/dependabot.yml` opens weekly updates for `backend/` (npm and its Docker base image) and GitHub Actions.
 
@@ -222,8 +222,8 @@ CI publishes to the fixed name `ghcr.io/anujsaha0111/foldback/backend` (set in `
 - **Kill switches:** set `AI_ENABLED=false` or `SIGNUPS_ENABLED=false` in `.env`, then `docker compose up -d backend`
 - **After a power cut:** the Mac restarts, auto-logs in as `foldback`, Colima and the stack start, Tailscale and the tunnel reconnect. Check with `docker compose ps` and the smoke test
 - **macOS updates:** never remotely. Do them with someone at home on the line, at a quiet time, and tell the team. Turn off automatic installation of macOS updates (System Settings → General → Software Update → Automatic Updates) so a surprise restart cannot take the demo down
-- **Backups:** verify one restore into a scratch database before submission (phase 9)
+- **Backups:** verify one restore into a scratch database before going live
 
 ## Limits and fallback
 
-A home machine is less reliable than a cloud server: power, home internet, and reboots. The demo video is recorded before the deadline, because the video is the judging artifact if the Mac is offline during judging. If the Mac fails for good, the latest dump restores into any Postgres 16 (for example a free Neon database) and the same image runs on any Docker host; only `.env` and the tunnel's target change.
+A home machine is less reliable than a cloud server: power, home internet, and reboots. The demo video is recorded before the deadline, because the video shows the product if the Mac is offline. If the Mac fails for good, the latest dump restores into any Postgres 16 (for example a free Neon database) and the same image runs on any Docker host; only `.env` and the tunnel's target change.

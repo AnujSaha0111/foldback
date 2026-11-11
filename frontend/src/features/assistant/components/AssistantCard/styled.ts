@@ -29,7 +29,7 @@ export const Turn = styled("li")({
   "&[data-role='system']": { color: "var(--text-2)", fontSize: "var(--fs-small)" },
 });
 
-/** The muted line under a reply for each tool the assistant used, so judges can see it working. */
+/** The muted line under a reply for each tool the assistant used, so the organizer can see it working. */
 export const ToolLine = styled("small")({ color: "var(--text-2)", fontSize: "var(--fs-small)" });
 
 export const Card = styled("div")({
