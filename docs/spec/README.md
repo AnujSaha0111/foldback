@@ -4,9 +4,8 @@
 
 Foldback collects equal shares for a group plan through PayPal. Each share is placed on hold (a PayPal authorization) instead of being charged. If the confirmed headcount is met by the deadline, Foldback captures every hold. If it is not, Foldback voids every hold, so no money leaves anyone's account.
 
-Timeline: hard deadline Thursday 12 November 2026, 12:00 Pacific. Target submission 11 November. Judging runs 1 to 15 December 2026.
 
-**Two goals, equal weight:** a strong submission, and a production-grade system. Production grade here means:
+**The goal:** a production-grade system. Production grade here means:
 
 - strict TypeScript
 - a constraint-heavy Postgres schema
@@ -17,11 +16,11 @@ Timeline: hard deadline Thursday 12 November 2026, 12:00 Pacific. Target submiss
 - Docker images
 - HTTPS on a real, always-on server
 
-Most demo projects skip these, and judges notice.
+Most demo projects skip these.
 
 - **PayPal:** sandbox Orders v2 with `intent: AUTHORIZE`, then Payments v2 authorizations (capture, void, get).
 - **AI:** free hosted models, DeepSeek (`deepseek-flash`, $2 prepaid) first, then free Groq (`gpt-oss-120b`) and Gemini Flash-Lite as fallbacks, read a pasted group chat into a fixed schema. An organizer agent answers questions, simulates outcomes, drafts reminders, and proposes clock moves. The model never sets amounts and never calls PayPal.
-- **Sponsor tool:** Bryntum Scheduler (we compete for Best Use of Bryntum).
+- **Board:** Bryntum Scheduler.
 - **Hosting:** a team member's Mac mini runs the backend and Postgres under Docker Compose, reached through a Cloudflare Tunnel at `api.<domain>`. The frontend is on Vercel at `app.<domain>`. See `deploy.md`.
 
 ## Read order
@@ -29,12 +28,10 @@ Most demo projects skip these, and judges notice.
 1. `README.md` (this file)
 2. `quality.md`
 3. `product.md`
-4. `phases/NN-*.md` for the active phase
-5. The contract files that phase lists
+4. The contract files for the area you work on
 
 | File | What it freezes |
 |---|---|
-| `plan.md` | Phase order, dates, hour budget, stop rules |
 | `architecture.md` | Stack, repo layout, layering, money state machine, security, observability |
 | `data-model.md` | Postgres schema, constraints, migrations, seeds |
 | `api.md` | HTTP routes, auth, Socket.IO events |
@@ -44,54 +41,34 @@ Most demo projects skip these, and judges notice.
 | `ui.md` | Screens, flows, copy (visual design is settled in phase 2) |
 | `test.md` | Jest suites and manual negatives |
 | `deploy.md` | Mac mini host, Docker image, Compose, Cloudflare Tunnel, Vercel, scripts, launchd jobs, CI/CD, operations |
-| `demo.md` | Chat fixtures, sandbox prep, video, judge path, Devpost text |
-| `quality.md` | **Permanent** rules for AI-assisted building: workflow, code rules, approved dependencies, performance budgets, security checklist, CI gates |
-
-## Active phase
-
-Start at [phases/00-spike.md](phases/00-spike.md).
-
-| Phase | File | Status |
-|---|---|---|
-| 0 Spike | `phases/00-spike.md` | done |
-| 1 Database design | `phases/01-database-design.md` | done |
-| 2 UI design | `phases/02-ui-design.md` | done |
-| 3 Backend foundation | `phases/03-backend-foundation.md` | done |
-| 4 Rule reader | `phases/04-rule-reader.md` | done |
-| 5 Frontend and board | `phases/05-frontend-and-board.md` | in progress: 5a and 5b done, 5c plans and rule screen in review |
-| 6 Pay link and hold | `phases/06-pay-and-hold.md` | blocked on 4 and 5 |
-| 7 Resolve: keep or release | `phases/07-resolve.md` | blocked on 6 |
-| 8 Organizer agent | `phases/08-agent.md` | blocked on 7 |
-| 9 Ship and judge pack | `phases/09-ship.md` | blocked on 8 |
+| `demo.md` | Chat fixtures, sandbox prep, video, try-it path |
+| `quality.md` | **Permanent** quality rules: workflow, code rules, approved dependencies, performance budgets, security checklist, CI gates |
 
 ## Build rules
 
-- **`quality.md` applies to every phase.** Each phase exit check includes its Quality gate: no duplication, no dead code, approved dependencies only, performance budgets, security checklist, and green CI.
-- Implement the active phase and stop at its exit check. Mark it done in `plan.md` and in the table above.
-- Do not add features, tables, routes, screens, or sponsor tools that this spec does not name.
+- **`quality.md` applies to every change.** Every change passes its Quality gate: no duplication, no dead code, approved dependencies only, performance budgets, security checklist, and green CI.
+- Do not add features, tables, routes, screens, or third-party tools that this spec does not name.
 - Server code owns amounts, headcount, deadlines, authorize, capture, and void. The browser and the model do not.
 - The keep-or-release decision is deterministic code (`services/resolve`, which calls the pure `domain/decide`). The agent can simulate or propose. It cannot decide.
 - A `sample` row is not a PayPal payment. Never show a made-up PayPal id as verified.
 - A missing or ambiguous PayPal response means an `*_unknown` status and stop. Never send a second order, capture, or void to "finish the demo."
 - Constraints live in the schema. If code and a constraint disagree, the constraint wins and the code is wrong.
 - One feature means one service, one repository, and one route file in the backend, plus one feature folder in the frontend. Docs are updated in the same change.
-- `yarn typecheck`, `yarn lint`, and `yarn test` pass in both packages before a phase is marked done. CI enforces it.
+- `yarn typecheck`, `yarn lint`, and `yarn test` pass in both packages before a change merges. CI enforces it.
 - Never print or commit secrets. Keep Bryntum source and license keys out of git.
-- MIT license. No AI tool attribution in commits, PR text, code comments, or docs.
-- When a contract file and a phase file disagree, the contract file wins. Stop and ask.
+- MIT license.
 
 ## Repository layout
 
 ```text
 foldback/
-  README.md                  judge-facing (final version in phase 9)
-  LICENSE                    MIT (phase 9)
+  README.md                  project guide
+  LICENSE                    MIT
   .github/workflows/ci.yml
   docs/spec/                 this spec
   backend/                   Express 5 API + Socket.IO + Postgres (own package.json and yarn.lock)
   frontend/                  Next.js 16 app (own package.json and yarn.lock)
   deploy/                    compose files, env template, scripts, launchd jobs
-  learn/                     numbered study notes, gitignored, never pushed
 ```
 
 ## One-sentence pitch

@@ -71,7 +71,7 @@ corepack yarn dup
 corepack yarn test
 ```
 
-CI runs the same gates plus the build, the shared-types check, a secret scan, and a dependency audit. Bundle budgets arrive with the frontend. The pre-commit hook (installed by `corepack yarn hooks`) already runs Prettier, ESLint, and typecheck on what you stage, and rejects a commit message that carries an AI attribution line. The rules are in [quality.md](spec/quality.md). The short version:
+CI runs the same gates plus the build, the shared-types check, a secret scan, and a dependency audit. Bundle budgets arrive with the frontend. The pre-commit hook (installed by `corepack yarn hooks`) already runs Prettier, ESLint, and typecheck on what you stage, and rejects a commit message that carries a co-author or generator trailer. The rules are in [quality.md](spec/quality.md). The short version:
 
 - Search the code before writing a new function, type, or component. Reuse it.
 - Never edit a migration that is already merged. Add `NNNN_name.sql`.

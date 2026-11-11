@@ -36,7 +36,7 @@ export function AuthForm({
   const finish = useFinishAuth();
   const [leaving, leave] = useTransition();
   const working = busy || leaving;
-  // A visitor whose session is still good goes straight on instead of signing in again. The API is the judge.
+  // A visitor whose session is still good goes straight on instead of signing in again. The API decides.
   const { data: me } = useGetMeQuery();
   const sent = useRef(false);
   useEffect(() => {

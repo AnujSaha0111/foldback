@@ -1,5 +1,5 @@
-# Project rule: no AI attribution in commit messages.
-if grep -qiE '^co-authored-by:.*(claude|anthropic|openai|chatgpt|copilot|gemini|cursor)|generated (with|by) .*(claude|chatgpt|copilot|gemini)' "$1"; then
-  echo "Commit rejected: remove the AI attribution line from the message." >&2
+# Project rule: no co-author or generator trailers in commit messages.
+if grep -qiE '^co-authored-by:|^generated (with|by) ' "$1"; then
+  echo "Commit rejected: remove the Co-authored-by or Generated line from the message." >&2
   exit 1
 fi

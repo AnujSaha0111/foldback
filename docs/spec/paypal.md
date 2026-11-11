@@ -30,7 +30,7 @@ Flow: create an order with `intent: AUTHORIZE` → buyer approves in PayPal → 
 
 Server, auth, and observability variables (`NODE_ENV`, `JWT_SECRET`, `CORS_ORIGINS`, `TRUST_PROXY`, `LOG_LEVEL`, `METRICS_TOKEN`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `SIGNUPS_ENABLED`) are listed in `deploy.md`. `backend/.env.example` and `deploy/env.production.example` list every key with empty secrets. All are parsed by the zod env module, so a missing or invalid value stops boot with a clear message. `.env` files are gitignored.
 
-In the PayPal developer dashboard, use the default sandbox accounts or create two: a **business** account (merchant; the REST app belongs to it) and a **personal** account (buyer). The buyer logs in inside the PayPal window. The README gives judges the personal sandbox login, which is test-only data.
+In the PayPal developer dashboard, use the default sandbox accounts or create two: a **business** account (merchant; the REST app belongs to it) and a **personal** account (buyer). The buyer logs in inside the PayPal window. The README gives visitors the personal sandbox login, which is test-only data.
 
 ## OAuth
 

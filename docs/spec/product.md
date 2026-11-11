@@ -2,7 +2,7 @@
 
 ## Name
 
-**Foldback.** Use this name everywhere: UI title, repository, video, and Devpost text. The working name "Quorum" is retired because it is generic.
+**Foldback.** Use this name everywhere: UI title, repository, video, and every description. The working name "Quorum" is retired because it is generic.
 
 ## Pitch
 
@@ -10,7 +10,7 @@
 
 An organizer pastes the group chat where the plan was agreed. Foldback reads out the terms (who, how much, by when, and at most one person allowed to pay late), the organizer confirms them, and each friend gets a pay link. Each payment is a PayPal hold, not a charge. If everyone pays by the deadline, Foldback captures every hold. If not, it voids every hold and nobody is charged.
 
-Thirty-second version, for the video and the Devpost opener:
+Thirty-second version, for the video and the pitch:
 
 "Group plans die in the group chat. Someone fronts the money, chases payments for a week, and when the plan falls through, they're stuck refunding people. Foldback reads the chat, turns the plan into confirmed terms, and sends every friend a PayPal link that holds their share instead of charging it. A Bryntum schedule shows who is held and who is still waiting. If the whole group pays by the deadline, Foldback captures every hold. If it doesn't, Foldback releases them, so nobody pays for a plan that didn't happen. An AI agent helps the organizer chase people and see what happens next, but code makes the money decision."
 
@@ -73,7 +73,7 @@ The decision is final once it is made. Code records `direction` (`keep` or `rele
 - Every payer owes the same share. `total_cents` must equal `headcount * share_cents`.
 - At most one grace person, with one grace deadline.
 - Seeded contracts use `America/Los_Angeles`.
-- The engine uses each contract's `demo_now`, not the wall clock, so a judge can move Friday to Monday without waiting.
+- The engine uses each contract's `demo_now`, not the wall clock, so a visitor can move Friday to Monday without waiting.
 - A contract is either entirely `sample` (seeded, no PayPal ids) or entirely `sandbox` (real PayPal calls). They are never mixed.
 - PayPal authorizations are valid for up to 29 days, and capture is most reliable within the 3-day honor period. The product targets short-deadline plans. Reauthorization is out of scope, and the README says so.
 
@@ -88,7 +88,7 @@ Do not build any of these, even if a phase finishes early:
 - More than one grace person
 - Sending email, SMS, or WhatsApp. The agent drafts text; the organizer copies it.
 - A mobile app, native wrapper, or analytics product
-- Any sponsor tool besides Bryntum
+- Any third-party tool besides Bryntum
 - "The money is safe with Foldback" copy, escrow claims, or legal advice
 - Predictive models, payer ranking, or partial captures
 - Editing a rule after confirmation. The organizer resets the demo or creates a new contract.
@@ -97,8 +97,8 @@ Do not build any of these, even if a phase finishes early:
 
 - Foldback is not escrow, a bank, or a money transmitter. It is a sandbox prototype that places and resolves PayPal authorizations under a confirmed rule.
 - A sample row is not a payment. Copy must say "Sample" unless `money_source` is `sandbox` and a PayPal id returned by PayPal is stored.
-- No invented revenue, user counts, or survey numbers. If we cite a public fact (for example, that PayPal retired Money Pools in 2021), the Devpost text links the source, or we drop the claim.
-- We will not claim the Bryntum trial lasts through judging until Bryntum replies yes. See `scheduler.md`.
+- No invented revenue, user counts, or survey numbers. If we cite a public fact (for example, that PayPal retired Money Pools in 2021), the text links the source, or we drop the claim.
+- We will not claim the Bryntum trial lasts longer than Bryntum confirms. See `scheduler.md`.
 
 ## Organizer control
 
@@ -108,9 +108,9 @@ Reset deletes local rows. It does not void holds that already exist in PayPal. `
 
 ## Success criteria
 
-Judges score five equally weighted criteria. Each one maps to something the build must show:
+Each one maps to something the build must show:
 
-| Criterion | What earns it |
+| Criterion | What shows it |
 |---|---|
 | Technological implementation | Authorize, capture, and void with idempotency and unknown-outcome handling. LLM structured outputs plus a tool-using agent with guardrails. A production-grade system: a constraint-enforced Postgres schema, auth, rate limits, observability, CI, and Docker on a real VM. |
 | Design | One coherent flow: chat paste, confirm, pay links, board, outcome. A real payer page, not an organizer clicking for everyone. |
@@ -118,4 +118,4 @@ Judges score five equally weighted criteria. Each one maps to something the buil
 | Innovation | An all-or-nothing group hold on PayPal, read from chat, run by an agent that cannot touch the money. |
 | Presentation | A video under 3 minutes with one live PayPal approval, both outcomes, and readable ids. A hosted HTTPS URL with a one-click guest workspace. |
 
-A judge who never opens the code can watch the video and see: a chat, the extracted terms, a pay link, a live PayPal hold, the agent answering "what if Maya doesn't pay?", a capture wave (Kept), and a void wave (Released).
+Someone who never opens the code can watch the video and see: a chat, the extracted terms, a pay link, a live PayPal hold, the agent answering "what if Maya doesn't pay?", a capture wave (Kept), and a void wave (Released).
