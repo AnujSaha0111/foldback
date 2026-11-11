@@ -5,6 +5,7 @@ import { newId } from "../db/ids";
 import { withTransaction } from "../db/tx";
 import { AppError } from "../http/errors";
 import {
+  countRecentGuests,
   findCredentialsByEmail,
   insertGuest,
   insertMember,
@@ -13,6 +14,7 @@ import {
 import type { User } from "../repositories/users.repo";
 import { hashPassword, verifyPassword } from "./password";
 import { seedUser } from "./seed.service";
+import { MAX_GUESTS_PER_DAY } from "../shared/rules";
 import { signSession } from "./token";
 
 const GUEST_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -63,6 +65,11 @@ export async function login(
 }
 
 export async function createGuest(pool: Pool, env: Env): Promise<AuthResult> {
+  if ((await countRecentGuests(pool)) >= MAX_GUESTS_PER_DAY) {
+    throw new AppError("rate_limited", "The demo is busy right now. Try again in an hour.", undefined, {
+      "Retry-After": "3600",
+    });
+  }
   const user = await withTransaction(pool, async (client) => {
     const guest = await insertGuest(client, {
       id: newId("usr"),
