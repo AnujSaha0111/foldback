@@ -2,7 +2,7 @@ import { when } from "../domain/reason";
 import { AppError } from "../http/errors";
 import { AGENT_SYSTEM_PROMPT, agentContext } from "../integrations/llm/agentPrompt";
 import { runAgent } from "../integrations/llm/agentRunner";
-import { hasUsableModel } from "../integrations/llm/client";
+import { budgetedDeps, hasUsableModel } from "../integrations/llm/client";
 import type { ChatMessage } from "../integrations/llm/client";
 import { findOwned } from "../repositories/contracts.repo";
 import { hasEvent, listRecent } from "../repositories/events.repo";
@@ -67,13 +67,7 @@ export async function askAgent(
   });
   const { tools, collected } = agentTools(facts, deps.env);
   const result = await runAgent(
-    {
-      env: deps.env,
-      logger: deps.logger,
-      allow: () => deps.budget.allow(),
-      record: (attempt) => deps.budget.record(context, attempt),
-      ...(deps.llmFetch ? { fetch: deps.llmFetch } : {}),
-    },
+    budgetedDeps(deps, context),
     `${AGENT_SYSTEM_PROMPT}\n\n${live}`,
     conversation,
     tools,

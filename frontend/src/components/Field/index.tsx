@@ -19,42 +19,48 @@ function useFieldIds(help: ReactNode) {
   return { id, helpId, describedBy: help ? helpId : undefined };
 }
 
-export function Field({ label, help, type, ...input }: FieldProps) {
-  const { id, helpId, describedBy } = useFieldIds(help);
-  const [shown, setShown] = useState(false);
-  const password = type === "password";
+type FrameProps = LabelProps & { ids: ReturnType<typeof useFieldIds>; children: ReactNode };
+
+/** The label, the control and its helper, the same for every field. */
+function Frame({ label, help, ids, children }: FrameProps) {
   return (
     <Root>
-      <Label htmlFor={id}>{label}</Label>
-      <Control>
-        <Input
-          id={id}
-          type={password && shown ? "text" : type}
-          aria-describedby={describedBy}
-          data-reveal={password || undefined}
-          {...input}
-        />
-        {password ? (
-          <Reveal type="button" aria-controls={id} onClick={() => setShown(!shown)}>
-            {shown ? "Hide" : "Show"}
-            <span className="sr-only"> password</span>
-          </Reveal>
-        ) : null}
-      </Control>
-      {help ? <Help id={helpId}>{help}</Help> : null}
+      <Label htmlFor={ids.id}>{label}</Label>
+      <Control>{children}</Control>
+      {help ? <Help id={ids.helpId}>{help}</Help> : null}
     </Root>
   );
 }
 
-export function TextAreaField({ label, help, ...area }: TextAreaFieldProps) {
-  const { id, helpId, describedBy } = useFieldIds(help);
+export function Field({ label, help, type, ...input }: FieldProps) {
+  const ids = useFieldIds(help);
+  const { id, describedBy } = ids;
+  const [shown, setShown] = useState(false);
+  const password = type === "password";
   return (
-    <Root>
-      <Label htmlFor={id}>{label}</Label>
-      <Control>
-        <Area id={id} aria-describedby={describedBy} {...area} />
-      </Control>
-      {help ? <Help id={helpId}>{help}</Help> : null}
-    </Root>
+    <Frame label={label} help={help} ids={ids}>
+      <Input
+        id={id}
+        type={password && shown ? "text" : type}
+        aria-describedby={describedBy}
+        data-reveal={password || undefined}
+        {...input}
+      />
+      {password ? (
+        <Reveal type="button" aria-controls={id} onClick={() => setShown(!shown)}>
+          {shown ? "Hide" : "Show"}
+          <span className="sr-only"> password</span>
+        </Reveal>
+      ) : null}
+    </Frame>
+  );
+}
+
+export function TextAreaField({ label, help, ...area }: TextAreaFieldProps) {
+  const ids = useFieldIds(help);
+  return (
+    <Frame label={label} help={help} ids={ids}>
+      <Area id={ids.id} aria-describedby={ids.describedBy} {...area} />
+    </Frame>
   );
 }

@@ -165,7 +165,7 @@ interface Ending {
   read: { request: PayPalRequest; result: OperationResult } | null;
   /** The order can never succeed, so the friend needs a new one. */
   orderDead?: boolean;
-  /** PayPal turned the call away unprocessed (401, 408, 429): not a refusal, the friend can simply retry. */
+  /** PayPal turned the call away unprocessed (401, 408, 429): not a refusal, so the friend can retry. */
   busy?: boolean;
 }
 

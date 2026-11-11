@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ExtractionSchema } from "../../domain/extraction";
 import { describeInstant, isoInZone } from "../../domain/time";
 import { DEFAULT_TIMEZONE } from "../../shared/rules";
+import { parseJsonReply } from "./client";
 import type { ChatMessage } from "./client";
 
 /** The rule reader's instructions. Word for word from docs/spec/ai.md, so the prompt and the spec cannot drift. */
@@ -95,10 +96,5 @@ export function buildExtractionMessages(ruleText: string, referenceAt: Date): Ch
 
 /** Parses a model's reply with the same schema the prompt asked for. Null when it is not valid JSON of that shape. */
 export function parseExtractionReply(content: string): z.infer<typeof ExtractionSchema> | null {
-  try {
-    const parsed = ExtractionSchema.safeParse(JSON.parse(content));
-    return parsed.success ? parsed.data : null;
-  } catch {
-    return null;
-  }
+  return parseJsonReply(ExtractionSchema, content);
 }

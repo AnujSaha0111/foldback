@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import { Meter as BaseMeter } from "@/components/Meter/styled";
 import { HOVER } from "@/theme/media";
 import { Mono } from "@/components/Money/styled";
 
@@ -150,18 +151,9 @@ export const ToGo = styled("span")({
   fontWeight: 600,
 });
 
-export const Meter = styled("div")({
+export const Meter = styled(BaseMeter)({
   gridColumn: "1 / -1",
   flexBasis: "100%",
-  height: "4px",
   marginTop: "var(--s-2)",
   background: "rgba(1, 33, 105, 0.08)",
-  "& > i": {
-    display: "block",
-    height: "100%",
-    background: "var(--blue)",
-    transformOrigin: "0 50%",
-    transform: "scaleX(var(--v))",
-    transition: "transform var(--d-5) var(--ease-out-quart)",
-  },
 });
