@@ -31,7 +31,7 @@ export const reasons = {
   voidRefused: (name: string) => `PayPal refused to release ${name}'s hold, so Foldback paused.`,
 
   unreachable: (name: string) =>
-    `Foldback could not reach PayPal for ${name}, so it paused. Nothing was sent. Resolve again to retry.`,
+    `Foldback got no answer it could act on from PayPal for ${name}, so it paused. Nothing was taken. Resolve again to retry.`,
 
   clockMoved: (to: Date, zone: string) => `The demo clock moved to ${when(to, zone)}.`,
 };

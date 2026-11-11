@@ -31,11 +31,12 @@ interface Reply {
   response: unknown;
 }
 
+/** `processed` is false when PayPal never acted on the request, so the same key can be sent again (paypal.md). */
+type Refused = { outcome: "failed"; name: string | null; issue: string | null; processed: boolean };
+
 /** Every call ends as one of these, and none of them throws (docs/spec/paypal.md, "Common request rules"). */
 export type PayPalResult<T> =
-  | (Reply & { outcome: "completed"; value: T })
-  | (Reply & { outcome: "failed"; name: string | null; issue: string | null })
-  | (Reply & { outcome: "unknown" });
+  (Reply & { outcome: "completed"; value: T }) | (Reply & Refused) | (Reply & { outcome: "unknown" });
 
 export interface PayPalDeps {
   env: Env;
@@ -206,6 +207,9 @@ function firstIssue(body: Record<string, unknown>): string | null {
   return typeof issue === "string" ? issue : null;
 }
 
+/** PayPal turned these away before acting on them (auth, timeout, rate limit), so nothing happened. */
+const NOT_PROCESSED = new Set([401, 408, 429]);
+
 /**
  * Sorts one HTTP reply. A 4xx with a JSON body is a definite failure, with one exception: an earlier request with this
  * key is still running, so PayPal has not said how it ended. The issue is checked as well as the name, because that
@@ -227,12 +231,13 @@ function classify(status: number, debugId: string | null, text: string): PayPalR
   const stillRunning = body["name"] === "RESOURCE_CONFLICT" || issue === "PREVIOUS_REQUEST_IN_PROGRESS";
   if (status < 400 || status >= 500 || stillRunning) return { ...reply, outcome: "unknown" };
   const name = typeof body["name"] === "string" ? body["name"] : null;
-  return { ...reply, outcome: "failed", name, issue };
+  return { ...reply, outcome: "failed", name, issue, processed: !NOT_PROCESSED.has(status) };
 }
 
 /** Nothing reached PayPal, so this is a definite failure however it came about. */
 function notSent(name: string): PayPalResult<never> {
-  return { outcome: "failed", status: null, debugId: null, response: { error: name }, name, issue: null };
+  const nothing = { status: null, debugId: null, response: { error: name } };
+  return { ...nothing, outcome: "failed", name, issue: null, processed: false };
 }
 
 /** What a completed reply turned out to mean: a value, a refusal in a 2xx body, or (null) nothing we can rely on. */
@@ -250,7 +255,8 @@ function read<T, U>(
   const reading = parsed.success ? interpret(parsed.data) : null;
   if (reading === null) return { status, debugId, response, outcome: "unknown" };
   if ("issue" in reading) {
-    return { status, debugId, response, outcome: "failed", name: null, issue: reading.issue };
+    const reply = { status, debugId, response };
+    return { ...reply, outcome: "failed", name: null, issue: reading.issue, processed: true };
   }
   return { status, debugId, response, outcome: "completed", value: reading.value };
 }

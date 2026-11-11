@@ -213,7 +213,7 @@ Stores `demo_now`, writes `clock_moved`, runs resolve, and returns `ContractRead
 
 `POST /api/contracts/:id/resolve`, no body. Runs the same function as the clock route without changing `demo_now`. Used by the Resolve button, agent proposals, and tests. Response: `ContractRead`, or the 409 codes in `architecture.md`.
 
-`503 paypal_disabled` when a wave would call PayPal while `PAYPAL_WRITES_ENABLED=false`: nothing is sent. A call that never reached PayPal (no token, for example) puts the share back to `held`, pauses the plan, and answers `502 paypal_failed`. It is never recorded as a refusal, and the next resolve retries with the same key. A void PayPal refuses also answers `502 paypal_failed`.
+`503 paypal_disabled` when a wave would call PayPal while `PAYPAL_WRITES_ENABLED=false`: nothing is sent. A call that never reached PayPal (no token, for example), or that PayPal turned away unprocessed (401, 408, 429), puts the share back to `held`, pauses the plan, and answers `502 paypal_failed`. It is never recorded as a refusal, and the next resolve retries with the same key. A void PayPal refuses also answers `502 paypal_failed`.
 
 ## Scheduler projection
 
