@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { errorCode } from "@/api/baseApi";
 import { useCheckoutMutation, useGetShareQuery, useSyncMutation } from "@/api/sharesApi";
 import { Badge } from "@/components/Badge";
@@ -36,6 +37,7 @@ import {
   Panel,
   Row,
   Who,
+  WithMark,
 } from "./styled";
 
 interface PayScreenProps {
@@ -165,6 +167,23 @@ function Share({ share, paypalReturn, cancelled }: ShareProps) {
   );
 }
 
+/**
+ * The label with PayPal's own wordmark in place of its last word, "PayPal". The image's alt text keeps the button's
+ * name the same for screen readers ("Hold my share with PayPal").
+ */
+function withPayPalMark(label: string): ReactNode {
+  const lead = label.replace(/PayPal$/, "");
+  if (lead === label) return label;
+  return (
+    <WithMark>
+      {lead}
+      {/* PayPal's wordmark, unmodified, from its brand CDN (ui.md, PayPal). next/image adds nothing for an SVG. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/paypal-color.svg" alt="PayPal" width={71} height={20} />
+    </WithMark>
+  );
+}
+
 interface HoldButtonProps {
   shareId: string;
   action: NonNullable<PayView["action"]>;
@@ -198,7 +217,7 @@ function HoldButton({ shareId, action }: HoldButtonProps) {
   return (
     <>
       <Button variant="sun" block loading={isLoading || syncing || leaving} onClick={() => void hold()}>
-        {action.label}
+        {withPayPalMark(action.label)}
       </Button>
       <Help>{action.help}</Help>
       {data?.outcome === "unknown" ? <Help>{UNCLEAR_RESULT}</Help> : null}

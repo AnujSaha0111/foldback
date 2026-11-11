@@ -88,4 +88,12 @@ export const Help = styled("p")({
   color: "var(--text-2)",
 });
 
+/** The button's words and PayPal's wordmark, which keeps its own colours and sits on the text's line. */
+export const WithMark = styled("span")({
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "0.3em",
+  "& img": { display: "block", width: "auto", height: "1.25em" },
+});
+
 export const HoldId = styled(Help)({ fontFamily: "var(--font-mono)", overflowWrap: "anywhere" });
