@@ -160,7 +160,7 @@ Assert the URL, method, and `PayPal-Request-Id` of every mocked call.
 
 Each case sets low limits through env.
 
-- L1 `paid model refused at boot`: `LLM_CHAIN=openrouter:anthropic/claude-3.5-sonnet` (not free) → the env parser throws.
+- L1 `paid model refused at boot`: `LLM_CHAIN=openrouter:openai/gpt-4o` (not free) → the env parser throws.
 - L2 `per-user AI limit`: the third create within a minute → 429 `rate_limited` with `Retry-After`. The stub was called twice.
 - L3 `daily budget stops calls`: today's attempts are at the call cap → 503 `ai_budget_exhausted`, and the stub is not called. Reads still return 200.
 - L4 `reset does not refill the budget`.
@@ -183,4 +183,4 @@ Each case sets low limits through env.
 
 ## Done
 
-Every automated case passes in CI on the commit submitted to Devpost.
+Every automated case passes in CI on the released commit.

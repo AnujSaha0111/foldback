@@ -1,35 +1,24 @@
-# Quality rules for AI-assisted building
+# Quality rules
 
-Foldback is built with heavy AI assistance. Published research is consistent about what goes wrong when AI-written code is accepted without structure, so these rules are **permanent**. They apply to planning, building, and deploying, in every phase. Every phase exit check implicitly includes the [Quality gate](#quality-gate) at the bottom of this file.
-
-## What goes wrong, and the evidence
-
-| Problem | Evidence | Our counter |
-|---|---|---|
-| **Duplicated code instead of reuse** | GitClear's 2026 study: copy/pasted lines rose to 15.7% of changes while refactored ("moved") lines fell to 3.8%, so developers are now ~5× likelier to add redundant code than to reuse it ([GitClear](https://www.gitclear.com/the_ai_code_quality_maintainability_gap)). Builder.io cites an 8-fold increase in duplication ([Builder.io](https://www.builder.io/m/explainers/vibe-coding-limitations)). | "Search before you write" rule, `jscpd` gate, shared modules |
-| **Dead code and unused dependencies** | Each prompt starts fresh, so old helpers are forgotten while new ones get added. | `knip` gate |
-| **More bugs and security holes** | CodeRabbit: ~1.7× more issues and up to 2.74× more XSS in AI-co-authored PRs ([Vonage summary](https://developer.vonage.com/en/blog/beyond-vibe-coding-best-practices-2026)). Veracode: 45% of AI coding tasks introduced a vulnerability ([CSA](https://labs.cloudsecurityalliance.org/research/csa-research-note-ai-generated-code-security-vibe-coding-202/)). Escape.tech: 65% of 1,400 vibe-coded apps had security issues, including 400+ exposed secrets (same source). | Security checklist, CodeQL, gitleaks, authorization tests, a second-review pass on money and auth diffs |
-| **Hallucinated packages ("slopsquatting")** | ~20% of 576,000 AI code samples recommended packages that don't exist, and 43% of those names recur every time, so attackers pre-register them ([CSA](https://labs.cloudsecurityalliance.org/research/csa-research-note-slopsquatting-ai-supply-chain-20260419-csa/)). | Approved-dependency list; every new package is verified and approved by a human |
-| **Heavy, unoptimized frontends** | The number at the bottom of DevTools → Network ("transferred / resources") balloons with barrel imports, unsplit heavy libraries, and unused UI kits. One MUI case went from 5 MB to 878 KB just by fixing imports ([developerway](https://www.developerway.com/posts/bundle-size-investigation)). | Performance budgets enforced by Lighthouse CI; lazy-loaded heavy code |
-| **Code nobody understands** | "Comprehension gap": code ships without anyone being able to explain it ([Apiiro](https://apiiro.com/blog/vibe-coding-security-best-practices/)). | The numbered `learn/` notes explain every file, and you review every diff |
+These rules are **permanent**. They apply to planning, building, and deploying. Every change is done only when it passes the [Quality gate](#quality-gate).
 
 ## 1. Workflow rules
 
 1. **Spec first.** Code follows `docs/spec/`. If the spec is wrong or silent, the spec is updated first, in the same change.
-2. **Plan before coding.** Each phase starts with a checklist plan in `.claude/tasks/phase-NN.md` (local and gitignored): goal, files, steps, risks. Finished plans move to `.claude/tasks/archive/`.
-3. **One task per prompt, one concern per diff.** Small, reviewable commits. No commit mixes a refactor with a feature.
+2. **Plan before coding.** Each piece of work starts with a short written plan, kept locally: goal, files, steps, risks.
+3. **One task per change, one concern per diff.** Small, reviewable commits. No commit mixes a refactor with a feature.
 4. **Search before you write.** Before adding a function, type, constant, component, or hook, search the codebase for an existing one. Extend it instead of copying. Shared logic lives in `domain/` (backend), `src/lib` or `src/components` (frontend), or `src/shared` (cross-package).
 5. **Tests with every behavior change.** No feature is "done" without its `test.md` cases passing.
 6. **Verify, don't trust.** After each change, run typecheck, lint, tests, knip, and jscpd locally, then run the app and click through the changed path.
-7. **Second review for high-risk diffs.** Anything touching money (PayPal, resolve, sync), auth, permissions, or deletion gets a dedicated adversarial review pass (a `/code-review` run) before merging, plus your manual review.
-8. **Human checkpoints** (you do these; I'll ask each time):
+7. **Second review for high-risk diffs.** Anything touching money (PayPal, resolve, sync), auth, permissions, or deletion gets a dedicated adversarial review pass before merging, plus a second person's review.
+8. **Team checkpoints:**
    - approve the database design
    - approve every new dependency
    - approve the UI design
    - test on a real phone
    - review money and auth diffs
    - record the video
-9. **No long autonomous runs on money, auth, migrations, or deletion.** Those are done step by step, with you watching.
+9. **No long autonomous runs on money, auth, migrations, or deletion.** Those are done step by step, with a second person watching.
 
 ## 2. Code rules
 
@@ -48,12 +37,12 @@ Enforced by ESLint where possible; otherwise checked in review.
   - `dangerouslySetInnerHTML`
   - `axios` (use `fetch` / RTK Query)
 - **Backend bans:** string-built SQL. Repositories call `client.query(text, values)` with `$n` parameters only. A lint rule rejects template literals containing `${` passed as the first argument to `.query(`.
-- No commented-out code. No `TODO` without a phase number. Comments explain **why**, never what.
+- No commented-out code. No `TODO` without an owner. Comments explain **why**, never what.
 - One source of truth for every constant: statuses, limits, prices, copy strings, and error codes. Never repeat a literal across files.
 - Prefer the platform and the existing stack over a new library. Don't write a helper that `Intl`, `crypto`, `URL`, zod, or MUI already provides.
 - Errors are `AppError(code, status, message)`. Never `throw "string"`, and never swallow an error with an empty `catch`.
 
-## 3. Dependency rules (anti-slopsquatting)
+## 3. Dependency rules (no unknown packages)
 
 - **Only packages on the approved list below may be installed.** Adding one requires:
   1. Checking it on npmjs.com: it exists, has an official or long-standing publisher, more than 50k weekly downloads (or is an official vendor package), its first publish is more than 6 months old, and it has a public repository.
@@ -137,7 +126,7 @@ How we stay inside the budgets:
 | Performance | Lighthouse CI against the production build | any budget in section 4 is missed |
 | Build | `next build`, `tsc -p tsconfig.build.json` | failure |
 
-Locally: **husky + lint-staged** runs Prettier, ESLint, and typecheck on staged files before each commit. A commit-msg hook rejects messages containing AI attribution trailers.
+Locally: **husky + lint-staged** runs Prettier, ESLint, and typecheck on staged files before each commit. A commit-msg hook rejects co-author and generator trailers.
 
 ## 8. Deploy rules
 
@@ -148,10 +137,10 @@ Locally: **husky + lint-staged** runs Prettier, ESLint, and typecheck on staged 
 
 ## Quality gate
 
-A phase, or any change, is done only when:
+A change is done only when:
 
 1. Every gate in section 7 is green, locally and in CI.
 2. The section 6 security checklist is ticked for every route the change touched.
 3. Section 4 budgets hold for every route the change touched.
 4. A second review pass was done if the change touched money, auth, or deletion.
-5. You reviewed the diff and the `learn/` note for that work is written.
+5. A second person reviewed the diff.

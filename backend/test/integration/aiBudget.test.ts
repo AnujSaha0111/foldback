@@ -122,7 +122,7 @@ describe("record", () => {
   it("refuses a paid OpenRouter model, because the database enforces the free-only rule", async () => {
     const budget = createAiBudget(testEnv(), pools.app);
     await expect(
-      budget.record(CONTEXT, { ...ATTEMPT, provider: "openrouter", model: "anthropic/claude-3.5-sonnet" }),
+      budget.record(CONTEXT, { ...ATTEMPT, provider: "openrouter", model: "openai/gpt-4o" }),
     ).rejects.toMatchObject({ code: "23514" });
     await budget.record(CONTEXT, { ...ATTEMPT, provider: "openrouter", model: "openrouter/free" });
     await budget.record(CONTEXT, { ...ATTEMPT, provider: "openrouter", model: "vendor/model:free" });

@@ -2,7 +2,7 @@
 # Usage:
 #   restore.sh check <dump>        restore into a scratch database, count rows, drop it (safe, any time)
 #   restore.sh production <dump>   replace the live database with the dump (asks you to confirm)
-# A backup you have never restored is a guess: run `check` after setting up backups and before judging.
+# A backup you have never restored is a guess: run `check` after setting up backups and before going live.
 . "$(dirname "$0")/lib.sh"
 
 mode="${1:-}"
