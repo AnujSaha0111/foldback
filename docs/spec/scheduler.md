@@ -2,7 +2,7 @@
 
 Bryntum is the organizer's board. It shows one row per person across the deadline, and it updates the moment a hold, capture, or release happens, or when the agent proposes a clock move. It never decides money.
 
-We target **Best Use of Bryntum**. The prize brief explicitly rewards "an agent that drives the schedule itself." The board must visibly react to the agent's proposals and to PayPal outcomes, not just render once.
+The board must visibly react to the agent's proposals and to PayPal outcomes, not just render once.
 
 ## Package
 
@@ -10,21 +10,21 @@ We target **Best Use of Bryntum**. The prize brief explicitly rewards "an agent 
 yarn add @bryntum/scheduler@npm:@bryntum/scheduler-trial @bryntum/scheduler-react
 ```
 
-The hackathon page gives the alias as `npm install @bryntum/scheduler@npm:@bryntum/scheduler-trial`. Yarn supports the same `npm:` alias. Follow the React quick start at `https://bryntum.com/products/scheduler/docs/guide/Scheduler/quick-start/react`. If the React wrapper also needs a trial alias, or the trial needs Bryntum's npm registry login, phase 0 records the exact working command at the top of `FoldbackScheduler.tsx` and in the README. The frontend Dockerfile and CI use the same command. If registry auth is required, the token is a GitHub Actions secret passed as a build secret (`--mount=type=secret`) into the Docker build and read by `.npmrc`. It is never committed or baked into an image layer.
+Bryntum's trial instructions give the alias as `npm install @bryntum/scheduler@npm:@bryntum/scheduler-trial`. Yarn supports the same `npm:` alias. Follow the React quick start at `https://bryntum.com/products/scheduler/docs/guide/Scheduler/quick-start/react`. If the React wrapper also needs a trial alias, or the trial needs Bryntum's npm registry login, phase 0 records the exact working command at the top of `FoldbackScheduler.tsx` and in the README. The frontend Dockerfile and CI use the same command. If registry auth is required, the token is a GitHub Actions secret passed as a build secret (`--mount=type=secret`) into the Docker build and read by `.npmrc`. It is never committed or baked into an image layer.
 
 Bundler: **use `--webpack`** for `next dev` and `next build`. With Turbopack the dev server exits silently while compiling a page that imports Bryntum (phase 0). Webpack worked.
 
-Next.js: `FoldbackScheduler` is a client component loaded with `next/dynamic(() => import(...), { ssr: false })`, because Bryntum needs `window`. Import Bryntum's CSS from that component. Check that the wrapper supports React 19.2 in phase 0. If it does not, stop and ask on the PayPal Discord before considering a React downgrade.
+Next.js: `FoldbackScheduler` is a client component loaded with `next/dynamic(() => import(...), { ssr: false })`, because Bryntum needs `window`. Import Bryntum's CSS from that component. Check that the wrapper supports React 19.2 in phase 0. If it does not, stop and ask Bryntum support before considering a React downgrade.
 
 One standard Scheduler. Not Scheduler Pro, Gantt, or Calendar.
 
 ## License gate
 
-The trial lasts 45 days. Started 28 October 2026, it ends around 12 December 2026, before judging ends on 15 December 2026.
+The trial lasts 45 days. Started 28 October 2026, it ends around 12 December 2026. Renew it before then to keep the live demo running.
 
-Phase 0 sends the email in `phases/00-spike.md`, or posts the same request in the PayPal Discord, where Bryntum staff answer hackathon questions. Record the date and the answer in `plan.md`. This is insurance, not a requirement: every team using the hackathon's trial link has the same 45-day clock, so if nobody answers, nothing in the build changes and the video stays the judging artifact. Never commit a license key or vendor the package. `.gitignore` includes `node_modules`.
+Never commit a license key or vendor the package. `.gitignore` includes `node_modules`.
 
-If the reply is no or still missing at phase 7, the video is the judging artifact, and the README says a fresh trial install is the run path. Do not switch to a hand-rolled calendar. A hand-rolled calendar fails the sponsor requirement.
+If the trial lapses, the video shows the board, and the README says a fresh trial install is the run path. Do not switch to a hand-rolled calendar.
 
 ## Data
 
