@@ -13,7 +13,7 @@ Live: **https://app.foldback.tech** (PayPal sandbox only: no real money moves).
 3. Ask the assistant "What happens if Maya Shah doesn't pay?". It runs the real rule on a copy and answers.
 4. Press **Advance to deadline**, then **Advance to grace end**, and watch the plan release.
 
-**A real sandbox hold:** on Plans, press **Use the sample cabin chat**, then **Read the plan** and **Confirm**. Open a pay link, approve with a PayPal sandbox buyer account, and the board shows the hold live. <!-- Team: add the judge sandbox buyer login here before submission (revised plan, D8). -->
+**A real sandbox hold:** on Plans, press **Use the sample cabin chat**, then **Read the plan** and **Confirm**. Open a pay link, approve with a PayPal sandbox buyer account, and the board shows the hold live.
 
 ## How PayPal is used
 
