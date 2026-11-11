@@ -46,6 +46,29 @@ describe("useContractLive", () => {
     expect(dispatch).toHaveBeenCalledTimes(1);
   });
 
+  it("refreshes the plan once when it rejoins after a gap, not on the first join", () => {
+    renderHook(() => useContractLive("con_1"));
+    const joinWith = (call: number) => act(() => socket.emit.mock.calls[call]?.[2]({ ok: true }));
+    fire("connect");
+    joinWith(0);
+    expect(dispatch).not.toHaveBeenCalled();
+    fire("disconnect");
+    fire("connect");
+    joinWith(1);
+    expect(dispatch).toHaveBeenCalledTimes(1);
+    fire("connect");
+    joinWith(2);
+    expect(dispatch).toHaveBeenCalledTimes(1);
+  });
+
+  it("refreshes after a failed connection too, such as an API restart while the page loads", () => {
+    renderHook(() => useContractLive("con_1"));
+    fire("connect_error");
+    fire("connect");
+    act(() => socket.emit.mock.calls[0]?.[2]({ ok: true }));
+    expect(dispatch).toHaveBeenCalledTimes(1);
+  });
+
   it("leaves the room when the screen closes", () => {
     const { unmount } = renderHook(() => useContractLive("con_1"));
     unmount();
