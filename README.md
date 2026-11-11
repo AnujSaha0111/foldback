@@ -15,6 +15,8 @@ Live: **https://app.foldback.tech** (PayPal sandbox only: no real money moves).
 
 **A real sandbox hold:** on Plans, press **Use the sample cabin chat**, then **Read the plan** and **Confirm**. Open a pay link, approve with a PayPal sandbox buyer account, and the board shows the hold live.
 
+Sandbox buyer for the PayPal window: `judges@personal.example.com` / `12345678` (a test account; no real money).
+
 ## How PayPal is used
 
 | Step | Call | Idempotency key |
