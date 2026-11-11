@@ -33,7 +33,7 @@ App header on organizer screens: `Foldback`, the tagline `Nobody pays unless the
 
 ## 1. Rule screen (`/plans`)
 
-Textarea label `Paste the group chat or describe the plan`. Placeholder: the cabin sentence from `demo.md`. A small link, `Use the sample cabin chat`, fills the textarea with the cabin chat so a judge never has to type.
+Textarea label `Paste the group chat or describe the plan`. Placeholder: the cabin sentence from `demo.md`. A small link, `Use the sample cabin chat`, fills the textarea with the cabin chat so a visitor never has to type.
 
 Primary button: `Read the plan`. While the request is in flight, the button reads `Reading…` and is disabled.
 
@@ -90,7 +90,7 @@ Contract status words:
 
 - A short message list and an input with the placeholder `Ask about this plan…`
 - Three suggestion chips that send a message: `What happens if Maya doesn't pay?`, `Draft reminders for anyone unpaid`, `Move to the deadline`. Use the real unpaid person's name; hide a chip when it doesn't apply.
-- Under each assistant reply, a muted line per tool call, for example `Simulated Mon 9 Nov, 6:00pm PT`, so judges can see the agent using tools.
+- Under each assistant reply, a muted line per tool call, for example `Simulated Mon 9 Nov, 6:00pm PT`, so people can see the agent using tools.
 - Drafts render as a quote block with a `Copy` button.
 - Proposals render as cards with the label, the preview sentence, an `Approve` button, and `Dismiss`. Approve calls the route, refetches the board, and adds a system line `Approved: …`.
 - On `agent_unavailable`, show the message from `ai.md`. Everything else keeps working.

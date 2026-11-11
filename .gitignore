@@ -8,7 +8,9 @@ dist/
 .next/
 coverage/
 *.log
-.claude/
+# Local tool folders at the root stay out of the repository.
+/.*/
+!/.github/
 docs/google-gemini/
 docs/vendor/
 *.zip
