@@ -7,6 +7,16 @@ updates:
     groups:
       npm-minor-and-patch:
         update-types: [minor, patch]
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    groups:
+      npm-minor-and-patch:
+        update-types: [minor, patch]
+    # The scheduler is an alias of Bryntum's trial package; keep that pin stable.
+    ignore:
+      - dependency-name: "@bryntum/*"
   - package-ecosystem: github-actions
     directory: /
     schedule:
