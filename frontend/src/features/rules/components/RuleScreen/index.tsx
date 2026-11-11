@@ -21,6 +21,7 @@ import {
 } from "@/types/generated/rules";
 import { isQuestion, nextReading } from "../../reading";
 import { useDraft } from "../../useDraft";
+import { useSpeech } from "../../useSpeech";
 import type { Reading } from "../../reading";
 import { ClarifyForm } from "../ClarifyForm";
 import { TermsList } from "../TermsList";
@@ -59,6 +60,8 @@ const TEXT_BOX = {
 
 function RuleFlow() {
   const [text, setText, forgetDraft] = useDraft(DRAFT_KEY);
+  // Each phrase the organizer says is added to the box, which they can still edit before reading it.
+  const speech = useSpeech((words) => setText(text ? `${text} ${words}` : words));
   const [reading, setReading] = useState<Reading>({ kind: "none" });
   // After a read the text turns into a transcript with its quotes marked; Edit text brings the box back.
   const [editing, setEditing] = useState(false);
@@ -116,7 +119,7 @@ function RuleFlow() {
               {...TEXT_BOX}
               required
             />
-            <TextTools count={text.length} onSample={() => setText(CABIN_CHAT_TEXT)} />
+            <TextTools count={text.length} onSample={() => setText(CABIN_CHAT_TEXT)} speech={speech} />
             <Actions>
               <Button type="submit" loading={read.isLoading}>
                 {read.isLoading ? "Reading…" : "Read the plan"}

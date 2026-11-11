@@ -84,6 +84,21 @@ export const SampleLink = styled("button")({
   "&::after": { content: '""', position: "absolute", inset: "-10px -4px" },
 });
 
+/** The sample link and Speak the plan, side by side. */
+export const Ways = styled("span")({
+  display: "inline-flex",
+  flexWrap: "wrap",
+  gap: "var(--s-2) var(--s-5)",
+});
+
+/** What the microphone is doing, or why it stopped. Empty otherwise. */
+export const Heard = styled("p")({
+  marginTop: "var(--s-2)",
+  fontSize: "var(--fs-small)",
+  color: "var(--text-2)",
+  "&:empty": { display: "none" },
+});
+
 export const Count = styled("span")({
   fontFamily: "var(--font-mono)",
   fontVariantNumeric: "tabular-nums",

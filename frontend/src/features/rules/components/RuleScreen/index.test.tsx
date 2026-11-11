@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import {
   useClarifyRuleMutation,
   useConfirmRuleMutation,
@@ -81,6 +81,33 @@ describe("RuleScreen", () => {
     setup();
     fireEvent.click(screen.getByRole("button", { name: "Use the sample cabin chat" }));
     expect(chatBox()).toHaveValue(CABIN_CHAT_TEXT);
+  });
+
+  it("adds what the organizer says to the box, where the browser can listen", () => {
+    class Recognition {
+      static last: Recognition | null = null;
+      onresult: ((event: unknown) => void) | null = null;
+      start = jest.fn();
+      stop = jest.fn();
+      constructor() {
+        Recognition.last = this;
+      }
+    }
+    const speech = window as unknown as { webkitSpeechRecognition?: unknown };
+    speech.webkitSpeechRecognition = Recognition;
+    setup();
+    fireEvent.change(chatBox(), { target: { value: "Cabin for four." } });
+    fireEvent.click(screen.getByRole("button", { name: "Speak the plan" }));
+    expect(screen.getByText(/Listening/)).toBeInTheDocument();
+    const said = { resultIndex: 0, results: [{ isFinal: true, 0: { transcript: "Ravi pays Monday" } }] };
+    act(() => Recognition.last?.onresult?.(said));
+    expect(chatBox()).toHaveValue("Cabin for four. Ravi pays Monday");
+    delete speech.webkitSpeechRecognition;
+  });
+
+  it("offers no Speak button where the browser cannot listen", () => {
+    setup();
+    expect(screen.queryByRole("button", { name: "Speak the plan" })).not.toBeInTheDocument();
   });
 
   it("sends the fixed demo date only for the sample text", async () => {
