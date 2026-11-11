@@ -21,6 +21,8 @@ interface AppliedMigration {
   checksum: string;
   appliedAt: Date;
   checksumOk: boolean;
+  /** False for a migration applied by a newer image whose file this code does not have. */
+  known: boolean;
 }
 
 export interface MigrationStatus {
@@ -163,6 +165,7 @@ export async function migrationStatus(
         checksum: r.checksum,
         appliedAt: r.applied_at,
         checksumOk: files.find((f) => f.version === r.version)?.checksum === r.checksum,
+        known: files.some((f) => f.version === r.version),
       })),
       pending: files.filter((f) => !doneVersions.has(f.version)).map((f) => f.version),
     };
@@ -171,10 +174,13 @@ export async function migrationStatus(
   }
 }
 
-/** True when every migration file has been applied and none was edited. Used by /health/ready. */
+/**
+ * True when every migration file has been applied and none was edited. Used by boot and /health/ready. A migration
+ * applied by a newer image is accepted: migrations are additive, so a rollback to the previous image can still start.
+ */
 export async function migrationsCurrent(pool: Pool, dir: string = MIGRATIONS_DIR): Promise<boolean> {
   const status = await migrationStatus(pool, dir, { createLedger: false });
-  return status.pending.length === 0 && status.applied.every((m) => m.checksumOk);
+  return status.pending.length === 0 && status.applied.every((m) => !m.known || m.checksumOk);
 }
 
 /** Drops everything in the public schema. Refuses to run in production. */
