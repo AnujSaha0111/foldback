@@ -185,6 +185,19 @@ Jest with a mocked `fetch` (see `test.md`), plus one manual sandbox pass per pha
 - A timeout on void leaves `void_unknown`, and the next resolve sends no void until sync.
 - `PAYPAL_ENV=live` throws on boot.
 
+### Sandbox pass, 11 Nov 2026
+
+Run against `api-m.sandbox.paypal.com` with the `1cf9309` image, on a throwaway stack on the Mac (own database, production untouched), with $5 orders approved by the sandbox buyer. A timeout was made real by a proxy that forwards each request to PayPal and then swallows the reply, so PayPal acts and the app gives up after `PAYPAL_TIMEOUT_MS` (8 s for the run). Each result was checked against PayPal with a direct GET.
+
+| Case | Result |
+|---|---|
+| Authorize, reply lost | Pass. PayPal placed the hold; the share went to `authorize_unknown` and a second checkout returned `409 money_unknown`. Sending `fb-auth-{orderId}` again returned the same authorization, and the order still had one. Sync stored that id and set the share `held` |
+| Authorize of an order PayPal had already authorized under another key | Pass, with a note. Sandbox did not answer `ORDER_ALREADY_AUTHORIZED`: it answered 201 with the existing authorization, which the app stored. One hold either way. The `ORDER_ALREADY_AUTHORIZED` branch is covered by the Jest tests only |
+| Capture, reply lost | Pass. PayPal captured; the share went to `capture_unknown` and resolve returned `409 money_unknown` twice with zero new PayPal calls. Sync read `CAPTURED` and set the share `kept`; the next resolve captured the other share once |
+| Void, reply lost | Pass. PayPal voided; the share went to `void_unknown` and the next resolve returned `409 money_unknown` with no void sent. Sync read `VOIDED` and set the share `released` |
+| Void that never reached PayPal (request dropped before PayPal saw it, and once with no token) | Pass. Sync read the authorization still `CREATED` and set the share `held`; the next resolve voided once with the same `fb-void-{authorizationId}` |
+| `PAYPAL_ENV=live` | Pass. Boot stops with "PAYPAL_ENV: must be exactly sandbox" and exit code 1 |
+
 Never point the app at `https://api-m.paypal.com`.
 
 ## Official references
