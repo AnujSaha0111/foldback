@@ -78,6 +78,15 @@ services:
       GROQ_API_KEY: ${GROQ_API_KEY:-}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      # Optional tuning from env.production.example. Empty means the default in env.ts.
+      AI_GLOBAL_PER_MIN: ${AI_GLOBAL_PER_MIN:-}
+      AI_USER_PER_MIN: ${AI_USER_PER_MIN:-}
+      AI_USER_PER_DAY: ${AI_USER_PER_DAY:-}
+      AI_IP_PER_MIN: ${AI_IP_PER_MIN:-}
+      AI_IP_PER_DAY: ${AI_IP_PER_DAY:-}
+      AGENT_PER_CONTRACT_PER_DAY: ${AGENT_PER_CONTRACT_PER_DAY:-}
+      IP_HASH_SALT: ${IP_HASH_SALT:-}
+      LLM_CHAIN: ${LLM_CHAIN:-}
     # Localhost only. The tunnel client on the host forwards api.{domain} here.
     ports:
       - "127.0.0.1:8787:8787"
@@ -97,6 +106,8 @@ services:
       start_period: 20s
       retries: 3
     restart: unless-stopped
+    # A capture wave is up to four PayPal calls of 15 s each; let it finish before SIGKILL.
+    stop_grace_period: 75s
     mem_limit: 512m
     logging: *logging
 

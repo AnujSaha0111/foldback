@@ -8,7 +8,8 @@ import { attachRealtime } from "./realtime/io";
 import { createDeferredNotifier } from "./realtime/notify";
 import { sweepExpiredGuests, sweepStaleDrafts } from "./services/housekeeping.service";
 
-const SHUTDOWN_GRACE_MS = 10_000;
+// Four sequential PayPal calls of up to 15 s each must finish before compose (stop_grace_period 75s) kills us.
+const SHUTDOWN_GRACE_MS = 70_000;
 const GUEST_SWEEP_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 async function main(): Promise<void> {
