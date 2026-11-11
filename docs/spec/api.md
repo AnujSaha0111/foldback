@@ -2,7 +2,7 @@
 
 Base path `/api`. JSON in and out. Errors use `{ "error": "<code>", "message": "<sentence>", "request_id": "<id>" }` with the status codes below. The client shows `message` and branches only on `error`.
 
-Bodies, params, and query strings are validated with zod strict objects (unknown keys are rejected). A missing, malformed, or extra field returns `400 bad_request` with `details` (the zod issue paths).
+Bodies and params are validated with zod strict objects (unknown keys are rejected). The only query parameter, `?via=agent` on clock and resolve, is compared to that literal; other query keys are ignored. A missing, malformed, or extra field returns `400 bad_request` with `details` (the zod issue paths).
 
 Every money mutation re-reads the share and contract inside a Postgres transaction before calling PayPal, and capture or void runs under the contract advisory lock (`architecture.md` → Concurrency).
 

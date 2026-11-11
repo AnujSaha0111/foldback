@@ -378,3 +378,5 @@ On boot and every 6 hours, delete expired guests **who have no live money** (que
 - An edited, already-applied file (checksum mismatch) fails `migrate` and `/health/ready`.
 - Migrations are additive: never drop or rename anything the previous release reads. The server and `/health/ready` therefore accept a migration applied by a newer image that this code has no file for, so a rollback to the previous image still starts. `migrate` itself stays strict.
 - In production, a one-shot `migrate` container runs before `backend` starts (see `deploy.md`).
+
+Note on `paypal_operations`: when a capture or void is refused but the read that follows shows it already happened (a replay), the write row is settled `failed` while the share moves to `kept` or `released`. The `get_order` or `get_authorization` row written next to it is the proof. The `failed` outcome keeps the key free.
