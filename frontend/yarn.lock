@@ -365,6 +365,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/runtime@npm:^7.29.7 || ^8.0.5":
+  version: 8.1.0
+  resolution: "@babel/runtime@npm:8.1.0"
+  checksum: 10c0/4531254e3a031cb392b5a363eecce35592c944c656fb7a3a7ac619cbcc05007a8ceca56e3f438aabca17a5ef0d1d18ab54957cd6c5d16a0f2d088850b10a1a83
+  languageName: node
+  linkType: hard
+
 "@babel/template@npm:^7.29.7":
   version: 7.29.7
   resolution: "@babel/template@npm:7.29.7"
@@ -1468,11 +1475,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/material-nextjs@npm:^7.3.10":
-  version: 7.3.10
-  resolution: "@mui/material-nextjs@npm:7.3.10"
+"@mui/material-nextjs@npm:^9.5.0":
+  version: 9.5.0
+  resolution: "@mui/material-nextjs@npm:9.5.0"
   dependencies:
-    "@babel/runtime": "npm:^7.28.6"
+    "@babel/runtime": "npm:^7.29.7 || ^8.0.5"
   peerDependencies:
     "@emotion/cache": ^11.11.0
     "@emotion/react": ^11.11.4
@@ -1487,7 +1494,7 @@ __metadata:
       optional: true
     "@types/react":
       optional: true
-  checksum: 10c0/c152ca485671b611eddd89d43f896ac544c8adee0b66a640ab9dc9f020e70babdf7af57673f21dea47bb37bda4e87bb23932919ed11b77c34029e79368d730a1
+  checksum: 10c0/575208d55f255fd52677407ffa32a3aacd148df165f51f46954020cb17b9a5a9336c86182ca41e9a5fc62a643ddb62f9fe4f7acea16b6b2ea3404de0be243f21
   languageName: node
   linkType: hard
 
@@ -4459,7 +4466,7 @@ __metadata:
     "@emotion/react": "npm:^11.14.0"
     "@emotion/styled": "npm:^11.14.1"
     "@mui/material": "npm:^7.3.11"
-    "@mui/material-nextjs": "npm:^7.3.10"
+    "@mui/material-nextjs": "npm:^9.5.0"
     "@reduxjs/toolkit": "npm:^2.13.0"
     "@testing-library/dom": "npm:10.4.2"
     "@testing-library/jest-dom": "npm:^7.0.1"
