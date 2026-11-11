@@ -15,7 +15,7 @@ import { NavMenu } from "@/components/NavMenu";
 import { CommandMenu } from "@/features/command/components/CommandMenu";
 import { daysUntil } from "@/lib/format";
 import { useAppDispatch } from "@/store/hooks";
-import { Crumb, Tagline, User } from "./styled";
+import { Crumb, User } from "./styled";
 
 // The dialog pulls in MUI's modal code, which nobody needs until they press the button.
 const ResetDialog = dynamic(() => import("../ResetDialog").then((module) => module.ResetDialog));
@@ -60,7 +60,6 @@ export function AppHeader() {
 
   return (
     <Header>
-      <Tagline>Nobody pays unless the group makes it.</Tagline>
       <NavMenu
         links={[
           {
