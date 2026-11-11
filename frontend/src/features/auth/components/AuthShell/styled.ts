@@ -14,7 +14,8 @@ export const Column = styled("div")({
   width: "100%",
   maxWidth: "32rem",
   padding: "var(--s-4) var(--gutter-r) var(--s-4) var(--gutter-l)",
-  animation: "fb-rise var(--d-5) var(--ease-out-quart) both",
+  // The form is the page on a phone, so it lifts in without fading: see fb-lift in globals.css.
+  animation: "fb-lift var(--d-5) var(--ease-out-quart) both",
   "& h1": { marginBottom: "var(--s-1)", fontSize: "clamp(1.75rem, 1.4rem + 1vw, 2.25rem)" },
   [WIDE]: { paddingInline: "var(--s-8)" },
 });

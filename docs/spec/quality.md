@@ -75,6 +75,20 @@ The number at the bottom of DevTools → Network is what we budget: **transferre
 
 All routes: CLS ≤ 0.1, INP ≤ 200 ms, Lighthouse accessibility ≥ 95, best practices ≥ 95.
 
+**Measured on production, 11 November 2026** (Lighthouse 12, run by hand; mobile is Lighthouse's simulated mid-range phone on 4G):
+
+| Route | Mobile perf | Desktop perf | Accessibility | Best practices | SEO | Mobile LCP | JS transferred |
+|---|---|---|---|---|---|---|---|
+| `/` | 79 | 100 | 100 | 100 | 100 | 2.6 s | 238 KB |
+| `/login` | 87 after the fix (none before) | 100 | 100 | 96 | 100 | — | 242 KB |
+| `/signup` | 89 after the fix (none before) | 100 | 100 | 96 | 100 | — | 242 KB |
+| `/privacy` | 96 | 100 | 100 | 100 | 91 | 2.4 s | 231 KB |
+
+- The sign-in and sign-up forms faded in from `opacity: 0`, which Chrome never counts as the largest paint, so mobile had no LCP and no performance score. The form now lifts in without the fade (`fb-lift`); the scores shown are from a local production build after the fix.
+- Best practices is 96 on the auth pages because a signed-out visitor's session check (`/api/auth/me`) answers 401, which the browser logs.
+- The JS budgets above are not met: React and the Next.js runtime alone come to about 130 KB. Re-baseline them after judging, from these numbers.
+- `/` misses its mobile target on main-thread work (about 0.7 s of blocking time), not on bytes.
+
 The board is the one heavy route: Bryntum's single library file is 3.47 MB raw. It is an operator screen, so the budget is deliberately wider, but it is loaded **only** on `/plans/[id]` through `next/dynamic` with `ssr: false`, shows a skeleton while loading, and never appears in the landing, auth, plans, or pay bundles. Its CSS (57 KB gzip) is imported only inside that component.
 
 How we stay inside the budgets:
