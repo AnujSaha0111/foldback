@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import {
   useAuthorizeMutation,
   useCheckoutMutation,
@@ -76,6 +76,13 @@ describe("PayScreen", () => {
     answer({ data: share });
     render(<PayScreen shareId="shr_1" />);
     expect(useGetShareQuery).toHaveBeenCalledWith("shr_1", { pollingInterval: 10_000 });
+  });
+
+  it("shows PayPal's own wordmark in the button, named for screen readers", () => {
+    answer({ data: share });
+    render(<PayScreen shareId="shr_1" />);
+    const button = screen.getByRole("button", { name: "Hold my share with PayPal" });
+    expect(within(button).getByRole("img", { name: "PayPal" })).toHaveAttribute("src", "/paypal-color.svg");
   });
 
   it("opens checkout for this share, then leaves for PayPal", async () => {
