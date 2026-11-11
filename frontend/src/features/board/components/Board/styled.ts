@@ -41,6 +41,9 @@ export const Stat = styled("div")({
   "& > small": { display: "block", marginTop: "2px", fontSize: "0.75rem", color: "var(--text-3)" },
 });
 
+/** "of $320.00" after the amount held. */
+export const Of = styled("small")({ fontWeight: 400, color: "var(--text-2)" });
+
 export const Meter = styled("div")({
   height: "4px",
   marginTop: "10px",

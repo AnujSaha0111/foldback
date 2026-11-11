@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { ApiFailure } from "@/api/baseApi";
 import { useMoveClockMutation, useResolvePlanMutation } from "@/api/contractsApi";
 import { useSyncMutation } from "@/api/sharesApi";
 import { Button } from "@/components/Button";
@@ -72,6 +73,7 @@ export function Controls({ contract, shares }: ControlsProps) {
  */
 function Paused({ contract, shares }: ControlsProps) {
   const [sync] = useSyncMutation();
+  const [syncFailure, setSyncFailure] = useState<ApiFailure | undefined>(undefined);
   const [resolvePlan, resolving] = useResolvePlanMutation();
   const [checking, setChecking] = useState(false);
   const refused = shares.some((share) => share.status === "capture_failed");
@@ -79,7 +81,16 @@ function Paused({ contract, shares }: ControlsProps) {
 
   const check = async () => {
     setChecking(true);
-    for (const share of unknown) await sync({ shareId: share.id });
+    setSyncFailure(undefined);
+    for (const share of unknown) {
+      // Stop at the first check PayPal could not answer: resolving would only pause again.
+      const result = await sync({ shareId: share.id });
+      if ("error" in result) {
+        setSyncFailure(result.error);
+        setChecking(false);
+        return;
+      }
+    }
     await resolvePlan({ id: contract.id });
     setChecking(false);
   };
@@ -101,7 +112,7 @@ function Paused({ contract, shares }: ControlsProps) {
           Check payment
         </Button>
       </BannerAction>
-      <FormError error={resolving.error} />
+      <FormError error={syncFailure ?? resolving.error} />
     </Callout>
   );
 }

@@ -57,7 +57,7 @@ export function PayScreen({ shareId, returned = NOT_RETURNED }: PayScreenProps) 
       compactFooter
       header={
         <Header>
-          <Badge>{data?.money_source === "sample" ? "Sample" : "Sandbox"}</Badge>
+          {data ? <Badge>{data.money_source === "sample" ? "Sample" : "Sandbox"}</Badge> : null}
         </Header>
       }
     >

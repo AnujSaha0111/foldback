@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useAskAgentMutation, useMoveClockMutation, useResolvePlanMutation } from "@/api/contractsApi";
 import { Button } from "@/components/Button";
 import { FormError } from "@/components/FormError";
+import { useClientValue } from "@/hooks/useClientValue";
 import { copyText } from "@/lib/copyText";
+import { readKept, writeKept } from "@/lib/sessionStore";
 import type { AgentDraft, AgentProposal, ApiContract, ApiShare } from "@/types/generated/api-types";
 import { Ask, Card, Log, Root, Row, ToolLine, Turn } from "./styled";
 
@@ -13,6 +15,19 @@ type Entry =
   | { role: "user"; text: string }
   | { role: "assistant"; text: string; tools: string[]; drafts: AgentDraft[]; proposals: AgentProposal[] }
   | { role: "system"; text: string };
+
+/**
+ * The conversation kept in this tab, so a reload does not lose it. Old proposals are dropped: the plan may have moved
+ * since, and a proposal is only ever approved from a fresh answer.
+ */
+function restore(kept: string): Entry[] {
+  try {
+    const entries = JSON.parse(kept) as Entry[];
+    return entries.map((entry) => (entry.role === "assistant" ? { ...entry, proposals: [] } : entry));
+  } catch {
+    return [];
+  }
+}
 
 /** The server takes at most 12 turns, so older ones are dropped from what is sent. */
 const MAX_TURNS = 12;
@@ -41,7 +56,13 @@ function chips(contract: ApiContract, shares: ApiShare[]): string[] {
 /** The organizer's assistant. It answers from tools, and everything it suggests waits for the organizer. */
 export function AssistantCard({ contract, shares, onProposed }: AssistantCardProps) {
   const [ask, asking] = useAskAgentMutation();
-  const [entries, setEntries] = useState<Entry[]>([]);
+  const key = `foldback:assistant:${contract.id}`;
+  const kept = useClientValue(() => readKept(key), "");
+  const [live, setEntries] = useState<Entry[] | null>(null);
+  const entries = live ?? restore(kept);
+  useEffect(() => {
+    if (live) writeKept(key, JSON.stringify(live));
+  }, [key, live]);
   const [draft, setDraft] = useState("");
 
   const send = async (text: string) => {
@@ -51,7 +72,7 @@ export function AssistantCard({ contract, shares, onProposed }: AssistantCardPro
       entry.role === "system" ? [] : [{ role: entry.role, content: entry.text }],
     );
     const messages = [...history, { role: "user" as const, content: question }].slice(-MAX_TURNS);
-    setEntries((now) => [...now, { role: "user", text: question }]);
+    setEntries([...entries, { role: "user", text: question }]);
     setDraft("");
     const { data } = await ask({ id: contract.id, messages });
     if (!data) {
@@ -59,7 +80,7 @@ export function AssistantCard({ contract, shares, onProposed }: AssistantCardPro
       return;
     }
     setEntries((now) => [
-      ...now,
+      ...(now ?? entries),
       {
         role: "assistant",
         text: data.reply,
@@ -76,7 +97,7 @@ export function AssistantCard({ contract, shares, onProposed }: AssistantCardPro
     event.preventDefault();
     void send(draft);
   };
-  const note = (text: string) => setEntries((now) => [...now, { role: "system", text }]);
+  const note = (text: string) => setEntries((now) => [...(now ?? entries), { role: "system", text }]);
 
   return (
     <Root aria-labelledby="assistant-title">

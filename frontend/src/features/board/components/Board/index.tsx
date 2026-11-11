@@ -21,7 +21,7 @@ import { Controls } from "../Controls";
 import { PersonCard } from "../PersonCard";
 import { Picker } from "../PersonCard/styled";
 import { SchedulerPanel } from "../SchedulerPanel";
-import { Back, Head, Layout, Meter, Pick, Reason, Stat, Stats, Urgent } from "./styled";
+import { Back, Head, Layout, Meter, Of, Pick, Reason, Stat, Stats, Urgent } from "./styled";
 
 const HOUR_MS = 3_600_000;
 
@@ -161,7 +161,7 @@ function Numbers({
         <span>Held so far</span>
         <div>
           <Mono>{formatMoney(heldCents)}</Mono>
-          <small style={{ fontWeight: 400, color: "var(--text-2)" }}>of {formatMoney(total)}</small>
+          <Of>of {formatMoney(total)}</Of>
         </div>
         <Meter aria-hidden="true" style={{ "--v": total ? heldCents / total : 0 } as CSSProperties}>
           <i />

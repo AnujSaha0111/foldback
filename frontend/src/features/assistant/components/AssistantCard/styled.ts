@@ -36,8 +36,7 @@ export const Card = styled("div")({
   display: "grid",
   gap: "var(--s-2)",
   padding: "var(--s-3)",
-  border: "1px solid var(--line)",
-  borderRadius: "var(--r-panel)",
+  background: "var(--layer)",
   "& blockquote": { whiteSpace: "pre-wrap", overflowWrap: "anywhere" },
 });
 

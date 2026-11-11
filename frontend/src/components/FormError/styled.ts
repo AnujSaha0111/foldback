@@ -7,4 +7,5 @@ export const Message = styled("p")({
   fontSize: "var(--fs-small)",
   fontWeight: 500,
   color: "var(--danger-text)",
+  "&:empty": { marginTop: 0 },
 });
