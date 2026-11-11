@@ -3,6 +3,7 @@ import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import Script from "next/script";
 import type { ReactNode } from "react";
 import { Providers } from "@/components/Providers";
+import { SITE_URL } from "@/lib/site";
 import { themeInitScript } from "@/theme/initScript";
 import "./globals.css";
 
@@ -19,9 +20,16 @@ const mono = IBM_Plex_Mono({
   display: "swap",
 });
 
+const DESCRIPTION =
+  "Group payments as PayPal holds. Captured if everyone joins by the deadline, released if not.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: { default: "Foldback", template: "%s · Foldback" },
-  description: "Group payments as PayPal holds. Captured if everyone joins by the deadline, released if not.",
+  description: DESCRIPTION,
+  // The card image is app/opengraph-image.tsx; Next adds it to every page.
+  openGraph: { title: "Foldback", description: DESCRIPTION, url: "/", siteName: "Foldback", type: "website" },
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {
