@@ -17,6 +17,8 @@ export interface Room<Event> {
   changed: "contract:changed" | "share:changed";
   /** What to refresh for an event, or null to ignore it. */
   tagsFor: (event: Event) => Tags | null;
+  /** Everything the screen shows from this room, refreshed once after the socket comes back from a gap. */
+  refresh: Tags;
 }
 
 /**
@@ -30,17 +32,29 @@ export function useRoom<Event>(room: Room<Event>): number {
 
   useEffect(() => {
     const socket = getSocket();
+    // A gap (an API restart, a dropped network) can hide an event or a failed first load, and polling stops once the
+    // room is joined again, so the first join after a gap refreshes the screen.
+    let missed = false;
     const join = () => {
-      socket.emit(room.join, room.payload, (ack: JoinAck) => setJoined(ack.ok));
+      socket.emit(room.join, room.payload, (ack: JoinAck) => {
+        setJoined(ack.ok);
+        if (!ack.ok || !missed) return;
+        missed = false;
+        dispatch(baseApi.util.invalidateTags(room.refresh));
+      });
     };
     const changed = (event: Event) => {
       const tags = room.tagsFor(event);
       if (tags) dispatch(baseApi.util.invalidateTags(tags));
     };
-    const lost = () => setJoined(false);
+    const lost = () => {
+      missed = true;
+      setJoined(false);
+    };
 
     socket.on("connect", join);
     socket.on("disconnect", lost);
+    socket.on("connect_error", lost);
     socket.on(room.changed, changed);
     if (socket.connected) join();
     else socket.connect();
@@ -48,6 +62,7 @@ export function useRoom<Event>(room: Room<Event>): number {
     return () => {
       socket.off("connect", join);
       socket.off("disconnect", lost);
+      socket.off("connect_error", lost);
       socket.off(room.changed, changed);
       socket.disconnect();
     };

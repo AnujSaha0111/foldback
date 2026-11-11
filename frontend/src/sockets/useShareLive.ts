@@ -13,6 +13,7 @@ export function useShareLive(shareId: string): number {
       payload: { shareId },
       changed: "share:changed",
       tagsFor: (event) => (event.shareId === shareId ? [{ type: "PublicShare", id: shareId }] : null),
+      refresh: [{ type: "PublicShare", id: shareId }],
     }),
     [shareId],
   );

@@ -8,6 +8,11 @@ import type { Room } from "./useRoom";
 /** A plan's room. It remembers the last version it saw, so a repeated event refreshes nothing. */
 function contractRoom(contractId: string): Room<ContractChangedEvent> {
   let seen = 0;
+  const tags: Room<ContractChangedEvent>["refresh"] = [
+    { type: "Contract", id: contractId },
+    { type: "Scheduler", id: contractId },
+    "ContractList",
+  ];
   return {
     join: "contract:join",
     payload: { contractId },
@@ -15,8 +20,9 @@ function contractRoom(contractId: string): Room<ContractChangedEvent> {
     tagsFor: (event) => {
       if (event.contractId !== contractId || event.version <= seen) return null;
       seen = event.version;
-      return [{ type: "Contract", id: contractId }, { type: "Scheduler", id: contractId }, "ContractList"];
+      return tags;
     },
+    refresh: tags,
   };
 }
 
