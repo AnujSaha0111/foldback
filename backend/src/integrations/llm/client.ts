@@ -1,6 +1,7 @@
+import type { z } from "zod";
 import type { Env } from "../../config/env";
 import type { Logger } from "../../observability/logger";
-import type { Allowance, UsedAttempt } from "../../services/aiBudget.service";
+import type { AiBudget, Allowance, UsageContext, UsedAttempt } from "../../services/aiBudget.service";
 
 // The only file that makes language-model HTTP calls (docs/spec/ai.md). Plain fetch to OpenAI-compatible endpoints,
 // so there is no SDK and no extra dependency.
@@ -23,6 +24,30 @@ export interface JsonRequest {
   schemaName: string;
   jsonSchema: Record<string, unknown>;
   maxTokens: number;
+}
+
+/** The chain's deps for one request: every attempt is checked against the AI budget and recorded under `context`. */
+export function budgetedDeps(
+  deps: { env: Env; logger: Logger; budget: AiBudget; llmFetch?: typeof fetch },
+  context: UsageContext,
+): LlmDeps {
+  return {
+    env: deps.env,
+    logger: deps.logger,
+    allow: () => deps.budget.allow(),
+    record: (attempt) => deps.budget.record(context, attempt),
+    ...(deps.llmFetch ? { fetch: deps.llmFetch } : {}),
+  };
+}
+
+/** A model's reply read as JSON of the given shape, or null when it is not. */
+export function parseJsonReply<S extends z.ZodType>(schema: S, content: string): z.output<S> | null {
+  try {
+    const parsed = schema.safeParse(JSON.parse(content));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
 }
 
 export interface LlmDeps {

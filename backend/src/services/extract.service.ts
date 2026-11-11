@@ -6,7 +6,7 @@ import { ExtractionSchema } from "../domain/extraction";
 import type { Extraction } from "../domain/extraction";
 import { validateExtraction } from "../domain/validateExtraction";
 import { AppError } from "../http/errors";
-import { callChain, hasUsableModel, parseChain } from "../integrations/llm/client";
+import { budgetedDeps, callChain, hasUsableModel, parseChain } from "../integrations/llm/client";
 import {
   buildExtractionMessages,
   EXTRACTION_JSON_SCHEMA,
@@ -128,13 +128,7 @@ async function askModel(deps: RuleDeps, who: Requester, draft: Draft): Promise<R
     ipHash: who.ipHash,
   };
   const result = await callChain(
-    {
-      env: deps.env,
-      logger: deps.logger,
-      allow: () => deps.budget.allow(),
-      record: (attempt) => deps.budget.record(context, attempt),
-      ...(deps.llmFetch ? { fetch: deps.llmFetch } : {}),
-    },
+    budgetedDeps(deps, context),
     {
       messages: buildExtractionMessages(draft.ruleText, draft.referenceAt),
       schemaName: "foldback_rule",

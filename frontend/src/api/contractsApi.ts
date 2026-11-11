@@ -13,6 +13,10 @@ interface ReadRuleBody {
   use_fixture_time?: boolean;
 }
 
+/** A clock move or a resolve changes the plan, its board and the plans list. */
+const planMoved = (_result: unknown, _error: unknown, { id }: { id: string }) =>
+  ["ContractList", { type: "Contract" as const, id }, { type: "Scheduler" as const, id }] as const;
+
 const contractsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getContracts: build.query<ContractSummary[], void>({
@@ -52,11 +56,7 @@ const contractsApi = baseApi.injectEndpoints({
         method: "POST",
         body: { demo_now: demoNow },
       }),
-      invalidatesTags: (_result, _error, { id }) => [
-        "ContractList",
-        { type: "Contract", id },
-        { type: "Scheduler", id },
-      ],
+      invalidatesTags: planMoved,
     }),
     resolvePlan: build.mutation<ContractRead, { id: string; viaAgent?: boolean }>({
       query: ({ id, viaAgent }) => ({
@@ -64,11 +64,7 @@ const contractsApi = baseApi.injectEndpoints({
         method: "POST",
         body: {},
       }),
-      invalidatesTags: (_result, _error, { id }) => [
-        "ContractList",
-        { type: "Contract", id },
-        { type: "Scheduler", id },
-      ],
+      invalidatesTags: planMoved,
     }),
     /** One assistant turn. Nothing it proposes has happened: the organizer approves through the clock or resolve route. */
     askAgent: build.mutation<

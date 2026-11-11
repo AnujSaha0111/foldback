@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { callChain } from "./client";
+import { callChain, parseJsonReply } from "./client";
 import type { ChatMessage, LlmDeps, LlmResult } from "./client";
 
 // The organizer agent's manual tool loop (docs/spec/ai.md, Job 2). Each step is one JSON reply through the normal
@@ -63,12 +63,7 @@ function protocol(tools: AgentTool[]): string {
 }
 
 function parseStep(content: string): Step | null {
-  try {
-    const parsed = StepSchema.safeParse(JSON.parse(content));
-    return parsed.success ? parsed.data : null;
-  } catch {
-    return null;
-  }
+  return parseJsonReply(StepSchema, content);
 }
 
 /** Runs one tool. Bad input and unknown tools come back to the model as an error result, never as a guess. */

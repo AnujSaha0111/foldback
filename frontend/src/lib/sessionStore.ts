@@ -13,6 +13,6 @@ export function writeKept(key: string, value: string): void {
     if (value) sessionStorage.setItem(key, value);
     else sessionStorage.removeItem(key);
   } catch {
-    // Storage is off (a private window): the value simply is not kept.
+    // Storage is off (a private window): the value is not kept.
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material/styles";
+import { Meter as BaseMeter } from "@/components/Meter/styled";
 
 export const Head = styled("div")({
   display: "flex",
@@ -44,19 +45,7 @@ export const Stat = styled("div")({
 /** "of $320.00" after the amount held. */
 export const Of = styled("small")({ fontWeight: 400, color: "var(--text-2)" });
 
-export const Meter = styled("div")({
-  height: "4px",
-  marginTop: "10px",
-  background: "var(--layer-hover)",
-  "& i": {
-    display: "block",
-    height: "100%",
-    background: "var(--blue)",
-    transformOrigin: "0 50%",
-    transform: "scaleX(var(--v))",
-    transition: "transform var(--d-5) var(--ease-out-quart)",
-  },
-});
+export const Meter = styled(BaseMeter)({ marginTop: "10px" });
 
 export const Reason = styled("p")({
   marginTop: "var(--s-4)",
